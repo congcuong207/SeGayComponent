@@ -19,20 +19,48 @@ class _MainScaffoldState extends State<MainScaffold> {
   bool isCollapsed = false;
   bool isSizeMin = false;
   bool showSidebarOverlay = false;
+  int? selectedChildIndex;
 
   final List<NavMenuItem> menuItems = [
     NavMenuItem(
-        title: "Dashboards",
-        icon: Icons.dashboard,
-        page: const DashboardPage()),
+      title: "Dashboards",
+      icon: Icons.dashboard,
+      page: const DashboardPage(),
+    ),
     NavMenuItem(
-        title: "Products",
-        icon: Icons.shopping_cart,
-        page: const ProductsPage()),
+      title: "Products",
+      icon: Icons.shopping_cart,
+      page: null,
+      children: [
+        NavMenuItem(
+          title: "List Product",
+          icon: Icons.list,
+          page: const DashboardPage(),
+        ),
+        NavMenuItem(
+          title: "Add Product",
+          icon: Icons.add,
+          page: const ProductsPage(),
+        ),
+      ],
+    ),
     NavMenuItem(
-        title: "Categories",
-        icon: Icons.category,
-        page: const CategoriesPage()),
+      title: "Categories",
+      icon: Icons.category,
+      page: const CategoriesPage(),
+      children: [
+        NavMenuItem(
+          title: "List Product",
+          icon: Icons.list,
+          page: const ProductsPage(),
+        ),
+        NavMenuItem(
+          title: "Add Product",
+          icon: Icons.add,
+          page: const ProductsPage(),
+        ),
+      ],
+    ),
     // ... add more items
   ];
 
@@ -42,6 +70,15 @@ class _MainScaffoldState extends State<MainScaffold> {
     isSizeMin = size.width < 900;
     if (isSizeMin && isCollapsed) {
       isCollapsed = false;
+    }
+
+    Widget currentPage;
+    if (selectedChildIndex != null &&
+        menuItems[selectedIndex].children != null &&
+        menuItems[selectedIndex].children!.length > selectedChildIndex!) {
+      currentPage = menuItems[selectedIndex].children![selectedChildIndex!].page!;
+    } else {
+      currentPage = menuItems[selectedIndex].page!;
     }
 
     return Scaffold(
@@ -56,6 +93,12 @@ class _MainScaffoldState extends State<MainScaffold> {
                   onItemSelected: _onSidebarItemSelected,
                   isCollapsed: isCollapsed,
                   onMenuPressed: _toggleSidebarCollapse,
+                  onChildItemSelected: (parentIdx, childIdx, page) {
+                    setState(() {
+                      selectedIndex = parentIdx;
+                      selectedChildIndex = childIdx;
+                    });
+                  },
                 ),
               Expanded(
                 child: Container(
@@ -67,7 +110,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
-                          child: menuItems[selectedIndex].page,
+                          child: currentPage,
                         ),
                       ),
                     ],
@@ -86,11 +129,19 @@ class _MainScaffoldState extends State<MainScaffold> {
                 onItemSelected: (index) {
                   setState(() {
                     selectedIndex = index;
+                    selectedChildIndex = null;
                     showSidebarOverlay = false;
                   });
                 },
                 isCollapsed: false,
                 onMenuPressed: () => setState(() => showSidebarOverlay = false),
+                onChildItemSelected: (parentIdx, childIdx, page) {
+                  setState(() {
+                    selectedIndex = parentIdx;
+                    selectedChildIndex = childIdx;
+                    showSidebarOverlay = false;
+                  });
+                },
               ),
             ),
         ],
@@ -116,6 +167,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   void _onSidebarItemSelected(int index) {
     setState(() {
       selectedIndex = index;
+      selectedChildIndex = null;
     });
   }
 

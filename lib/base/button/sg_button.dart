@@ -46,7 +46,7 @@ class SGButton extends StatelessWidget {
         padding:
             padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         decoration: BoxDecoration(
-          color: color ?? const Color(0xFF16A34A), // Màu xanh lá
+          color: color ?? const Color(0xFF16A34A),
           borderRadius: BorderRadius.circular(borderRadius),
           border: border,
           boxShadow: boxShadow,

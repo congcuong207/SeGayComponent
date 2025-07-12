@@ -11,6 +11,7 @@ class Sidebar extends StatefulWidget {
   final ValueChanged<int> onItemSelected;
   final bool isCollapsed;
   final VoidCallback onMenuPressed;
+  final void Function(int parentIndex, int childIndex, Widget page)? onChildItemSelected;
 
   const Sidebar({
     super.key,
@@ -19,6 +20,7 @@ class Sidebar extends StatefulWidget {
     required this.onItemSelected,
     required this.isCollapsed,
     required this.onMenuPressed,
+    this.onChildItemSelected,
   });
 
   @override
@@ -27,6 +29,9 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   int? hoveredIndex;
+  Set<int> expandedIndexes = {};
+  int? selectedChildIndex;
+  int? hoveredChildIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -93,24 +98,86 @@ class _SidebarState extends State<Sidebar> {
   }
 
   List<Widget> _buildMenuItems() {
-    return List.generate(widget.items.length, (index) {
-      final isSelected = widget.selectedIndex == index;
+    List<Widget> widgets = [];
+    for (int index = 0; index < widget.items.length; index++) {
+      final item = widget.items[index];
+      final bool isParentSelected = widget.selectedIndex == index && (selectedChildIndex == null || (item.children != null && item.children!.isNotEmpty && selectedChildIndex != null));
       final isHovered = hoveredIndex == index;
-      final color = _getTextColor(isSelected, isHovered);
-      final colorIcon = _getIconColor(isSelected, isHovered);
+      final color = _getTextColor(isParentSelected, isHovered);
+      final colorIcon = _getIconColor(isParentSelected, isHovered);
+      final hasChildren = item.children != null && item.children!.isNotEmpty;
+      final isExpanded = expandedIndexes.contains(index);
 
-      // return _buildMenuItem(index, isSelected, isHovered, color, colorIcon);
-      return ItemSidebar(
-          isSelected: isSelected,
+      widgets.add(
+        ItemSidebar(
+          isSelected: isParentSelected,
           isHovered: isHovered,
           color: color,
           colorIcon: colorIcon,
-          item: widget.items[index],
+          item: item,
           isCollapsed: widget.isCollapsed,
           onEnter: (_) => setState(() => hoveredIndex = index),
           onExit: (_) => setState(() => hoveredIndex = null),
-          onTap: () => widget.onItemSelected(index));
-    });
+          onTap: () {
+            if (hasChildren) {
+              setState(() {
+                if (isExpanded) {
+                  expandedIndexes.remove(index);
+                } else {
+                  expandedIndexes.add(index);
+                }
+              });
+            } else {
+              setState(() {
+                selectedChildIndex = null;
+              });
+              widget.onItemSelected(index);
+            }
+          },
+          showExpandIcon: hasChildren,
+          isExpanded: isExpanded,
+          isChild: false,
+        ),
+      );
+
+      // Nếu có children và đang mở, render thêm các item con
+      if (hasChildren && isExpanded && !widget.isCollapsed) {
+        for (int childIdx = 0; childIdx < item.children!.length; childIdx++) {
+          final child = item.children![childIdx];
+          final isChildSelected = widget.selectedIndex == index && selectedChildIndex == childIdx;
+          final isChildHovered = hoveredChildIndex == childIdx && hoveredIndex == index;
+          final childColor = _getTextColor(isChildSelected, isChildHovered);
+          final childColorIcon = _getIconColor(isChildSelected, isChildHovered);
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(left: 32.0),
+              child: ItemSidebar(
+                isSelected: isChildSelected,
+                isHovered: isChildHovered,
+                color: childColor,
+                colorIcon: childColorIcon,
+                item: child,
+                isCollapsed: widget.isCollapsed,
+                onEnter: (_) => setState(() { hoveredChildIndex = childIdx; hoveredIndex = index; }),
+                onExit: (_) => setState(() { hoveredChildIndex = null; }),
+                onTap: () {
+                  setState(() {
+                    selectedChildIndex = childIdx;
+                  });
+                  if (widget.onChildItemSelected != null) {
+                    widget.onChildItemSelected!(index, childIdx, child.page!);
+                  } else {
+                    widget.onItemSelected(index);
+                  }
+                },
+                isChild: true,
+              ),
+            ),
+          );
+        }
+      }
+    }
+    return widgets;
   }
 
   Color _getTextColor(bool isSelected, bool isHovered) {
