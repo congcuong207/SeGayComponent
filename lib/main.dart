@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:se_gay_components/common/sg_button.dart';
+import 'package:se_gay_components/common/sg_text.dart';
+import 'package:se_gay_components/common/sg_textfield.dart';
+import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
+import 'package:se_gay_components/web_base/sg_web_base.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +36,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 's',)
     );
   }
 }
@@ -56,7 +61,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  int selectedIndex = 0;
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -86,40 +91,23 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      body: SGWebBase(
+        name: "SGDash",
+        menuItems: const [
+          MenuItem(icon: Icons.abc, label: "Home", idMenu: "Home"),
+          MenuItem(icon: Icons.cabin, label: "Category", children: [
+            MenuItem(icon: Icons.abc, label: "Home",idMenu: "H"),
+            MenuItem(icon: Icons.abc, label: "Home", idMenu: "M")
+          ]),
+        ],
+        selectedIndex: selectedIndex,
+        onItemSelected: (index, [subIndex]) {
+          selectedIndex = index;
+          setState(() {
+            
+          });
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
