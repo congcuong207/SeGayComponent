@@ -12,4 +12,5 @@ abstract class ColorValues {
   static const Color colorBorderGray = Color(0xFF9D9D9D);
   static const Color colorGrayLight = Color(0xFF676E8A);
   static const Color colorOrange = Color(0xFFFF7E41);
+  static const Color colorLightSeaGreen = Color.fromARGB(255, 58, 183, 183);
 }

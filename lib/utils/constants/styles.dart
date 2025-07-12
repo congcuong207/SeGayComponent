@@ -47,4 +47,11 @@ abstract class AppStyles {
     fontWeight: FontWeight.w500,
     fontFamily: FONT_FAMILY_LATO,
   );
+
+  static TextStyle appNameTextStyle = TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 20,
+    color: ColorValues.color1890FF,
+    fontFamily: FONT_FAMILY_LATO
+  );
 }

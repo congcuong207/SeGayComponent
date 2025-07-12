@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/base/model/nav_menu_item.dart';
+import 'package:se_gay_components/base/navBar/component/item_sidebar.dart';
+import 'package:se_gay_components/base/sg_text.dart';
 import 'package:se_gay_components/utils/constants/colors.dart';
+import 'package:se_gay_components/utils/constants/styles.dart';
 
 class Sidebar extends StatefulWidget {
   final List<NavMenuItem> items;
@@ -69,7 +72,10 @@ class _SidebarState extends State<Sidebar> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const LogoApp(),
+        const LogoApp(
+          nameApp: "POSDash",
+          logoImage: "assets/images/logo_design.png",
+        ),
         const Spacer(),
         IconButton(
           icon: const Icon(Icons.menu, size: 24),
@@ -92,57 +98,26 @@ class _SidebarState extends State<Sidebar> {
       final isHovered = hoveredIndex == index;
       final color = _getTextColor(isSelected, isHovered);
       final colorIcon = _getIconColor(isSelected, isHovered);
-      
-      return _buildMenuItem(index, isSelected, isHovered, color, colorIcon);
-    });
-  }
 
-  Widget _buildMenuItem(int index, bool isSelected, bool isHovered, Color color, Color colorIcon) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => hoveredIndex = index),
-      onExit: (_) => setState(() => hoveredIndex = null),
-      child: GestureDetector(
-        onTap: () => widget.onItemSelected(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          color: isSelected
-              ? Colors.blue.withOpacity(0.08)
-              : Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(widget.items[index].icon, color: colorIcon, size: 24),
-              const SizedBox(width: 12),
-              Visibility(
-                visible: !widget.isCollapsed,
-                child: Expanded(
-                  child: AnimatedOpacity(
-                    opacity: widget.isCollapsed ? 0.0 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Text(
-                      widget.items[index].title,
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+      // return _buildMenuItem(index, isSelected, isHovered, color, colorIcon);
+      return ItemSidebar(
+          isSelected: isSelected,
+          isHovered: isHovered,
+          color: color,
+          colorIcon: colorIcon,
+          item: widget.items[index],
+          isCollapsed: widget.isCollapsed,
+          onEnter: (_) => setState(() => hoveredIndex = index),
+          onExit: (_) => setState(() => hoveredIndex = null),
+          onTap: () => widget.onItemSelected(index));
+    });
   }
 
   Color _getTextColor(bool isSelected, bool isHovered) {
     if (isSelected || isHovered) {
       return ColorValues.blackColor;
     }
+    // ignore: deprecated_member_use
     return ColorValues.blackColor.withOpacity(0.3);
   }
 
@@ -155,22 +130,30 @@ class _SidebarState extends State<Sidebar> {
 }
 
 class LogoApp extends StatelessWidget {
-  const LogoApp({super.key});
+  final String nameApp;
+  final String? logoImage;
+  const LogoApp({super.key, required this.nameApp, this.logoImage});
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Icon(Icons.dashboard, color: ColorValues.color1890FF),
-        SizedBox(width: 8),
-        Text(
-          "POSDash",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: ColorValues.color1890FF,
+        // const Icon(Icons.dashboard, color: ColorValues.color1890FF),
+        if (logoImage != null)
+          SizedBox(
+            width: 30,
+            height: 30,
+            child: Image.asset(
+              logoImage!,
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
+        // Image(image: image)
+        const SizedBox(width: 8),
+        SGText(
+          text: nameApp,
+          textStyle: AppStyles.appNameTextStyle,
+        )
       ],
     );
   }
