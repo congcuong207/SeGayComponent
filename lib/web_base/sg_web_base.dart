@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
-import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 
 class SGWebBase extends StatelessWidget {
@@ -51,8 +50,18 @@ class SGWebBase extends StatelessWidget {
   Widget SGHeader(){
     return Container(
       height: 64,
-      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 2), // Đổ bóng xuống dưới
+          ),
+        ]
+      ),
       child: Row(
         children: [
           const Spacer(),

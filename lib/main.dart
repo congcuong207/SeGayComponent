@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:se_gay_components/common/sg_button.dart';
 import 'package:se_gay_components/common/sg_text.dart';
-import 'package:se_gay_components/common/sg_textfield.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
 
@@ -82,15 +80,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
       body: SGWebBase(
         name: "SGDash",
         menuItems: const [
@@ -107,6 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
             
           });
         },
+        body: const Center(
+          child: SGText(text: "Hello"),
+        ),
       ),
     );
   }

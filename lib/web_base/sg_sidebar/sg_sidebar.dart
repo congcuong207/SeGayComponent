@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 
 class MenuItem {
