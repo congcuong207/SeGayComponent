@@ -13,6 +13,7 @@ class ApiBase {
     _dio.options.receiveTimeout = const Duration(seconds: 120);
     _dio.options.headers = {
       'Content-Type': 'application/json',
+      if (ApiConfig.getBearToken().isNotEmpty) 'Authorization': 'Bearer ${ApiConfig.getBearToken()}',
     };
     _dio.interceptors.add(LogInterceptor(
       requestHeader: true,

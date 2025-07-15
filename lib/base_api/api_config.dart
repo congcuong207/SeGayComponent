@@ -1,5 +1,7 @@
 class ApiConfig {
   static String baseURL = '';
+  static String bearToken = "";
+
   static final ApiConfig instance = ApiConfig();
 
   /// Đặt lại baseURL cho API.
@@ -21,5 +23,25 @@ class ApiConfig {
   /// ```
   static String getBaseURL() {
     return baseURL;
+  }
+  /// Đặt bearToken cho API.
+  /// ///
+  /// Sử dụng:
+  /// ///
+  /// ```dart
+  /// ApiConfig.setBearToken('your_bearer_token');
+  /// ``` 
+  static void setBearToken(String token) {
+    bearToken = token;
+  }
+  /// Lấy bearToken hiện tại cho API.
+  ///
+  /// Sử dụng:
+  ///
+  /// ```dart
+  /// String token = ApiConfig.getBearToken();
+  /// ```
+  static String getBearToken() {
+    return bearToken;
   }
 } 
