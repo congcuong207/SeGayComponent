@@ -5,7 +5,7 @@ class ApiBase {
   final Dio _dio;
 
   ApiBase() : _dio = Dio() {
-    const url = ApiConfig.baseURL;
+    String url = ApiConfig.getBaseURL();
     if (url.isNotEmpty) {
       _dio.options.baseUrl = url;
     }
