@@ -41,46 +41,49 @@ class SGTextField extends StatefulWidget {
   final Alignment? alignment;
   final EdgeInsetsGeometry? padding;
   final List<TextInputFormatter>? inputFormatters;
+  final TextInputAction? textInputAction;
 
-  const SGTextField(
-      {super.key,
-        this.controller,
-        this.label,
-        this.readOnly = false,
-        this.prefixIcon,
-        this.suffixIcon,
-        this.borderRadius,
-        this.onClickSuffixIcon,
-        this.onClickPreffixIcon,
-        this.obscureText,
-        this.height,
-        this.fontSize,
-        this.fontWeight,
-        this.border,
-        this.onChanged,
-        this.focusNode,
-        this.onSubmitted,
-        this.isTextRequire,
-        this.labelStyle,
-        this.hintStyle,
-        this.enabled,
-        this.color,
-        this.clearIcon,
-        this.backgroundColor,
-        this.borderColor,
-        this.onTap,
-        this.isHalfWidth,
-        this.keyboardInputType = TextInputType.text,
-        this.maxLength,
-        this.hasError = false,
-        this.isLoading = false,
-        this.inputFormatters,
-        this.onTapOutside,
-        this.hintText,
-        this.maxLines = 1,
-        this.isShowAlwaysLable = false,
-        this.alignment,
-        this.padding});
+  const SGTextField({
+    super.key,
+    this.controller,
+    this.label,
+    this.readOnly = false,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.borderRadius,
+    this.onClickSuffixIcon,
+    this.onClickPreffixIcon,
+    this.obscureText,
+    this.height,
+    this.fontSize,
+    this.fontWeight,
+    this.border,
+    this.onChanged,
+    this.focusNode,
+    this.onSubmitted,
+    this.isTextRequire,
+    this.labelStyle,
+    this.hintStyle,
+    this.enabled,
+    this.color,
+    this.clearIcon,
+    this.backgroundColor,
+    this.borderColor,
+    this.onTap,
+    this.isHalfWidth,
+    this.keyboardInputType = TextInputType.text,
+    this.maxLength,
+    this.hasError = false,
+    this.isLoading = false,
+    this.inputFormatters,
+    this.onTapOutside,
+    this.hintText,
+    this.maxLines = 1,
+    this.isShowAlwaysLable = false,
+    this.alignment,
+    this.padding,
+    this.textInputAction,
+  });
 
   @override
   _VSTextFieldState createState() => _VSTextFieldState();
@@ -185,7 +188,9 @@ class _VSTextFieldState extends State<SGTextField> {
               ),
               decoration: InputDecoration(
                 counterText: "",
-                floatingLabelBehavior: widget.isShowAlwaysLable ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                floatingLabelBehavior: widget.isShowAlwaysLable
+                    ? FloatingLabelBehavior.always
+                    : FloatingLabelBehavior.auto,
                 label: widget.label != null
                     ? Visibility(
                         visible: widget.label != null,
@@ -213,7 +218,10 @@ class _VSTextFieldState extends State<SGTextField> {
                     : null, // Nhãn của TextField
                 border: InputBorder.none,
                 hintText: widget.hintText,
-                hintStyle: widget.hintStyle ?? const TextStyle(color: Color(0XFFB5B4B4),fontWeight: FontWeight.normal),
+                hintStyle: widget.hintStyle ??
+                    const TextStyle(
+                        color: Color(0XFFB5B4B4),
+                        fontWeight: FontWeight.normal),
                 contentPadding: widget.height == 40
                     ? const EdgeInsets.only(
                         top: 2,
@@ -229,6 +237,7 @@ class _VSTextFieldState extends State<SGTextField> {
                   widget.onChanged!(value);
                 }
               },
+              textInputAction: widget.textInputAction,
               onFieldSubmitted: (value) {
                 if (widget.onSubmitted != null) {
                   widget.onSubmitted!(value);
