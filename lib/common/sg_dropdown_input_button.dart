@@ -3,10 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_text.dart';
 
 class SGDropdownInputButton<T> extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
+  final String? textDataNullSearch;
   final double? width;
   final double? height;
   final double? sizeBorderLine;
@@ -34,6 +36,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     super.key,
     required this.controller,
     this.label,
+    this.textDataNullSearch,
     this.width,
     this.height,
     this.sizeBorderLine,
@@ -59,7 +62,8 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   });
 
   @override
-  State<SGDropdownInputButton<T>> createState() => _SGDropdownInputButtonState<T>();
+  State<SGDropdownInputButton<T>> createState() =>
+      _SGDropdownInputButtonState<T>();
 }
 
 class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
@@ -146,7 +150,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         _justSelected = false;
         return;
       }
-      // Không tự động show overlay ở đây!
     } else {
       final currentText = widget.controller.text;
       final match = widget.items.firstWhere(
@@ -184,8 +187,10 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           return itemText.toLowerCase().contains(searchValue);
         }).toList();
       }
+      if (_isOpen && _overlayEntry != null) {
+        _overlayEntry!.markNeedsBuild();
+      }
     });
-    // Không gọi _showOverlay ở đây!
   }
 
   void _onItemSelected(DropdownMenuItem<T> item) {
@@ -286,9 +291,11 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
                         );
                       }).toList()
                     : [
-                        const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text('Không có dữ liệu'),
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: SGText(
+                            text: widget.textDataNullSearch ?? 'No Data',
+                          ),
                         ),
                       ],
               ),
@@ -335,46 +342,43 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.sizeBorderCircular ?? 12),
+              borderRadius:
+                  BorderRadius.circular(widget.sizeBorderCircular ?? 12),
               borderSide: BorderSide(
-                color: widget.colorBorderFocus ?? SGAppColors.info500, // <-- màu tím ở đây
+                color: widget.colorBorderFocus ?? SGAppColors.info500,
                 width: widget.sizeBorderLine ?? 1,
               ),
             ),
             suffixIcon: (widget.isShowSuffixIcon ?? false)
                 ? (widget.enableSearch && widget.controller.text.isNotEmpty)
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () {
-                              widget.controller.clear();
-                              if (!_isOpen) _showOverlay();
-                            },
-                            child: const Center(
-                              child: Icon(Icons.clear,
-                                  color: Colors.grey, size: 18),
-                            ),
-                          ),
-                        ),
+                    ? IconButton(
+                        icon: const Icon(Icons.clear,
+                            color: Colors.grey, size: 18),
+                        onPressed: () {
+                          widget.controller.clear();
+                          if (!_isOpen) _showOverlay();
+                        },
                       )
-                    : const Icon(Icons.arrow_drop_down)
+                    : IconButton(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onPressed: () {
+                          if (_isOpen) {
+                            _removeOverlay();
+                          } else {
+                            _focusNode.requestFocus();
+                            _showOverlay();
+                          }
+                        },
+                      )
                 : null,
             contentPadding: widget.contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
           onTap: () {
-            if (_justSelected) {
-              return;
-            }
+            if (_justSelected) return;
             _focusNode.requestFocus();
+            widget.controller.clear();
             if (!_isOpen) _showOverlay();
-            if (widget.enableSearch && widget.controller.text.isNotEmpty) {
-              widget.controller.clear();
-            }
           },
           onEditingComplete: () {
             if (widget.enableSearch) {
