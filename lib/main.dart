@@ -145,6 +145,7 @@ class _TestScreenState extends State<TestScreen> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         // SGDropdownButton<int>(
         //   value: rowsPerPage,
@@ -198,7 +199,8 @@ class _TestScreenState extends State<TestScreen> {
             log('_controller: ${_controller.text}');
           },
           hintText: 'Chọn số...',
-          width: 50,
+          dropdownMaxHeight: 30,
+          dropdownWidth: 50,
         ),
       ],
     );

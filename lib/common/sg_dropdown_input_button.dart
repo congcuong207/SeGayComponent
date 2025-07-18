@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
+import 'dart:math' as math;
 
 class SGDropdownInputButton<T> extends StatefulWidget {
   final TextEditingController controller;
@@ -31,6 +32,12 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final String? hintText;
   final TextInputType? inputType;
   final bool enableSearch;
+  // Thêm các thuộc tính mới
+  final TextStyle? textStyle;
+  final double? dropdownMaxHeight;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final double? dropdownWidth;
 
   const SGDropdownInputButton({
     super.key,
@@ -59,6 +66,12 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.hintText,
     this.inputType,
     this.enableSearch = true,
+    // Thêm các tham số mới
+    this.textStyle,
+    this.dropdownMaxHeight,
+    this.fontSize,
+    this.fontWeight,
+    this.dropdownWidth,
   });
 
   @override
@@ -235,13 +248,34 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    
+    // Lấy vị trí của widget trong hệ tọa độ toàn cục
+    final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    final Offset position = box!.localToGlobal(Offset.zero, ancestor: overlay);
+    
+    // Tính toán không gian hiện có phía trên và phía dưới
+    final screenHeight = MediaQuery.of(context).size.height;
+    final spaceAbove = position.dy;
+    final spaceBelow = screenHeight - (position.dy + size.height);
+    
+    // Chiều cao dự kiến của popup
+    final double estimatedPopupHeight = _filteredItems.isEmpty 
+        ? 60 // Chiều cao tối thiểu cho "No Data"
+        : math.min(300, _filteredItems.length * 44.0); // 44 là chiều cao ước tính cho mỗi item
+    
+    // Xác định hướng hiển thị (true = hiển thị phía trên, false = hiển thị phía dưới)
+    final showAbove = spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
+    
     return OverlayEntry(
       builder: (context) => Positioned(
         width: widget.width ?? size.width,
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
-          offset: Offset(0.0, size.height + 4),
+          targetAnchor: showAbove ? Alignment.topCenter : Alignment.bottomCenter,
+          followerAnchor: showAbove ? Alignment.bottomCenter : Alignment.topCenter,
+          offset: Offset(0.0, showAbove ? -4 : 4), // Khoảng cách 4px
           child: Material(
             elevation: 4.0,
             borderRadius:
@@ -318,10 +352,12 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveWidth = widget.dropdownWidth ?? widget.width;
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
-        width: widget.width,
+        width: effectiveWidth,
         child: TextField(
           controller: widget.controller,
           focusNode: _focusNode,
@@ -331,8 +367,20 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
           textAlign: widget.textAlign ?? TextAlign.start,
+          style: widget.textStyle?.copyWith(
+                fontSize: widget.fontSize,
+                fontWeight: widget.fontWeight,
+              ) ??
+              TextStyle(
+                fontSize: widget.fontSize,
+                fontWeight: widget.fontWeight,
+              ),
           decoration: InputDecoration(
             hintText: widget.hintText,
+            hintStyle: TextStyle(
+              fontSize: widget.fontSize,
+              fontWeight: widget.fontWeight,
+            ),
             border: OutlineInputBorder(
               borderRadius:
                   BorderRadius.circular(widget.sizeBorderCircular ?? 12),
@@ -377,7 +425,9 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           onTap: () {
             if (_justSelected) return;
             _focusNode.requestFocus();
-            widget.controller.clear();
+            if (widget.enableSearch) {
+              widget.controller.clear();
+            }
             if (!_isOpen) _showOverlay();
           },
           onEditingComplete: () {
