@@ -1,6 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
-import 'package:se_gay_components/common/sg_dropdown_button.dart';
+import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
 
@@ -121,13 +123,14 @@ class _TestScreenState extends State<TestScreen> {
     User(id: 1, name: 'Alice'),
     User(id: 2, name: 'Bob'),
   ];
+  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller2 = TextEditingController();
   List<DropdownMenuItem<User>> get userDropdownItems => users.map((user) {
         return DropdownMenuItem<User>(
           value: user,
           child: Text(user.name),
         );
       }).toList();
-
 
   final List<DropdownMenuItem<int>> items = [
     const DropdownMenuItem(value: 5, child: Text('5')),
@@ -140,8 +143,8 @@ class _TestScreenState extends State<TestScreen> {
   String value = '';
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         // SGDropdownButton<int>(
         //   value: rowsPerPage,
@@ -160,21 +163,31 @@ class _TestScreenState extends State<TestScreen> {
         //     }
         //   },
         // ),
-        // SGDropdownComboBox<User>(
-        //   width: 250,
-        //   value: selectedUser,
-        //   items: userDropdownItems,
-        //   colorSelectedText: SGAppColors.error500,
-        //   onChanged: (user) {
-        //     setState(() {
-        //       selectedUser = user;
-        //     });
-        //   },
-        // ),
-        SGDropdownComboBox<int>(
+        SGDropdownInputButton<User>(
+          width: 250,
+          value: selectedUser,
+          items: userDropdownItems,
+          // textAlign: TextAlign.center,
+          defaultValue: users[1],
+          colorSelectedText: SGAppColors.error500,
+          onChanged: (user) {
+            setState(() {
+              selectedUser = user;
+            });
+            log('message onChanged: ${selectedUser!.id}');
+          },
+          controller: _controller2,
+        ),
+        SGDropdownInputButton<int>(
+          controller: _controller,
           // inputType: TextInputType.number,
           // defaultValue: 10,
-          // enableSearch: false,
+          colorBorderFocus: SGAppColors.error400,
+          textAlign: TextAlign.center,
+          contentPadding: const EdgeInsets.all(1),
+          sizeBorderCircular: 10,
+          enableSearch: false,
+          isShowSuffixIcon: false,
           colorSelectedText: SGAppColors.error500,
           value: selectedValue,
           items: items,
@@ -182,9 +195,10 @@ class _TestScreenState extends State<TestScreen> {
             setState(() {
               selectedValue = value;
             });
+            log('_controller: ${_controller.text}');
           },
           hintText: 'Chọn số...',
-          width: 250,
+          width: 50,
         ),
       ],
     );

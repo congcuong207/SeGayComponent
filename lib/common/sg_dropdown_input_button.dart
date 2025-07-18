@@ -1,22 +1,27 @@
 // ignore_for_file: unused_field, deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 
-class SGDropdownComboBox<T> extends StatefulWidget {
+class SGDropdownInputButton<T> extends StatefulWidget {
+  final TextEditingController controller;
   final String? label;
   final double? width;
   final double? height;
-  final double? sizeBoder;
-  final double? sizeBoderMenuItem;
-  final Color? colorBoder;
-  final Color? colorBoderMenuItem;
+  final double? sizeBorderLine;
+  final double? sizeBorderCircular;
+  final double? sizeBorderMenuItemLine;
+  final double? sizeBorderCircularItem;
+  final Color? colorBorder;
+  final Color? colorBorderMenuItem;
   final Color? colorSelectedText;
-  final Color? colorBoderFocus;
-  final Color? colorBoderHover;
+  final Color? colorBorderFocus;
+  final Color? colorBorderHover;
   final Color? colorHoverItem;
+  final bool? isShowSuffixIcon;
+  final TextAlign? textAlign;
+  final EdgeInsetsGeometry? contentPadding;
   final T? value;
   final T? defaultValue;
   final List<DropdownMenuItem<T>> items;
@@ -25,19 +30,25 @@ class SGDropdownComboBox<T> extends StatefulWidget {
   final TextInputType? inputType;
   final bool enableSearch;
 
-  const SGDropdownComboBox({
+  const SGDropdownInputButton({
     super.key,
+    required this.controller,
     this.label,
     this.width,
     this.height,
-    this.sizeBoder,
-    this.sizeBoderMenuItem,
-    this.colorBoder,
-    this.colorBoderMenuItem,
+    this.sizeBorderLine,
+    this.sizeBorderMenuItemLine,
+    this.colorBorder,
+    this.sizeBorderCircular,
+    this.colorBorderMenuItem,
+    this.sizeBorderCircularItem,
     this.colorSelectedText,
-    this.colorBoderFocus,
-    this.colorBoderHover,
+    this.colorBorderFocus,
+    this.colorBorderHover,
     this.colorHoverItem,
+    this.isShowSuffixIcon = true,
+    this.textAlign,
+    this.contentPadding,
     required this.value,
     this.defaultValue,
     required this.items,
@@ -48,17 +59,20 @@ class SGDropdownComboBox<T> extends StatefulWidget {
   });
 
   @override
-  State<SGDropdownComboBox<T>> createState() => _SGDropdownComboBoxState<T>();
+  State<SGDropdownInputButton<T>> createState() => _SGDropdownInputButtonState<T>();
 }
 
-class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
+class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   final LayerLink _layerLink = LayerLink();
   final FocusNode _focusNode = FocusNode();
-  final TextEditingController _controller = TextEditingController();
   OverlayEntry? _overlayEntry;
   late List<DropdownMenuItem<T>> _filteredItems;
   bool _isOpen = false;
   T? _hoveredItem;
+  bool _justSelected = false;
+  bool _isProgrammaticChange = false;
+  T? _lastSelectedValue;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -66,20 +80,26 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
     _filteredItems = widget.items;
     _setInitialValue();
     _focusNode.addListener(_handleFocus);
-    _controller.addListener(_onTextChanged);
+    widget.controller.addListener(_onTextChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initialized = true;
+    });
   }
 
   void _setInitialValue() {
     if (widget.value != null) {
       _setControllerTextByValue(widget.value);
+      _lastSelectedValue = widget.value;
     } else if (widget.defaultValue != null &&
         widget.items.any((item) => item.value == widget.defaultValue)) {
       _setControllerTextByValue(widget.defaultValue);
+      _lastSelectedValue = widget.defaultValue;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onChanged(widget.defaultValue);
       });
     } else if (widget.items.isNotEmpty) {
       _setControllerTextByValue(widget.items.first.value);
+      _lastSelectedValue = widget.items.first.value;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onChanged(widget.items.first.value);
       });
@@ -87,10 +107,11 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
   }
 
   @override
-  void didUpdateWidget(covariant SGDropdownComboBox<T> oldWidget) {
+  void didUpdateWidget(covariant SGDropdownInputButton<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       _setControllerTextByValue(widget.value);
+      _lastSelectedValue = widget.value;
     }
     if (oldWidget.items != widget.items) {
       _filteredItems = widget.items;
@@ -100,7 +121,9 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
 
   void _setControllerTextByValue(T? value) {
     final text = _getTextFromValue(value);
-    _controller.text = text;
+    _isProgrammaticChange = true;
+    widget.controller.text = text;
+    _isProgrammaticChange = false;
   }
 
   String _getTextFromValue(T? value) {
@@ -117,16 +140,39 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
   }
 
   void _handleFocus() {
+    if (!_initialized) return;
     if (_focusNode.hasFocus) {
-      if (!_isOpen) _showOverlay();
+      if (_justSelected) {
+        _justSelected = false;
+        return;
+      }
+      // Không tự động show overlay ở đây!
     } else {
+      final currentText = widget.controller.text;
+      final match = widget.items.firstWhere(
+        (item) =>
+            (item.child is Text
+                ? ((item.child as Text).data ?? '')
+                : item.value.toString()) ==
+            currentText,
+        orElse: () => DropdownMenuItem<T>(value: null, child: const SizedBox()),
+      );
+      if (match.value == null && _lastSelectedValue != null) {
+        if (widget.value != _lastSelectedValue) {
+          _setControllerTextByValue(_lastSelectedValue);
+          widget.onChanged(_lastSelectedValue);
+        } else {
+          _setControllerTextByValue(_lastSelectedValue);
+        }
+      }
       _removeOverlay();
     }
   }
 
   void _onTextChanged() {
+    if (_isProgrammaticChange) return;
     if (!widget.enableSearch) return;
-    final searchValue = _controller.text.toLowerCase();
+    final searchValue = widget.controller.text.toLowerCase();
     setState(() {
       if (searchValue.isEmpty) {
         _filteredItems = widget.items;
@@ -139,32 +185,27 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
         }).toList();
       }
     });
-
-    if (!_isOpen) {
-      _showOverlay();
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _isOpen) _overlayEntry?.markNeedsBuild();
-      });
-    }
+    // Không gọi _showOverlay ở đây!
   }
 
   void _onItemSelected(DropdownMenuItem<T> item) {
+    _isProgrammaticChange = true;
+    widget.controller.text = _getTextFromValue(item.value);
+    _isProgrammaticChange = false;
+    _lastSelectedValue = item.value;
     widget.onChanged(item.value);
-    _controller.text = _getTextFromValue(item.value);
+    if (mounted) _focusNode.unfocus();
+    _removeOverlay();
     setState(() {
       _filteredItems = widget.items;
+      _justSelected = true;
     });
-    // Đảm bảo đóng popup ngay lập tức
-    _removeOverlay();
-    // Sau đó mới unfocus để tránh xung đột
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _focusNode.unfocus();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _justSelected = false);
     });
   }
 
   void _showOverlay() {
-    // Nếu overlay đã tồn tại, không insert lại
     if (_overlayEntry != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _overlayEntry?.markNeedsBuild();
@@ -198,7 +239,8 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
           offset: Offset(0.0, size.height + 4),
           child: Material(
             elevation: 4.0,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius:
+                BorderRadius.circular(widget.sizeBorderCircularItem ?? 12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
               child: ListView(
@@ -233,7 +275,6 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
                                   SGAppColors.colorBorderGray.withOpacity(0.15),
                               onTapDown: (_) {
                                 _onItemSelected(item);
-                                // _removeOverlay();
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -261,8 +302,8 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
   @override
   void dispose() {
     _focusNode.removeListener(_handleFocus);
-    _controller.removeListener(_onTextChanged);
-    _controller.dispose();
+    widget.controller.removeListener(_onTextChanged);
+    widget.controller.dispose();
     _focusNode.dispose();
     _removeOverlay();
     super.dispose();
@@ -275,53 +316,64 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
       child: SizedBox(
         width: widget.width,
         child: TextField(
-          controller: _controller,
+          controller: widget.controller,
           focusNode: _focusNode,
           readOnly: !widget.enableSearch,
           keyboardType: widget.inputType ?? TextInputType.text,
           inputFormatters: widget.inputType == TextInputType.number
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
+          textAlign: widget.textAlign ?? TextAlign.start,
           decoration: InputDecoration(
             hintText: widget.hintText,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(widget.sizeBorderCircular ?? 12),
               borderSide: BorderSide(
-                color: widget.colorBoder ?? SGAppColors.colorBorderGray,
-                width: widget.sizeBoder ?? 1,
+                color: widget.colorBorder ?? SGAppColors.colorBorderGray,
+                width: widget.sizeBorderLine ?? 1,
               ),
             ),
-            suffixIcon: (widget.enableSearch && _controller.text.isNotEmpty)
-                ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          _controller.clear();
-                          widget.onChanged(null);
-                        },
-                        child: const Center(
-                          child:
-                              Icon(Icons.clear, color: Colors.grey, size: 18),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(widget.sizeBorderCircular ?? 12),
+              borderSide: BorderSide(
+                color: widget.colorBorderFocus ?? SGAppColors.info500, // <-- màu tím ở đây
+                width: widget.sizeBorderLine ?? 1,
+              ),
+            ),
+            suffixIcon: (widget.isShowSuffixIcon ?? false)
+                ? (widget.enableSearch && widget.controller.text.isNotEmpty)
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              widget.controller.clear();
+                              if (!_isOpen) _showOverlay();
+                            },
+                            child: const Center(
+                              child: Icon(Icons.clear,
+                                  color: Colors.grey, size: 18),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  )
-                : const Icon(Icons.arrow_drop_down),
-            contentPadding:
+                      )
+                    : const Icon(Icons.arrow_drop_down)
+                : null,
+            contentPadding: widget.contentPadding ??
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
           onTap: () {
+            if (_justSelected) {
+              return;
+            }
             _focusNode.requestFocus();
             if (!_isOpen) _showOverlay();
-            
-            // Xóa giá trị hiện tại khi click vào dropdown có enableSearch=true
-            if (widget.enableSearch && _controller.text.isNotEmpty) {
-              _controller.clear();
-              // Không gọi onChanged ở đây để giữ lại giá trị đã chọn
+            if (widget.enableSearch && widget.controller.text.isNotEmpty) {
+              widget.controller.clear();
             }
           },
           onEditingComplete: () {
@@ -331,12 +383,12 @@ class _SGDropdownComboBoxState<T> extends State<SGDropdownComboBox<T>> {
                     (item.child is Text
                         ? ((item.child as Text).data ?? '')
                         : item.value.toString()) ==
-                    _controller.text,
+                    widget.controller.text,
                 orElse: () =>
                     DropdownMenuItem<T>(value: null, child: const SizedBox()),
               );
               if (match.value == null) {
-                _setControllerTextByValue(widget.value);
+                _setControllerTextByValue(_lastSelectedValue);
               }
             }
             _removeOverlay();
