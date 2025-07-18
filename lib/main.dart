@@ -168,7 +168,8 @@ class _TestScreenState extends State<TestScreen> {
           width: 250,
           value: selectedUser,
           items: userDropdownItems,
-          // textAlign: TextAlign.center,
+          textAlign: TextAlign.left,
+          textAlignItem: TextAlign.left,
           defaultValue: users[1],
           colorSelectedText: SGAppColors.error500,
           onChanged: (user) {
@@ -185,8 +186,9 @@ class _TestScreenState extends State<TestScreen> {
           // defaultValue: 10,
           colorBorderFocus: SGAppColors.error400,
           textAlign: TextAlign.center,
+          fontSize: 12,
           contentPadding: const EdgeInsets.all(1),
-          sizeBorderCircular: 10,
+          sizeBorderCircular: 2,
           enableSearch: false,
           isShowSuffixIcon: false,
           colorSelectedText: SGAppColors.error500,
@@ -199,8 +201,8 @@ class _TestScreenState extends State<TestScreen> {
             log('_controller: ${_controller.text}');
           },
           hintText: 'Chọn số...',
-          dropdownMaxHeight: 30,
-          dropdownWidth: 50,
+          width: 25,
+          height: 25,
         ),
       ],
     );

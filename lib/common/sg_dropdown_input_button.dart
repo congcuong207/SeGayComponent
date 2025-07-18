@@ -24,6 +24,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final Color? colorHoverItem;
   final bool? isShowSuffixIcon;
   final TextAlign? textAlign;
+  final TextAlign? textAlignItem;
   final EdgeInsetsGeometry? contentPadding;
   final T? value;
   final T? defaultValue;
@@ -59,6 +60,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.isShowSuffixIcon = true,
     this.textAlign,
     this.contentPadding,
+    this.textAlignItem,
     required this.value,
     this.defaultValue,
     required this.items,
@@ -248,38 +250,46 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
-    
+
     // Lấy vị trí của widget trong hệ tọa độ toàn cục
-    final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
+    final RenderObject? overlay =
+        Overlay.of(context).context.findRenderObject();
     final RenderBox? box = context.findRenderObject() as RenderBox?;
     final Offset position = box!.localToGlobal(Offset.zero, ancestor: overlay);
-    
+
     // Tính toán không gian hiện có phía trên và phía dưới
     final screenHeight = MediaQuery.of(context).size.height;
     final spaceAbove = position.dy;
     final spaceBelow = screenHeight - (position.dy + size.height);
-    
+
     // Chiều cao dự kiến của popup
-    final double estimatedPopupHeight = _filteredItems.isEmpty 
+    final double estimatedPopupHeight = _filteredItems.isEmpty
         ? 60 // Chiều cao tối thiểu cho "No Data"
-        : math.min(300, _filteredItems.length * 44.0); // 44 là chiều cao ước tính cho mỗi item
-    
+        : math.min(
+            300,
+            _filteredItems.length *
+                44.0); // 44 là chiều cao ước tính cho mỗi item
+
     // Xác định hướng hiển thị (true = hiển thị phía trên, false = hiển thị phía dưới)
-    final showAbove = spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
-    
+    final showAbove =
+        spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
+
     return OverlayEntry(
       builder: (context) => Positioned(
         width: widget.width ?? size.width,
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
-          targetAnchor: showAbove ? Alignment.topCenter : Alignment.bottomCenter,
-          followerAnchor: showAbove ? Alignment.bottomCenter : Alignment.topCenter,
+          targetAnchor:
+              showAbove ? Alignment.topCenter : Alignment.bottomCenter,
+          followerAnchor:
+              showAbove ? Alignment.bottomCenter : Alignment.topCenter,
           offset: Offset(0.0, showAbove ? -4 : 4), // Khoảng cách 4px
           child: Material(
             elevation: 4.0,
-            borderRadius:
-                BorderRadius.circular(widget.sizeBorderCircularItem ?? 12),
+            borderRadius: BorderRadius.circular(widget.sizeBorderCircularItem ??
+                widget.sizeBorderCircular ??
+                12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
               child: ListView(
@@ -292,8 +302,10 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
                         Widget child = item.child;
                         if (child is Text) {
                           child = Text(
+                            textAlign: widget.textAlignItem ?? TextAlign.center,
                             (child).data ?? '',
                             style: TextStyle(
+                              fontSize: widget.fontSize,
                               color: isSelected
                                   ? (widget.colorSelectedText ?? Colors.blue)
                                   : Colors.black,
@@ -316,8 +328,10 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
                                 _onItemSelected(item);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
+                                padding: widget.width! <= 30
+                                    ? const EdgeInsets.only(top: 5, bottom: 5)
+                                    : const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                 child: child,
                               ),
                             ),
@@ -353,11 +367,13 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   @override
   Widget build(BuildContext context) {
     final effectiveWidth = widget.dropdownWidth ?? widget.width;
+    final effectiveHeight = widget.height;
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
         width: effectiveWidth,
+        height: effectiveHeight,
         child: TextField(
           controller: widget.controller,
           focusNode: _focusNode,
@@ -366,7 +382,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           inputFormatters: widget.inputType == TextInputType.number
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
-          textAlign: widget.textAlign ?? TextAlign.start,
+          textAlign: widget.textAlign ?? TextAlign.end,
           style: widget.textStyle?.copyWith(
                 fontSize: widget.fontSize,
                 fontWeight: widget.fontWeight,
