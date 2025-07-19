@@ -370,7 +370,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           controller: widget.controller,
           focusNode: _focusNode,
           readOnly: !widget.enableSearch,
-          enableInteractiveSelection: widget.enableSearch, // 禁用文本选择当搜索功能关闭时
+          enableInteractiveSelection: widget.enableSearch,
           keyboardType: widget.inputType ?? TextInputType.text,
           inputFormatters: _buildInputFormatters(),
           textAlign: widget.textAlign ?? TextAlign.center,

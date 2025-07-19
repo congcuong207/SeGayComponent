@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
+import 'package:se_gay_components/common/sg_input_text.dart';
+import 'package:se_gay_components/common/sg_textfield.dart' show SGTextField;
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
 
@@ -204,6 +206,20 @@ class _TestScreenState extends State<TestScreen> {
           width: 25,
           height: 25,
         ),
+        SGInputText(
+          controller: _controller,
+          hintText: 'Chọn số...',
+          height: 45,
+          label: 'Tên',
+          obscureText: true,
+          maxLines: 3,
+          isRequired: true,
+          expandable: true, // update size textfield theo lines
+          prefixIcon: const Icon(Icons.abc),
+          // suffixIcon: const Icon(Icons.abc),
+          // suffix: const Icon(Icons.abc),
+        ),
+
       ],
     );
   }

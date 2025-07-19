@@ -1,0 +1,303 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_text.dart';
+
+class SGInputText extends StatefulWidget {
+  final TextEditingController? controller;
+  final int? maxLength;
+  final int? maxLines;
+  final bool? hasError;
+  final bool? isLoading;
+  final bool? enabled;
+  final bool isRequired;
+  final bool readOnly;
+  final bool? obscureText;
+  final bool isPassword;
+  final String? label;
+  final String? hintText;
+  final String? counterText;
+  final Color? color;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color enabledBorderColor;
+  final Color focusedBorderColor;
+  final bool? isHalfWidth;
+  final TextStyle? hintStyle;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
+  final Widget? suffix;
+  final Widget? prefix;
+  final double? borderRadius;
+  final double radiusSize;
+  final VoidCallback? onClickSuffixIcon;
+  final VoidCallback? onClickPreffixIcon;
+  final VoidCallback? onTap;
+  final TapRegionCallback? onTapOutside;
+  final double? height;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final Border? border;
+  final Function(String)? onChanged;
+  final FocusNode? focusNode;
+  final Function(String)? onSubmitted;
+  final TextInputType? keyboardInputType;
+  final bool isShowAlwaysLable;
+  final Alignment? alignment;
+  final EdgeInsetsGeometry? padding;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextInputAction? textInputAction;
+  final double? width;
+  final TextAlign textAlign;
+  final bool expandable;
+
+  const SGInputText({
+    super.key,
+    this.controller,
+    this.label,
+    this.isRequired = false,
+    this.readOnly = false,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.borderRadius,
+    this.onClickSuffixIcon,
+    this.onClickPreffixIcon,
+    this.obscureText = false,
+    this.height,
+    this.fontSize,
+    this.fontWeight,
+    this.border,
+    this.onChanged,
+    this.focusNode,
+    this.onSubmitted,
+    this.hintStyle,
+    this.enabled,
+    this.color,
+    this.backgroundColor,
+    this.borderColor,
+    this.onTap,
+    this.isHalfWidth,
+    this.keyboardInputType,
+    this.maxLength,
+    this.hasError = false,
+    this.isLoading = false,
+    this.inputFormatters,
+    this.onTapOutside,
+    this.hintText,
+    this.maxLines,
+    this.isShowAlwaysLable = false,
+    this.alignment,
+    this.padding,
+    this.textInputAction,
+    this.width,
+    this.isPassword = false,
+    this.enabledBorderColor = const Color(0xFFE5E5E5),
+    this.focusedBorderColor = Colors.blue,
+    this.radiusSize = 5,
+    this.counterText = "",
+    this.suffix = const SizedBox(width: 16),
+    this.prefix,
+    this.textAlign = TextAlign.start,
+    this.expandable = false,
+  });
+
+  @override
+  State<SGInputText> createState() => _SGInputTextState();
+}
+
+class _SGInputTextState extends State<SGInputText> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+  bool obscureText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    obscureText = widget.isPassword;
+    _controller = widget.controller ?? TextEditingController();
+    _focusNode = widget.focusNode ?? FocusNode();
+
+    _controller.addListener(_updateState);
+    _focusNode.addListener(_updateState);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_updateState);
+    _focusNode.removeListener(_updateState);
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  void _updateState() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double calculatedWidth =
+        widget.width ?? MediaQuery.of(context).size.width / 2;
+
+    return SizedBox(
+      width: calculatedWidth,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel(),
+          const SizedBox(height: 10),
+          _buildTextField(calculatedWidth),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel() {
+    return Row(
+      children: [
+        if (widget.label != null)
+          SGText(
+            text: widget.label ?? "",
+            fontWeight: FontWeight.w500,
+          ),
+        Visibility(
+          visible: widget.isRequired,
+          child: const SGText(
+            text: "*",
+            color: SGAppColors.error700,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(double width) {
+    return SizedBox(
+      width: width,
+      height: widget.expandable ? null : widget.height,
+      child: TextFormField(
+        controller: _controller,
+        textAlignVertical: TextAlignVertical.center,
+        maxLength: widget.maxLength,
+        maxLines: _getMaxLines(),
+        onTap: widget.onTap,
+        readOnly: widget.readOnly,
+        onTapOutside: widget.onTapOutside,
+        keyboardType: _getKeyboardType(),
+        enabled: widget.enabled ?? true,
+        focusNode: _focusNode,
+        obscureText: obscureText,
+        inputFormatters: _getInputFormatters(),
+        style: _getTextStyle(),
+        textAlign: widget.textAlign,
+        decoration: _getInputDecoration(),
+        onChanged: widget.onChanged,
+        textInputAction: widget.textInputAction,
+        onFieldSubmitted: widget.onSubmitted,
+      ),
+    );
+  }
+
+  int? _getMaxLines() {
+    if (widget.isPassword) return 1;
+    if (widget.expandable) return null;
+    return widget.maxLines;
+  }
+
+  TextInputType _getKeyboardType() {
+    if (widget.isPassword) {
+      return widget.keyboardInputType ?? TextInputType.text;
+    }
+    if (widget.expandable) {
+      return TextInputType.multiline;
+    }
+    return widget.keyboardInputType ?? TextInputType.text;
+  }
+
+  List<TextInputFormatter>? _getInputFormatters() {
+    return widget.inputFormatters ??
+        <TextInputFormatter>[
+          FilteringTextInputFormatter.deny(RegExp(r'^\s+|\s+$')),
+        ];
+  }
+
+  TextStyle _getTextStyle() {
+    return TextStyle(
+      fontSize: widget.fontSize ?? 16,
+      fontWeight: widget.fontWeight,
+      color: (widget.enabled ?? true)
+          ? widget.color ?? SGAppColors.neutral900
+          : SGAppColors.neutral600,
+    );
+  }
+
+  InputDecoration _getInputDecoration() {
+    return InputDecoration(
+      counterText: widget.counterText,
+      floatingLabelBehavior: widget.isShowAlwaysLable
+          ? FloatingLabelBehavior.always
+          : FloatingLabelBehavior.auto,
+      border: _buildBorder(),
+      enabledBorder: _buildEnabledBorder(),
+      focusedBorder: _buildFocusedBorder(),
+      suffixIcon: _buildSuffixIcon(),
+      prefixIcon: widget.prefixIcon,
+      suffix: !widget.isPassword ? widget.suffix : null,
+      prefix: widget.prefix,
+      hintText: widget.hintText,
+      hintStyle: widget.hintStyle ??
+          const TextStyle(
+              color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+    );
+  }
+
+  OutlineInputBorder _buildBorder() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(widget.radiusSize),
+    );
+  }
+
+  OutlineInputBorder _buildEnabledBorder() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(widget.radiusSize),
+      borderSide: BorderSide(color: widget.enabledBorderColor),
+    );
+  }
+
+  OutlineInputBorder _buildFocusedBorder() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(widget.radiusSize),
+      borderSide: BorderSide(color: widget.focusedBorderColor),
+    );
+  }
+
+  Widget? _buildSuffixIcon() {
+    if (!widget.isPassword) return widget.suffixIcon;
+    return _buildPasswordVisibilityToggle();
+  }
+
+  Widget _buildPasswordVisibilityToggle() {
+    return InkWell(
+      highlightColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      onTap: _togglePasswordVisibility,
+      child: Icon(
+        obscureText
+            ? Icons.visibility_off_outlined
+            : Icons.remove_red_eye_outlined,
+      ),
+    );
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      obscureText = !obscureText;
+    });
+  }
+}
