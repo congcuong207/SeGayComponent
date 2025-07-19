@@ -128,7 +128,7 @@ class _VSTextFieldState extends State<SGTextField> {
 
     return Container(
       constraints: BoxConstraints(
-        minHeight: widget.height ?? 52,
+        minHeight: widget.height != null && widget.height! < 45 ? widget.height! : 45,
       ),
       alignment: widget.alignment,
       width: widget.isHalfWidth ?? false
