@@ -220,10 +220,7 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   List<TextInputFormatter>? _getInputFormatters() {
-    return widget.inputFormatters ??
-        <TextInputFormatter>[
-          FilteringTextInputFormatter.deny(RegExp(r'^\s+|\s+$')),
-        ];
+    return widget.inputFormatters;
   }
 
   TextStyle _getTextStyle() {
@@ -250,9 +247,10 @@ class _SGInputTextState extends State<SGInputText> {
       suffix: !widget.isPassword ? widget.suffix : null,
       prefix: widget.prefix,
       hintText: widget.hintText,
+      
       hintStyle: widget.hintStyle ??
           const TextStyle(
-              color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal),
+              color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal,fontSize: 14),
       contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
     );
   }
