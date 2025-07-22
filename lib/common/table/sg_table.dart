@@ -207,10 +207,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
         final bValue = sortValueGetter(b);
 
         if (aValue == null && bValue == null) return 0;
-        if (aValue == null)
+        if (aValue == null) {
           return _sortDirection == SortDirection.ascending ? -1 : 1;
-        if (bValue == null)
+        }
+        if (bValue == null) {
           return _sortDirection == SortDirection.ascending ? 1 : -1;
+        }
 
         int comparison;
         if (aValue is String && bValue is String) {
@@ -532,7 +534,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _updateResize(double currentX) {
     if (_resizingColumnIndex == null ||
         _resizeStartX == null ||
-        _resizeStartWidth == null) return;
+        _resizeStartWidth == null) {
+      return;
+    }
 
     final delta = currentX - _resizeStartX!;
     final originalWidth = _originalColumnWidths[_resizingColumnIndex] ?? 120.0;

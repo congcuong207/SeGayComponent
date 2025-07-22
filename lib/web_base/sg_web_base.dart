@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable, non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
@@ -52,7 +54,7 @@ class SGWebBase extends StatelessWidget {
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
@@ -83,7 +85,7 @@ class SGWebBase extends StatelessWidget {
             radius: 22,
             backgroundColor: Colors.orange[100],
             backgroundImage: backgroundImage,
-            child: Icon(Icons.person, color: Colors.deepOrange, size: 32),
+            child: const Icon(Icons.person, color: Colors.deepOrange, size: 32),
           ),
         ],
       ),
