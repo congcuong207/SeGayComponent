@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
-import 'package:se_gay_components/common/sg_textfield.dart' show SGTextField;
+import 'package:se_gay_components/table_view_exemple.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
 
@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
             selectedIndex = index;
             setState(() {});
           },
-          body: const TestScreen()),
+          body: const TableViewExemple()),
     );
   }
 }
