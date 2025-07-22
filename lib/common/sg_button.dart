@@ -4,30 +4,34 @@ import 'package:se_gay_components/common/sg_colors.dart';
 
 enum SGButtonState { active, inactive, loading }
 
-// ignore: must_be_immutable
 class SGButton extends StatelessWidget {
   final Function() onclick;
   final String text;
-  double? borderRadius;
-  double? width;
-  double? height;
-  double? textSize;
-  Color? activeColor;
-  Color? unActiveColor;
-  Color? color;
-  Color? textColor;
-  SGButtonState state;
-  Border? border;
+  final TextStyle? textStyle;
+  final double? borderRadius;
+  final double? width;
+  final double? height;
+  final double? textSize;
+  final Color? activeColor;
+  final Color? unActiveColor;
+  final Color? color;
+  final Color? textColor;
+  final SGButtonState state;
+  final Border? border;
 
-  EdgeInsetsGeometry? padding;
-  FontWeight? fontWeight;
-  Alignment? alignment;
-  Widget prefixWidget;
+  final double? loadingSize;
+  final Color? loadingColor;
 
-  SGButton({
+  final EdgeInsetsGeometry? padding;
+  final FontWeight? fontWeight;
+  final Alignment? alignment;
+  final Widget prefixWidget;
+
+  const SGButton({
     super.key,
     required this.onclick,
     required this.text,
+    this.textStyle,
     this.borderRadius,
     this.padding,
     this.width,
@@ -42,17 +46,20 @@ class SGButton extends StatelessWidget {
     this.fontWeight,
     this.border,
     this.prefixWidget = const SizedBox.shrink(),
+    this.loadingSize,
+    this.loadingColor,
   });
 
   @override
   Widget build(BuildContext context) {
     Color colorButton;
+    Color textColor;
     if ([SGButtonState.active, SGButtonState.loading].contains(state)) {
       colorButton = activeColor ?? color ?? SGAppColors.info200;
-      textColor = textColor ?? SGAppColors.neutral0;
+      textColor = this.textColor ?? SGAppColors.neutral0;
     } else {
       colorButton = unActiveColor ?? Colors.grey;
-      textColor = textColor ?? SGAppColors.neutral900;
+      textColor = this.textColor ?? SGAppColors.neutral900;
     }
     return InkWell(
       onTap: () {
@@ -63,48 +70,43 @@ class SGButton extends StatelessWidget {
       child: Container(
         width: width,
         height: height,
-        padding: padding ?? const EdgeInsets.symmetric(vertical: 8),
-        alignment: alignment,
+        padding: padding ?? const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        alignment: alignment ?? Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius ?? 0.0),
           color: colorButton,
           border: border,
         ),
-        child: SizedBox(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Row(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: state != SGButtonState.loading ? 1 : 0,
+              child: Row(
+                mainAxisSize: width == null ? MainAxisSize.min : MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  (state != SGButtonState.loading)
-                      ? prefixWidget
-                      : const SizedBox.shrink(),
-                  Expanded(
-                    child: Text(
-                      (state != SGButtonState.loading) ? text : "",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: textSize ?? 13,
-                        fontWeight: fontWeight ?? FontWeight.w600,
-                      ),
-                    ),
+                  prefixWidget,
+                  Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: textStyle ??
+                        TextStyle(
+                          color: textColor,
+                          fontSize: textSize ?? 13,
+                          fontWeight: fontWeight ?? FontWeight.w400,
+                        ),
                   )
                 ],
               ),
-              SizedBox(
-                width: 10,
-                height: 10,
-                child: (state == SGButtonState.loading)
-                    ? const CupertinoActivityIndicator(
-                        color: SGAppColors.neutral900,
-                      )
-                    : const SizedBox(),
-              )
-            ],
-          ),
+            ),
+            if (state == SGButtonState.loading)
+              CupertinoActivityIndicator(
+                color: loadingColor ?? SGAppColors.neutral900,
+                radius: loadingSize ?? 6,
+              ),
+          ],
         ),
       ),
     );
