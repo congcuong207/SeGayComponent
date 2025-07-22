@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:se_gay_components/common/pagination/sg_pagination_controls.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/common/sg_text.dart';
@@ -40,21 +41,94 @@ class _TableViewExempleState extends State<TableViewExemple> {
     'Chờ CBQL duyệt',
   ];
 
+  // pagination_controls
+  late int totalEntries;
+  late int totalPages;
+  late int startIndex;
+  late int endIndex;
+  int rowsPerPage = 10;
+  int currentPage = 1;
+  late List<DataTable> pageProducts;
+  TextEditingController? _controllerDropdownPage;
+  late List<DataTable> duplicatedLeaveRequests;
+
+  final List<DropdownMenuItem<int>> items = [
+    const DropdownMenuItem(value: 5, child: Text('5')),
+    const DropdownMenuItem(value: 10, child: Text('10')),
+    const DropdownMenuItem(value: 20, child: Text('20')),
+    const DropdownMenuItem(value: 50, child: Text('50')),
+  ];
+
   @override
   void initState() {
     super.initState();
+    // Only initialize the controller if pagination is actually used
+    _controllerDropdownPage =
+        TextEditingController(text: rowsPerPage.toString());
     _selectedLeaveType = 'Tất cả';
     _selectedStatus = 'Tất cả';
     _leaveTypeController.text = _selectedLeaveType!;
     _statusController.text = _selectedStatus!;
+    
+    // Create duplicated data
+    duplicatedLeaveRequests = [
+      ...dataTable,
+      ...dataTable,
+      ...dataTable,
+      ...dataTable
+    ];
+    
+    // Initialize pagination on startup
+    _updatePagination();
   }
 
   @override
   void dispose() {
+    // Safely dispose the controller
+    _controllerDropdownPage?.dispose();
+    _controllerDropdownPage = null;
     _searchController.dispose();
     _leaveTypeController.dispose();
     _statusController.dispose();
     super.dispose();
+  }
+
+  void _updatePagination() {
+    totalEntries = dataTable.length;
+    totalPages = (totalEntries / rowsPerPage).ceil().clamp(1, 9999);
+    startIndex = (currentPage - 1) * rowsPerPage;
+    endIndex = (startIndex + rowsPerPage).clamp(0, totalEntries);
+
+    if (startIndex >= totalEntries && totalEntries > 0) {
+      currentPage = 1;
+      startIndex = 0;
+      endIndex = rowsPerPage.clamp(0, totalEntries);
+    }
+
+    pageProducts = dataTable.isNotEmpty
+        ? dataTable.sublist(
+            startIndex < totalEntries ? startIndex : 0,
+            endIndex < totalEntries ? endIndex : totalEntries,
+          )
+        : [];
+
+    log('message pageProducts: ${pageProducts.length}');
+  }
+
+  void _onPageChanged(int page) {
+    setState(() {
+      currentPage = page;
+      _updatePagination();
+    });
+  }
+
+  void _onRowsPerPageChanged(int? value) {
+    if (value == null) return;
+    setState(() {
+      rowsPerPage = value;
+      currentPage = 1;
+      _updatePagination();
+    });
   }
 
   Widget _buildSearchField(Size size) {
@@ -74,8 +148,13 @@ class _TableViewExempleState extends State<TableViewExemple> {
     );
   }
 
-  Widget _buildFilterDropdown(String title, List<String> items, String? value,
-      Function(String?) onChanged, TextEditingController controller, Size size) {
+  Widget _buildFilterDropdown(
+      String title,
+      List<String> items,
+      String? value,
+      Function(String?) onChanged,
+      TextEditingController controller,
+      Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -90,10 +169,12 @@ class _TableViewExempleState extends State<TableViewExemple> {
           child: SGDropdownInputButton<String>(
             controller: controller,
             value: value,
-            items: items.map((item) => DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            )).toList(),
+            items: items
+                .map((item) => DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    ))
+                .toList(),
             onChanged: onChanged,
             sizeBorderCircular: 10,
             colorBorder: SGAppColors.neutral400,
@@ -101,16 +182,172 @@ class _TableViewExempleState extends State<TableViewExemple> {
             isShowSuffixIcon: true,
             hintText: 'Chọn ${title.toLowerCase()}',
             textAlign: TextAlign.left,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           ),
         ),
       ],
     );
   }
 
+  Widget _buildPaginationControls(List<DataTable> dataTable) {
+    // Check if pagination is disabled or controller is null
+    if (_controllerDropdownPage == null) {
+      return const SizedBox(); // Return empty widget
+    }
+
+    return Visibility(
+      visible: dataTable.length >= 5,
+      child: SGPaginationControls(
+        totalPages: totalPages,
+        currentPage: currentPage,
+        rowsPerPage: rowsPerPage,
+        controllerDropdownPage: _controllerDropdownPage!,
+        items: items,
+        onPageChanged: _onPageChanged,
+        onRowsPerPageChanged: _onRowsPerPageChanged,
+      ),
+    );
+  }
+
+  final List<DataTable> dataTable = [
+    DataTable(
+      id: 'TO/0070',
+      employeeId: '[ID0015]',
+      employeeName: 'Nguyễn Ngọc Anh',
+      department: 'Ban giám đốc',
+      leaveType: 'Nghỉ không hưởng lương',
+      description: '',
+      startDate: DateTime(2025, 7, 14, 22, 0),
+      endDate: DateTime(2025, 7, 15, 7, 0),
+      days: 1.0,
+      status: 'Hủy',
+    ),
+    DataTable(
+      id: 'TO/0071',
+      employeeId: '[ID006]',
+      employeeName: 'Hoàng Thị Mai',
+      department: 'Phòng HCNS',
+      leaveType: 'Nghỉ không hưởng lương',
+      description: '',
+      startDate: DateTime(2025, 7, 14, 13, 0),
+      endDate: DateTime(2025, 7, 14, 17, 0),
+      days: 0.5,
+      status: 'Hủy',
+    ),
+    DataTable(
+      id: 'TO/0072',
+      employeeId: '[ID010]',
+      employeeName: 'Nguyễn Thị Thảo',
+      department: 'Phòng HCNS',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 7, 14, 8, 0),
+      endDate: DateTime(2025, 7, 14, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+    DataTable(
+      id: 'TO/0073',
+      employeeId: '[TNBA22]',
+      employeeName: 'Lê Thị Na',
+      department: 'Phòng BA',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 1, 30, 8, 0),
+      endDate: DateTime(2025, 1, 31, 17, 0),
+      days: 0.0,
+      status: 'Đã từ chối',
+    ),
+    DataTable(
+      id: 'TO/0074',
+      employeeId: '[ID001]',
+      employeeName: 'Kế Toán Thủy',
+      department: 'Phòng kế toán',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2024, 12, 27, 8, 0),
+      endDate: DateTime(2024, 12, 27, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+    DataTable(
+      id: 'TO/0075',
+      employeeId: '[ID010]',
+      employeeName: 'Nguyễn Thị Thảo',
+      department: 'Phòng HCNS',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 7, 14, 8, 0),
+      endDate: DateTime(2025, 7, 14, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+    DataTable(
+      id: 'TO/0076',
+      employeeId: '[TNBA22]',
+      employeeName: 'Lê Thị Na',
+      department: 'Phòng BA',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 1, 30, 8, 0),
+      endDate: DateTime(2025, 1, 31, 17, 0),
+      days: 0.0,
+      status: 'Đã từ chối',
+    ),
+    DataTable(
+      id: 'TO/0077',
+      employeeId: '[ID001]',
+      employeeName: 'Kế Toán Thủy',
+      department: 'Phòng kế toán',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2024, 12, 27, 8, 0),
+      endDate: DateTime(2024, 12, 27, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+    DataTable(
+      id: 'TO/0077',
+      employeeId: '[ID010]',
+      employeeName: 'Nguyễn Thị Thảo',
+      department: 'Phòng HCNS',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 7, 14, 8, 0),
+      endDate: DateTime(2025, 7, 14, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+    DataTable(
+      id: 'TO/0078',
+      employeeId: '[TNBA22]',
+      employeeName: 'Lê Thị Na',
+      department: 'Phòng BA',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2025, 1, 30, 8, 0),
+      endDate: DateTime(2025, 1, 31, 17, 0),
+      days: 0.0,
+      status: 'Đã từ chối',
+    ),
+    DataTable(
+      id: 'TO/0079',
+      employeeId: '[ID001]',
+      employeeName: 'Kế Toán Thủy',
+      department: 'Phòng kế toán',
+      leaveType: 'Khám thai thông thường',
+      description: '',
+      startDate: DateTime(2024, 12, 27, 8, 0),
+      endDate: DateTime(2024, 12, 27, 17, 0),
+      days: 1.0,
+      status: 'Hoàn thành',
+    ),
+  ];
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Demo SG Table'),
@@ -168,6 +405,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
                   scrollDirection: Axis.vertical,
                   child: DemoBaseTable(
                     searchTerm: _searchTerm,
+                    dataTable: pageProducts,
                     leaveTypeFilter: _selectedLeaveType == 'Tất cả'
                         ? null
                         : _selectedLeaveType,
@@ -177,6 +415,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
                 ),
               ),
             ),
+            _buildPaginationControls(dataTable),
           ],
         ),
       ),
@@ -242,192 +481,136 @@ class DataTable {
   }
 }
 
-class DemoBaseTable extends StatelessWidget {
+class DemoBaseTable extends StatefulWidget {
   final String searchTerm;
   final String? leaveTypeFilter;
   final String? statusFilter;
+  final List<DataTable> dataTable;
 
-  DemoBaseTable(
+  const DemoBaseTable(
       {super.key,
       this.searchTerm = "",
       this.leaveTypeFilter,
-      this.statusFilter});
+      this.statusFilter,
+      required this.dataTable});
 
+  @override
+  State<DemoBaseTable> createState() => _DemoBaseTableState();
+}
+
+class _DemoBaseTableState extends State<DemoBaseTable> {
   final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
-
-  final List<DataTable> dataTable = [
-    DataTable(
-      id: 'TO/0076',
-      employeeId: '[ID0015]',
-      employeeName: 'Nguyễn Ngọc Anh',
-      department: 'Ban giám đốc',
-      leaveType: 'Nghỉ không hưởng lương',
-      description: '',
-      startDate: DateTime(2025, 7, 14, 22, 0),
-      endDate: DateTime(2025, 7, 15, 7, 0),
-      days: 1.0,
-      status: 'Hủy',
-    ),
-    DataTable(
-      id: 'TO/0075',
-      employeeId: '[ID006]',
-      employeeName: 'Hoàng Thị Mai',
-      department: 'Phòng HCNS',
-      leaveType: 'Nghỉ không hưởng lương',
-      description: '',
-      startDate: DateTime(2025, 7, 14, 13, 0),
-      endDate: DateTime(2025, 7, 14, 17, 0),
-      days: 0.5,
-      status: 'Hủy',
-    ),
-    DataTable(
-      id: 'TO/0077',
-      employeeId: '[ID010]',
-      employeeName: 'Nguyễn Thị Thảo',
-      department: 'Phòng HCNS',
-      leaveType: 'Khám thai thông thường',
-      description: '',
-      startDate: DateTime(2025, 7, 14, 8, 0),
-      endDate: DateTime(2025, 7, 14, 17, 0),
-      days: 1.0,
-      status: 'Hoàn thành',
-    ),
-    DataTable(
-      id: 'TO/0071',
-      employeeId: '[TNBA22]',
-      employeeName: 'Lê Thị Na',
-      department: 'Phòng BA',
-      leaveType: 'Khám thai thông thường',
-      description: '',
-      startDate: DateTime(2025, 1, 30, 8, 0),
-      endDate: DateTime(2025, 1, 31, 17, 0),
-      days: 0.0,
-      status: 'Đã từ chối',
-    ),
-    DataTable(
-      id: 'TO/0052',
-      employeeId: '[ID001]',
-      employeeName: 'Kế Toán Thủy',
-      department: 'Phòng kế toán',
-      leaveType: 'Khám thai thông thường',
-      description: '',
-      startDate: DateTime(2024, 12, 27, 8, 0),
-      endDate: DateTime(2024, 12, 27, 17, 0),
-      days: 1.0,
-      status: 'Hoàn thành',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final duplicatedLeaveRequests = [
-      ...dataTable,
-      ...dataTable,
-      ...dataTable,
-      ...dataTable
-    ];
+    return Column(
+      children: [
+        SgTable<DataTable>(
+          // textHeaderColor: SGAppColors.error50,
+          headerBackgroundColor: Colors.blue,
+          evenRowBackgroundColor: Colors.grey.shade200,
+          oddRowBackgroundColor: Colors.white,
+          selectedRowColor: Colors.lightBlue.shade100,
+          gridLineColor: Colors.grey.shade300,
+          gridLineWidth: 1.0,
+          showVerticalLines: true,
+          showHorizontalLines: true,
+          allowRowSelection: true,
+          searchTerm: widget.searchTerm,
+          customFilter: (item) {
+            // Lọc theo loại ngày nghỉ nếu đã chọn
+            if (widget.leaveTypeFilter != null &&
+                item.leaveType != widget.leaveTypeFilter) {
+              return false;
+            }
 
-    return SgTable<DataTable>(
-      // textHeaderColor: SGAppColors.error50,
-      headerBackgroundColor: Colors.blue,
-      evenRowBackgroundColor: Colors.grey.shade200,
-      oddRowBackgroundColor: Colors.white,
-      selectedRowColor: Colors.lightBlue.shade100,
-      gridLineColor: Colors.grey.shade300,
-      gridLineWidth: 1.0,
-      showVerticalLines: true,
-      showHorizontalLines: true,
-      allowRowSelection: true,
-      searchTerm: searchTerm,
-      customFilter: (item) {
-        // Lọc theo loại ngày nghỉ nếu đã chọn
-        if (leaveTypeFilter != null && item.leaveType != leaveTypeFilter) {
-          return false;
-        }
+            // Lọc theo trạng thái nếu đã chọn
+            if (widget.statusFilter != null &&
+                item.status != widget.statusFilter) {
+              return false;
+            }
 
-        // Lọc theo trạng thái nếu đã chọn
-        if (statusFilter != null && item.status != statusFilter) {
-          return false;
-        }
-
-        return true;
-      },
-      // Bật tính năng hiển thị cột hành động
-      showActions: true,
-      actionColumnTitle: 'Thao tác',
-      actionColumnWidth: 150,
-      actionViewColor: Colors.green,
-      actionEditColor: Colors.blue,
-      actionDeleteColor: Colors.red,
-      onViewAction: (item) {
-        log('message ${item.employeeName}');
-      },
-      onEditAction: (item) {},
-      onDeleteAction: (item) {},
-      columns: [
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Mã',
-          getValue: (item) => item.id,
-          width: 100,
+            return true;
+          },
+          // Bật tính năng hiển thị cột hành động
+          showActions: true,
+          actionColumnTitle: 'Thao tác',
+          actionColumnWidth: 150,
+          actionViewColor: Colors.green,
+          actionEditColor: Colors.blue,
+          actionDeleteColor: Colors.red,
+          onViewAction: (item) {
+            log('message ${item.employeeName}');
+          },
+          onEditAction: (item) {},
+          onDeleteAction: (item) {},
+          columns: [
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Mã',
+              getValue: (item) => item.id,
+              width: 100,
+            ),
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Nhân viên',
+              getValue: (item) => '${item.employeeId} ${item.employeeName}',
+              sortValue: (item) => item.employeeName,
+              searchValue: (item) => '${item.employeeId} ${item.employeeName}',
+              width: 200,
+            ),
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Phòng/Ban',
+              getValue: (item) => item.department,
+              width: 150,
+            ),
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Loại ngày nghỉ',
+              getValue: (item) => item.leaveType,
+            ),
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Mô tả',
+              getValue: (item) => item.description,
+              width: 100,
+              searchable: false, // Mô tả trống nên không tìm kiếm
+            ),
+            TableColumnBuilder.createDateColumn<DataTable>(
+              title: 'Ngày bắt đầu',
+              getValue: (item) => item.startDate,
+              format: dateFormat,
+              width: 150,
+            ),
+            TableColumnBuilder.createDateColumn<DataTable>(
+              title: 'Ngày kết thúc',
+              getValue: (item) => item.endDate,
+              format: dateFormat,
+              width: 150,
+            ),
+            TableColumnBuilder.createTextColumn<DataTable>(
+              title: 'Số ngày',
+              getValue: (item) => item.days.toString(),
+              sortValue: (item) => item.days,
+              // align: TextAlign.right,
+              width: 120,
+              isNumeric: true,
+            ),
+            SgTableColumn<DataTable>(
+              title: 'Trạng thái',
+              cellBuilder: (item) => _buildStatusTag(item.status),
+              sortValueGetter: (item) => item.status,
+              searchValueGetter: (item) => item.status,
+              cellAlignment: TextAlign.center,
+              titleAlignment: TextAlign.center,
+              width: 170,
+              searchable: true,
+            ),
+            // Đã xóa cột hành động tại đây vì đã dùng showActions
+          ],
+          data: widget.dataTable,
+          onRowTap: (item) {
+            debugPrint('Đã chọn: ${item.id} - ${item.employeeName}');
+          },
         ),
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Nhân viên',
-          getValue: (item) => '${item.employeeId} ${item.employeeName}',
-          sortValue: (item) => item.employeeName,
-          searchValue: (item) => '${item.employeeId} ${item.employeeName}',
-          width: 200,
-        ),
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Phòng/Ban',
-          getValue: (item) => item.department,
-          width: 150,
-        ),
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Loại ngày nghỉ',
-          getValue: (item) => item.leaveType,
-        ),
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Mô tả',
-          getValue: (item) => item.description,
-          width: 100,
-          searchable: false, // Mô tả trống nên không tìm kiếm
-        ),
-        TableColumnBuilder.createDateColumn<DataTable>(
-          title: 'Ngày bắt đầu',
-          getValue: (item) => item.startDate,
-          format: dateFormat,
-          width: 150,
-        ),
-        TableColumnBuilder.createDateColumn<DataTable>(
-          title: 'Ngày kết thúc',
-          getValue: (item) => item.endDate,
-          format: dateFormat,
-          width: 150,
-        ),
-        TableColumnBuilder.createTextColumn<DataTable>(
-          title: 'Số ngày',
-          getValue: (item) => item.days.toString(),
-          sortValue: (item) => item.days,
-          // align: TextAlign.right,
-          width: 120,
-          isNumeric: true,
-        ),
-        SgTableColumn<DataTable>(
-          title: 'Trạng thái',
-          cellBuilder: (item) => _buildStatusTag(item.status),
-          sortValueGetter: (item) => item.status,
-          searchValueGetter: (item) => item.status,
-          cellAlignment: TextAlign.center,
-          titleAlignment: TextAlign.center,
-          width: 170,
-          searchable: true,
-        ),
-        // Đã xóa cột hành động tại đây vì đã dùng showActions
+        // _buildPaginationControls(duplicatedLeaveRequests),
       ],
-      data: duplicatedLeaveRequests,
-      onRowTap: (item) {
-        debugPrint('Đã chọn: ${item.id} - ${item.employeeName}');
-      },
     );
   }
 

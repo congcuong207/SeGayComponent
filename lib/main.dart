@@ -86,10 +86,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           selectedIndex: selectedIndex,
           onItemSelected: (index, [subIndex]) {
-            selectedIndex = index;
-            setState(() {});
+            setState(() {
+              selectedIndex = index;
+              log('message selectedIndex: $selectedIndex');
+            });
           },
-          body: const TableViewExemple()),
+          body: selectedIndex == 1
+              ? const TestScreen()
+              : const TableViewExemple()),
     );
   }
 }
@@ -134,81 +138,100 @@ class _TestScreenState extends State<TestScreen> {
   String value = '';
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
       children: [
-        // SGDropdownButton<int>(
-        //   value: rowsPerPage,
-        //   items: rowsPerPageOptions
-        //       .map((e) => DropdownMenuItem<int>(
-        //             value: e,
-        //             child: Text(e.toString()),
-        //           ))
-        //       .toList(),
-        //   onChanged: (value) {
-        //     if (value != null) {
-        //       setState(() {
-        //         rowsPerPage = value;
-        //         currentPage = 1;
-        //       });
-        //     }
-        //   },
-        // ),
-        SGDropdownInputButton<User>(
-          width: 250,
-          value: selectedUser,
-          items: userDropdownItems,
-          textAlign: TextAlign.left,
-          textAlignItem: TextAlign.left,
-          defaultValue: users[1],
-          colorSelectedText: SGAppColors.error500,
-          onChanged: (user) {
-            setState(() {
-              selectedUser = user;
-            });
-            log('message onChanged: ${selectedUser!.id}');
-          },
-          controller: _controller2,
-        ),
-        SGDropdownInputButton<int>(
+        SGInputText(
+          height: 35,
+          prefixIcon: Icon(Icons.search),
           controller: _controller,
-          // inputType: TextInputType.number,
-          // defaultValue: 10,
-          colorBorderFocus: SGAppColors.error400,
-          textAlign: TextAlign.center,
-          fontSize: 12,
-          contentPadding: const EdgeInsets.all(1),
-          sizeBorderCircular: 2,
-          enableSearch: false,
-          isShowSuffixIcon: false,
-          colorSelectedText: SGAppColors.error500,
-          value: selectedValue,
-          items: items,
+          // width: size.width * 0.2,
+          borderRadius: 10,
+          padding: EdgeInsets.all(1),
+
+          fontSize: 14,
+          hintText: 'Tìm kiếm',
           onChanged: (value) {
             setState(() {
-              selectedValue = value;
+              // _searchTerm = value;
             });
-            log('_controller: ${_controller.text}');
           },
-          hintText: 'Chọn số...',
-          width: 25,
-          height: 25,
         ),
-        SGInputText(
-          controller: _controller,
-          hintText: 'Chọn số...',
-          height: 45,
-          label: 'Tên',
-          obscureText: true,
-          maxLines: 3,
-          isRequired: true,
-          expandable: true, // update size textfield theo lines
-          prefixIcon: const Icon(Icons.abc),
-          // suffixIcon: const Icon(Icons.abc),
-          // suffix: const Icon(Icons.abc),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // SGDropdownButton<int>(
+            //   value: rowsPerPage,
+            //   items: rowsPerPageOptions
+            //       .map((e) => DropdownMenuItem<int>(
+            //             value: e,
+            //             child: Text(e.toString()),
+            //           ))
+            //       .toList(),
+            //   onChanged: (value) {
+            //     if (value != null) {
+            //       setState(() {
+            //         rowsPerPage = value;
+            //         currentPage = 1;
+            //       });
+            //     }
+            //   },
+            // ),
+            SGDropdownInputButton<User>(
+              width: 250,
+              value: selectedUser,
+              items: userDropdownItems,
+              textAlign: TextAlign.left,
+              textAlignItem: TextAlign.left,
+              defaultValue: users[1],
+              colorSelectedText: SGAppColors.error500,
+              onChanged: (user) {
+                setState(() {
+                  selectedUser = user;
+                });
+                log('message onChanged: ${selectedUser!.id}');
+              },
+              controller: _controller2,
+            ),
+            SGDropdownInputButton<int>(
+              controller: _controller,
+              // inputType: TextInputType.number,
+              // defaultValue: 10,
+              colorBorderFocus: SGAppColors.error400,
+              textAlign: TextAlign.center,
+              fontSize: 12,
+              contentPadding: const EdgeInsets.all(1),
+              sizeBorderCircular: 2,
+              enableSearch: false,
+              isShowSuffixIcon: false,
+              colorSelectedText: SGAppColors.error500,
+              value: selectedValue,
+              items: items,
+              onChanged: (value) {
+                setState(() {
+                  selectedValue = value;
+                });
+                log('_controller: ${_controller.text}');
+              },
+              hintText: 'Chọn số...',
+              width: 25,
+              height: 25,
+            ),
+            SGInputText(
+              controller: _controller,
+              hintText: 'Chọn số...',
+              height: 35,
+              label: 'Tên',
+              // obscureText: true,
+              // maxLines: 3,
+              isRequired: true,
+              // expandable: true, // update size textfield theo lines
+              prefixIcon: const Icon(Icons.abc),
+              // suffixIcon: const Icon(Icons.abc),
+              // suffix: const Icon(Icons.abc),
+            ),
+          ],
         ),
-
       ],
     );
   }
