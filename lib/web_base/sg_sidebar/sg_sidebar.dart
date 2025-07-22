@@ -18,14 +18,15 @@ class SGSidebar extends StatefulWidget {
   final List<MenuItem> menuItems;
   final int selectedIndex;
   final Function(int, [int? subIndex]) onItemSelected;
+  // ignore: prefer_typing_uninitialized_variables
   final nameWeb;
   const SGSidebar({
-    Key? key,
+    super.key,
     required this.menuItems,
     required this.selectedIndex,
     required this.onItemSelected,
     required this.nameWeb,
-  }) : super(key: key);
+  });
 
   @override
   State<SGSidebar> createState() => _SGSidebarState();

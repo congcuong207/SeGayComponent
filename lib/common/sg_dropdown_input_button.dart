@@ -241,29 +241,24 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     }
   }
 
-  OverlayEntry _createOverlayEntry() {
-    // 获取组件尺寸和位置
+  OverlayEntry _createOverlayEntry() { 
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
     final RenderBox box = renderBox;
     final Offset position = box.localToGlobal(Offset.zero, ancestor: overlay);
 
-    // 计算弹出菜单的显示方向和空间
     final screenHeight = MediaQuery.of(context).size.height;
     final spaceAbove = position.dy;
     final spaceBelow = screenHeight - (position.dy + size.height);
     
-    // 估计弹出菜单高度
-    final itemHeight = 44.0; // 每个选项的估计高度
+    const itemHeight = 44.0;
     final double estimatedPopupHeight = _filteredItems.isEmpty 
-        ? 60 // "No Data"的最小高度
+        ? 60 
         : math.min(300, _filteredItems.length * itemHeight);
     
-    // 决定显示方向
     final showAbove = spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
     
-    // 设置菜单样式和内容
     return OverlayEntry(
       builder: (context) => Positioned(
         width: widget.width ?? size.width,
@@ -272,7 +267,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           showWhenUnlinked: false,
           targetAnchor: showAbove ? Alignment.topCenter : Alignment.bottomCenter,
           followerAnchor: showAbove ? Alignment.bottomCenter : Alignment.topCenter,
-          offset: Offset(0.0, showAbove ? -4 : 4), // 4px间距
+          offset: Offset(0.0, showAbove ? -4 : 4),
           child: Material(
             elevation: 4.0,
             borderRadius: BorderRadius.circular(
@@ -285,7 +280,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     );
   }
   
-  // 构建下拉列表
   Widget _buildDropdownList() {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 300),
@@ -299,11 +293,9 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     );
   }
 
-  // 构建下拉项
   Widget _buildDropdownItem(DropdownMenuItem<T> item) {
     final isSelected = item.value == (widget.value ?? widget.defaultValue);
     
-    // 处理项目中的文本样式
     Widget child = item.child;
     if (child is Text) {
       child = Text(
@@ -339,7 +331,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     );
   }
   
-  // 无数据时的视图
   Widget _buildEmptyView() {
     return Padding(
       padding: const EdgeInsets.all(16),

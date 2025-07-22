@@ -10,7 +10,7 @@ import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 
 class TableViewExemple extends StatefulWidget {
-  const TableViewExemple({Key? key}) : super(key: key);
+  const TableViewExemple({super.key});
 
   @override
   State<TableViewExemple> createState() => _TableViewExempleState();
