@@ -370,7 +370,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   Widget _buildSortIcon(int columnIndex) {
     if (_sortColumnIndex != columnIndex ||
         _sortDirection == SortDirection.none) {
-      return const SizedBox(width: 20);
+      return const SizedBox.shrink(); // Return no space at all
     }
 
     return Icon(
@@ -522,7 +522,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
         child: InkWell(
           onTap: hasSort ? () => _onSortColumn(index) : null,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               mainAxisAlignment: column.titleAlignment == TextAlign.center
                   ? MainAxisAlignment.center
@@ -538,7 +538,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     color: widget.textHeaderColor ?? Colors.white,
                   ),
                 ),
-                if (hasSort) _buildSortIcon(index),
+                // Only add the icon when it should actually be visible
+                if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) 
+                  _buildSortIcon(index),
               ],
             ),
           ),
@@ -559,17 +561,31 @@ class _SgTableState<T> extends State<SgTable<T>> {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
 
-      return _buildCell(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Align(
-            alignment: column.cellAlignment == TextAlign.center
-                ? Alignment.center
-                : column.cellAlignment == TextAlign.right
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
+      // Special handling for checkbox column
+      if (widget.showCheckboxes && index == 0) {
+        return _buildCell(
+          child: Center(
             child: column.cellBuilder(item),
           ),
+          width: column.width,
+          isLast: isLast,
+          columnIndex: index,
+          shouldExpand: shouldExpand,
+          screenWidth: screenWidth,
+          totalWidth: totalWidth,
+        );
+      }
+
+      // For regular data columns
+      return _buildCell(
+        child: Container(
+          padding: const EdgeInsets.only(left: 8, right: 8),
+          alignment: column.cellAlignment == TextAlign.center
+              ? Alignment.center
+              : column.cellAlignment == TextAlign.right
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+          child: column.cellBuilder(item), 
         ),
         width: column.width,
         isLast: isLast,

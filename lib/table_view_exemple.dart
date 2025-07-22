@@ -69,7 +69,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
     _selectedStatus = 'Tất cả';
     _leaveTypeController.text = _selectedLeaveType!;
     _statusController.text = _selectedStatus!;
-    
+
     // Create duplicated data
     duplicatedLeaveRequests = [
       ...dataTable,
@@ -77,7 +77,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
       ...dataTable,
       ...dataTable
     ];
-    
+
     // Initialize pagination on startup
     _updatePagination();
   }
@@ -86,7 +86,6 @@ class _TableViewExempleState extends State<TableViewExemple> {
   void dispose() {
     // Safely dispose the controller
     _controllerDropdownPage?.dispose();
-    _controllerDropdownPage = null;
     _searchController.dispose();
     _leaveTypeController.dispose();
     _statusController.dispose();
@@ -391,6 +390,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
                       _selectedStatus = value;
                       _statusController.text = value ?? '';
                     });
+                      log('message value: $value');
                   },
                   _statusController,
                   size,
@@ -527,7 +527,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                       onPressed: () {
                         // Handle batch delete
@@ -535,7 +536,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Xác nhận xóa'),
-                            content: Text('Bạn có chắc chắn muốn xóa ${_selectedItems.length} mục đã chọn?'),
+                            content: Text(
+                                'Bạn có chắc chắn muốn xóa ${_selectedItems.length} mục đã chọn?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
@@ -575,14 +577,15 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           ],
         ),
         const SizedBox(height: 8),
-        
+
         SgTable<DataTable>(
           // textHeaderColor: SGAppColors.error50,
           headerBackgroundColor: Colors.blue,
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
           selectedRowColor: Colors.lightBlue.shade100,
-          checkedRowColor: const Color(0xFFE8F4FE), // Light blue background for checked rows
+          checkedRowColor:
+              const Color(0xFFE8F4FE), // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
@@ -603,7 +606,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             }
 
             // Lọc theo trạng thái nếu đã chọn
-            if (widget.statusFilter != null && item.status != widget.statusFilter) {
+            if (widget.statusFilter != null &&
+                item.status != widget.statusFilter) {
               return false;
             }
 
@@ -624,6 +628,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           columns: [
             TableColumnBuilder.createTextColumn<DataTable>(
               title: 'Mã',
+              align: TextAlign.center,
               getValue: (item) => item.id,
               width: 100,
             ),
