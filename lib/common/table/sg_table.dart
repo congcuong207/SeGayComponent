@@ -14,6 +14,7 @@ class SgTable<T> extends StatefulWidget {
   final Color oddRowBackgroundColor;
   final Color evenRowBackgroundColor;
   final Color selectedRowColor;
+  final Color checkedRowColor;
   final Color gridLineColor;
   final double gridLineWidth;
   final bool showVerticalLines;
@@ -24,6 +25,11 @@ class SgTable<T> extends StatefulWidget {
   final String? searchTerm;
   final bool caseSensitiveSearch;
   final bool Function(T)? customFilter;
+  
+  // Checkbox selection
+  final bool showCheckboxes;
+  final Function(List<T>)? onSelectionChanged;
+  final double checkboxColumnWidth;
 
   // Action column options
   final bool showActions;
@@ -47,6 +53,7 @@ class SgTable<T> extends StatefulWidget {
     this.oddRowBackgroundColor = Colors.white,
     this.evenRowBackgroundColor = SGAppColors.neutral200,
     this.selectedRowColor = SGAppColors.info100,
+    this.checkedRowColor = const Color(0xFFE3F2FD),
     this.gridLineColor = SGAppColors.neutral200,
     this.gridLineWidth = 1.0,
     this.showVerticalLines = true,
@@ -57,6 +64,9 @@ class SgTable<T> extends StatefulWidget {
     this.searchTerm,
     this.caseSensitiveSearch = false,
     this.customFilter,
+    this.showCheckboxes = false,
+    this.onSelectionChanged,
+    this.checkboxColumnWidth = 50.0,
     this.showActions = false,
     this.onViewAction,
     this.onEditAction,
@@ -81,6 +91,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _selectedRowIndex;
   late List<SgTableColumn<T>> _effectiveColumns;
   String? _lastSearchTerm;
+  
+  // Checkbox selection state
+  final Set<T> _selectedItems = {};
+  bool _allSelected = false;
 
   Map<int, double> _columnWidths = {};
   Map<int, double> _originalColumnWidths = {};
@@ -105,10 +119,17 @@ class _SgTableState<T> extends State<SgTable<T>> {
     if (widget.data != oldWidget.data) {
       _sortedData = List.from(widget.data);
       _filterAndSortData();
+      
+      // Update selected items when data changes
+      if (widget.showCheckboxes) {
+        _selectedItems.removeWhere((item) => !widget.data.contains(item));
+        _updateAllSelectedState();
+      }
     }
 
     if (widget.columns != oldWidget.columns ||
         widget.showActions != oldWidget.showActions ||
+        widget.showCheckboxes != oldWidget.showCheckboxes ||
         widget.actionColumnTitle != oldWidget.actionColumnTitle) {
       _buildEffectiveColumns();
       _initColumnWidths();
@@ -119,10 +140,83 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _filterAndSortData();
     }
   }
+  
+  // Add methods for checkbox handling
+  void _toggleSelectAll(bool? selected) {
+    if (selected == null) return;
+    
+    setState(() {
+      _allSelected = selected;
+      
+      if (_allSelected) {
+        _selectedItems.addAll(_sortedData);
+      } else {
+        _selectedItems.clear();
+      }
+      
+      _notifySelectionChanged();
+    });
+  }
+  
+  void _toggleSelectItem(T item, bool? selected) {
+    if (selected == null) return;
+    
+    setState(() {
+      if (selected) {
+        _selectedItems.add(item);
+      } else {
+        _selectedItems.remove(item);
+      }
+      
+      _updateAllSelectedState();
+      _notifySelectionChanged();
+    });
+  }
+  
+  void _updateAllSelectedState() {
+    if (_sortedData.isEmpty) {
+      _allSelected = false;
+      return;
+    }
+    
+    _allSelected = _sortedData.every((item) => _selectedItems.contains(item));
+  }
+  
+  void _notifySelectionChanged() {
+    if (widget.onSelectionChanged != null) {
+      widget.onSelectionChanged!(_selectedItems.toList());
+    }
+  }
 
+  // Update the _buildEffectiveColumns method for better checkbox visuals
   void _buildEffectiveColumns() {
-    _effectiveColumns = List.from(widget.columns);
+    _effectiveColumns = [];
+    
+    // Add checkbox column if needed
+    if (widget.showCheckboxes) {
+      _effectiveColumns.add(
+        SgTableColumn<T>(
+          title: '',
+          width: widget.checkboxColumnWidth,
+          cellBuilder: (item) => Transform.scale(
+            scale: 1.2,
+            child: Checkbox(
+              value: _selectedItems.contains(item),
+              onChanged: (selected) => _toggleSelectItem(item, selected),
+              activeColor: Colors.blue,
+              checkColor: Colors.white,
+            ),
+          ),
+          cellAlignment: TextAlign.center,
+          titleAlignment: TextAlign.center,
+        ),
+      );
+    }
+    
+    // Add regular columns
+    _effectiveColumns.addAll(widget.columns);
 
+    // Add action column if enabled
     if (widget.showActions) {
       _effectiveColumns.add(
         SgTableActionColumn<T>(
@@ -345,10 +439,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
                       final isEven = index % 2 == 0;
                       final isLast = index == _sortedData.length - 1;
                       final isSelected = _selectedRowIndex == index;
+                      final isChecked = _selectedItems.contains(_sortedData[index]);
 
                       Color backgroundColor;
                       if (isSelected) {
                         backgroundColor = widget.selectedRowColor;
+                      } else if (isChecked) {
+                        backgroundColor = widget.checkedRowColor;
                       } else {
                         backgroundColor = isEven
                             ? widget.evenRowBackgroundColor
@@ -390,12 +487,36 @@ class _SgTableState<T> extends State<SgTable<T>> {
     );
   }
 
+  // Update the header checkbox to match the style
   List<Widget> _buildHeaderCells(
       bool shouldExpand, double screenWidth, double totalWidth) {
     return List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final hasSort = column.sortValueGetter != null;
       final isLast = index == _effectiveColumns.length - 1;
+      
+      // Special case for checkbox column
+      if (widget.showCheckboxes && index == 0) {
+        return _buildCell(
+          child: Center(
+            child: Transform.scale(
+              scale: 1.2,
+              child: Checkbox(
+                value: _allSelected,
+                onChanged: _toggleSelectAll,
+                activeColor: Colors.blue,
+                checkColor: Colors.white,
+              ),
+            ),
+          ),
+          width: column.width,
+          isLast: isLast,
+          columnIndex: index,
+          shouldExpand: shouldExpand,
+          screenWidth: screenWidth,
+          totalWidth: totalWidth,
+        );
+      }
 
       return _buildCell(
         child: InkWell(

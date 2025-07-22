@@ -500,23 +500,101 @@ class DemoBaseTable extends StatefulWidget {
 
 class _DemoBaseTableState extends State<DemoBaseTable> {
   final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
+  bool _showCheckboxes = true; // State for toggling checkboxes
+  List<DataTable> _selectedItems = []; // Selected items
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Add toggle for checkboxes
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_selectedItems.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Text(
+                      'Đã chọn: ${_selectedItems.length} mục',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete, size: 16),
+                      label: const Text('Xóa đã chọn'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                      onPressed: () {
+                        // Handle batch delete
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Xác nhận xóa'),
+                            content: Text('Bạn có chắc chắn muốn xóa ${_selectedItems.length} mục đã chọn?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Hủy'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  // Implement delete logic here
+                                },
+                                child: const Text('Xóa'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            Row(
+              children: [
+                const Text('Hiển thị hộp chọn:'),
+                Switch(
+                  value: _showCheckboxes,
+                  onChanged: (value) {
+                    setState(() {
+                      _showCheckboxes = value;
+                      if (!value) {
+                        _selectedItems = [];
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        
         SgTable<DataTable>(
           // textHeaderColor: SGAppColors.error50,
           headerBackgroundColor: Colors.blue,
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
           selectedRowColor: Colors.lightBlue.shade100,
+          checkedRowColor: const Color(0xFFE8F4FE), // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
           showHorizontalLines: true,
           allowRowSelection: true,
           searchTerm: widget.searchTerm,
+          showCheckboxes: _showCheckboxes, // on, off checkbox
+          onSelectionChanged: (selectedItems) {
+            setState(() {
+              _selectedItems = selectedItems;
+            });
+          },
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
             if (widget.leaveTypeFilter != null &&
@@ -525,8 +603,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             }
 
             // Lọc theo trạng thái nếu đã chọn
-            if (widget.statusFilter != null &&
-                item.status != widget.statusFilter) {
+            if (widget.statusFilter != null && item.status != widget.statusFilter) {
               return false;
             }
 
