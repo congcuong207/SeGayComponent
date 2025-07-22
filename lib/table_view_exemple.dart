@@ -577,7 +577,6 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           ],
         ),
         const SizedBox(height: 8),
-
         SgTable<DataTable>(
           // textHeaderColor: SGAppColors.error50,
           headerBackgroundColor: Colors.blue,

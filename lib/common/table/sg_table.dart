@@ -539,6 +539,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
                   ),
                 ),
                 // Only add the icon when it should actually be visible
+                
                 if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) 
                   _buildSortIcon(index),
               ],
