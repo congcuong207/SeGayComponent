@@ -6,7 +6,6 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_search_box.dart';
 import 'package:se_gay_components/constants/index.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
-import 'dart:async'; // Import Timer
 
 class SGHeader extends StatefulWidget {
   final Widget? navUserMenu;

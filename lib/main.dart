@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:se_gay_components/main_wrapper/main_wrapper_example.dart';
+import 'package:se_gay_components/examples/popup_hierarchy_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-      home: const MainWrapperExample(),
+      home: const PopupMenuHierarchyExample(),
     );
   }
 }

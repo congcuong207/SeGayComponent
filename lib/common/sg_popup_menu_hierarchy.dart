@@ -76,7 +76,7 @@ class _SGPopupMenuHierarchyState extends State<SGPopupMenuHierarchy> {
     final offset = renderBox.localToGlobal(Offset.zero);
 
     final OverlayState overlayState = Overlay.of(context);
-    final String rootPath = "root";
+    const String rootPath = "root";
     
     final menuEntry = OverlayEntry(
       builder: (context) => GestureDetector(
@@ -115,7 +115,6 @@ class _SGPopupMenuHierarchyState extends State<SGPopupMenuHierarchy> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: items.map((item) {
-        final itemPath = parentPath.isEmpty ? item.id : '$parentPath/${item.id}';
         
         return SGMenuPathBuilder(
           parentPath: parentPath,
@@ -228,13 +227,18 @@ class _PopupMenuItemWidgetState extends State<_PopupMenuItemWidget> {
       _isHovering = isHovering;
     });
     
-    if (isHovering && widget.item.hasChildren) {
-      _showSubmenu();
-    } else if (!isHovering) {
-      // We don't close immediately to allow moving to submenu
+    if (isHovering) {
+      // Khi di chuột qua mục mới, đóng tất cả menu con không liên quan
+      SGMenuHierarchy.instance.closeMenusNotInPath(widget.parentPath);
+      
+      // Nếu có menu con, hiển thị nó
+      if (widget.item.hasChildren) {
+        _showSubmenu();
+      }
+    } else {
+      // Giữ lại logic trì hoãn đóng hiện tại
       Future.delayed(const Duration(milliseconds: 50), () {
         if (!mounted || _isHovering) return;
-        // Only close submenus, not current or parent menus
         final currentPath = SGMenuHierarchy.instance.getCurrentPath();
         if (currentPath.startsWith(itemPath) && currentPath != itemPath) {
           SGMenuHierarchy.instance.closeMenusNotInPath(itemPath);
@@ -247,7 +251,6 @@ class _PopupMenuItemWidgetState extends State<_PopupMenuItemWidget> {
     if (!widget.item.hasChildren) return;
     
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
     final position = renderBox.localToGlobal(Offset.zero);
     
     final OverlayState overlayState = Overlay.of(context);
@@ -298,30 +301,3 @@ class _PopupMenuItemWidgetState extends State<_PopupMenuItemWidget> {
     SGMenuHierarchy.instance.setCurrentPath(itemPath);
   }
 }
-
-/// Example usage:
-/// 
-/// ```dart
-/// SGPopupMenuHierarchy(
-///   items: [
-///     SGPopupMenuItem(
-///       id: 'a1',
-///       label: 'a1',
-///       children: [
-///         SGPopupMenuItem(
-///           id: 'a1_1',
-///           label: 'a1 1',
-///           children: [
-///             SGPopupMenuItem(id: 'a1_1_1', label: 'a1 1 1'),
-///           ],
-///         ),
-///       ],
-///     ),
-///     SGPopupMenuItem(id: 'a2', label: 'a2'),
-///   ],
-///   child: ElevatedButton(
-///     onPressed: () {},
-///     child: Text('Show Menu'),
-///   ),
-/// )
-/// ``` 

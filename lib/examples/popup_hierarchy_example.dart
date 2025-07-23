@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_button.dart';
-import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_popup_menu_hierarchy.dart';
 
 class PopupMenuHierarchyExample extends StatefulWidget {
