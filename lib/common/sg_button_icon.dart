@@ -73,7 +73,9 @@ class _SGButtonState extends State<SGButtonIcon> {
           ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.only(bottom: 2, right: widget.paddingIconLeft),
+            padding: EdgeInsets.only(
+                bottom: 2,
+                right: widget.iconButton != null ? widget.paddingIconLeft : 0),
             child: SGText(
               textAlign: TextAlign.center,
               fontWeight: widget.fontWeight ?? FontWeight.bold,

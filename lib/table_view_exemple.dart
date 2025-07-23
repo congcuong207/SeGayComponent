@@ -374,7 +374,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
                   isOutlined: true,
                   borderWidth: 3,
                   defaultBGColor: Colors.amber,
-                  iconButton: 'assets/images/android.png',
+                  // iconButton: 'assets/images/android.png',
                   padding: const EdgeInsets.all(5),
                   text: 'text',
                   colorHover: Colors.red,
