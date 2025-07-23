@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:se_gay_components/common/pagination/sg_pagination_controls.dart';
-import 'package:se_gay_components/common/sg_button.dart';
+import 'package:se_gay_components/common/sg_button_icon.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/common/sg_text.dart';
@@ -368,14 +368,19 @@ class _TableViewExempleState extends State<TableViewExemple> {
               children: [
                 _buildSearchField(size),
                 const SizedBox(width: 20),
-                const SGButton(
+                SGButtonIcon(
+                  // enabled: true,
+                  paddingIconLeft: 10,
+                  isOutlined: true,
+                  borderWidth: 3,
                   defaultBGColor: Colors.amber,
-                  // iconButton: 'assets/images/android.png',
-                  padding: EdgeInsets.all(5),
+                  iconButton: 'assets/images/android.png',
+                  padding: const EdgeInsets.all(5),
                   text: 'text',
-                  mainColor: Colors.red,
-                  // width: 50,
-                  // height: 35,
+                  colorHover: Colors.red,
+                  onPressed: () {
+                    log('message onPressed');
+                  },
                 ),
                 _buildFilterDropdown(
                   'Loại ngày nghỉ',
