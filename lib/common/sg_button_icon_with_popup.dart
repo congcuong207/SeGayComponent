@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_button_v2.dart';
 import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_popup_controller.dart';
@@ -6,14 +7,6 @@ import 'sg_popup_menu.dart';
 
 class SGButtonIconWithPopup extends StatefulWidget {
   final List<SGPopupMenuItem> popupItems;
-  final double? width;
-  final double? height;
-  final Color? colorBackground;
-  final double? iconSize;
-  final double? borderRadius;
-  final Widget? iconChild;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
   final double popupWidth;
   final Color? popupBackgroundColor;
   final double popupBorderRadius;
@@ -26,20 +19,35 @@ class SGButtonIconWithPopup extends StatefulWidget {
   final Duration animationDuration;
   final double? popupMaxHeight;
   final bool popupEnableScroll;
-  final bool highlightButtonWhenPopupOpen;
-  final Color? highlightColor;
+
+  final Function(BuildContext context)? onclick;
+  final Function(BuildContext context, PointerHoverEvent event)? onHover;
+  final Function(BuildContext context, PointerExitEvent event)? onExit;
+  final Function(BuildContext context, PointerEnterEvent event)? onEnter;
+
+  final double? widthButton;
+  final double? heightButton;
+  final Color? colorBackgroundButton;
+  final Color? colorTextButton;
+  final Color? colorBorderButton;
+  final double? iconSizeButton;
+  final double? borderRadiusButton;
+  final Widget? iconChildButton;
+  final String? textButton;
+  final TextStyle? textStyleButton;
+  final EdgeInsetsGeometry? paddingButton;
+  final EdgeInsetsGeometry? marginButton;
+  final bool isDisabledButton;
+  final bool isLoadingButton;
+  final SGButtonType buttonType;
+  final SGButtonSize buttonSizeButton;
+  final MainAxisAlignment contentAlignmentButton;
+  final CrossAxisAlignment contentCrossAxisAlignmentButton;
+  final double? borderWidthButton;
 
   const SGButtonIconWithPopup({
     super.key,
     required this.popupItems,
-    this.width,
-    this.height,
-    this.colorBackground,
-    this.iconSize,
-    this.borderRadius,
-    this.iconChild,
-    this.padding,
-    this.margin,
     this.popupWidth = 200,
     this.popupBackgroundColor,
     this.popupBorderRadius = 8.0,
@@ -52,8 +60,29 @@ class SGButtonIconWithPopup extends StatefulWidget {
     this.animationDuration = const Duration(milliseconds: 150),
     this.popupMaxHeight,
     this.popupEnableScroll = true,
-    this.highlightButtonWhenPopupOpen = true,
-    this.highlightColor,
+    this.onclick,
+    this.onHover,
+    this.onExit,
+    this.onEnter,
+    this.widthButton,
+    this.heightButton,
+    this.colorBackgroundButton,
+    this.colorTextButton,
+    this.colorBorderButton,
+    this.iconSizeButton,
+    this.borderRadiusButton,
+    this.iconChildButton,
+    this.textButton,
+    this.textStyleButton,
+    this.paddingButton,
+    this.marginButton,
+    this.isDisabledButton = false,
+    this.isLoadingButton = false,
+    this.buttonType = SGButtonType.primary,
+    this.buttonSizeButton = SGButtonSize.medium,
+    this.contentAlignmentButton = MainAxisAlignment.center,
+    this.contentCrossAxisAlignmentButton = CrossAxisAlignment.center,
+    this.borderWidthButton,
   });
 
   @override
@@ -68,7 +97,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   @override
   void initState() {
     super.initState();
-    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
+    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     _popupController = SGPopupController(
       id: popupId,
       animationDuration: widget.animationDuration,
@@ -91,7 +120,8 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   }
 
   void _handleButtonClick(BuildContext context) {
-    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
+    widget.onclick?.call(context);
+    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     SGLog.debug("SGButtonIconWithPopup", ' Button clicked: $popupId');
     SGLog.debug("SGButtonIconWithPopup", ' isShowing before action: ${_popupController.isShowing}');
 
@@ -139,7 +169,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   @override
   void dispose() {
-    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
+    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     SGLog.debug("SGButtonIconWithPopup", ' Disposing controller: $popupId');
     _popupController.dispose();
     _scrollController.dispose();
@@ -152,16 +182,28 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
       link: _popupController.layerLink,
       child: SGButtonV2(
         onclick: _handleButtonClick,
-        width: widget.width,
-        height: widget.height,
-        colorBackground: _isOpen && widget.highlightButtonWhenPopupOpen
-            ? widget.highlightColor ?? Theme.of(context).primaryColorLight
-            : widget.colorBackground,
-        iconSize: widget.iconSize,
-        borderRadius: widget.borderRadius,
-        iconChild: widget.iconChild,
-        padding: widget.padding,
-        margin: widget.margin,
+        onHover: widget.onHover,
+        onExit: widget.onExit,
+        onEnter: widget.onEnter,
+        width: widget.widthButton,
+        height: widget.heightButton,
+        colorBackground: widget.colorBackgroundButton,
+        colorText: widget.colorTextButton,
+        colorBorder: widget.colorBorderButton,
+        iconSize: widget.iconSizeButton,
+        borderRadius: widget.borderRadiusButton,
+        iconChild: widget.iconChildButton,
+        text: widget.textButton,
+        textStyle: widget.textStyleButton,
+        padding: widget.paddingButton,
+        margin: widget.marginButton,
+        isDisabled: widget.isDisabledButton,
+        isLoading: widget.isLoadingButton,
+        buttonType: widget.buttonType,
+        buttonSize: widget.buttonSizeButton,
+        contentAlignment: widget.contentAlignmentButton,
+        borderWidth: widget.borderWidthButton,
+        contentCrossAxisAlignment: widget.contentCrossAxisAlignmentButton,
       ),
     );
   }

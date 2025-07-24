@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_button_icon_with_popup.dart';
+import 'package:se_gay_components/common/sg_button_v2.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_popup_menu.dart';
 
@@ -7,15 +8,49 @@ class SGSidebarHorizontalItem {
   final String label;
   final IconData? icon;
   final bool isActive;
+  final bool isHover;
   final VoidCallback onTap;
   final List<SGSidebarSubItem>? subItems;
+  final double popupWidth;
+  final Color? popupBackgroundColor;
+  final Color? buttonEnterColor;
+  final double popupBorderRadius;
+  final EdgeInsetsGeometry popupPadding;
+  final Offset popupOffset;
+  final bool preferBelow;
+  final VoidCallback? onPopupOpened;
+  final VoidCallback? onPopupClosed;
+  final Duration animationDuration;
+  final double? popupMaxHeight;
+  final bool popupEnableScroll;
+  final EdgeInsetsGeometry? paddingButton;
+  final EdgeInsetsGeometry? marginButton;
+  final double? heightButton;
+  final double? borderRadiusButton;
 
-  SGSidebarHorizontalItem({
+  const SGSidebarHorizontalItem({
     required this.label,
     this.icon,
     this.isActive = false,
+    this.isHover = false,
     required this.onTap,
     this.subItems,
+    this.popupWidth = 200,
+    this.buttonEnterColor = Colors.transparent,
+    this.popupBackgroundColor = Colors.white,
+    this.popupBorderRadius = 8.0,
+    this.popupPadding = const EdgeInsets.symmetric(vertical: 8.0),
+    this.popupOffset = const Offset(0, 5),
+    this.preferBelow = true,
+    this.onPopupOpened,
+    this.onPopupClosed,
+    this.animationDuration = const Duration(milliseconds: 150),
+    this.popupMaxHeight,
+    this.popupEnableScroll = true,
+    this.paddingButton,
+    this.marginButton,
+    this.heightButton = 24,
+    this.borderRadiusButton,
   });
 }
 
@@ -49,6 +84,7 @@ class SGSidebarHorizontal extends StatefulWidget {
 
 class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
   SGSidebarHorizontalItem? _selectedItem;
+  SGSidebarHorizontalItem? _hoveredItem;
 
   @override
   void initState() {
@@ -82,10 +118,27 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
     _findActiveItem();
   }
 
+  void _handleItemEnter(SGSidebarHorizontalItem item) {
+    setState(() {
+      _hoveredItem = item;
+    });
+    if (widget.onShowSubItems != null) {
+      widget.onShowSubItems?.call(item.subItems);
+    }
+  }
+
+  void _handleItemExit(SGSidebarHorizontalItem item) {
+    setState(() {
+      _hoveredItem = null;
+    });
+    if (_selectedItem != null && widget.onShowSubItems != null) {
+      widget.onShowSubItems?.call(_selectedItem!.subItems);
+    }
+  }
+
   void _handleItemTap(SGSidebarHorizontalItem item) {
     item.onTap();
     _selectedItem = item;
-    // Thông báo subItems khi có thay đổi item
     if (widget.onShowSubItems != null) {
       widget.onShowSubItems?.call(item.subItems);
     }
@@ -93,83 +146,102 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Divider(
-          color: SGAppColors.neutral300,
-          height: 1,
-        ),
-        Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          child: Row(
-            children: widget.items.map((item) => _buildItem(item)).toList(),
-          ),
-        ),
-      ],
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
+      child: Row(
+        children: widget.items.map((item) => _buildItem(item)).toList(),
+      ),
     );
   }
 
-  // Widget _buildItem(SGSidebarHorizontalItem item) {
-  //   return SGButtonIconWithPopup(
-  //     iconChild: Padding(padding: const EdgeInsets.all(9), child: SvgPicture.asset(AppSvgs.iconTime)),
-  //     popupOffset: const Offset(-83, 10),
-  //     popupId: 'header_time',
-  //     popupItems: [
-  //       // SGPopupMenuItem(
-  //       //   content: Column(
-  //       //     crossAxisAlignment: CrossAxisAlignment.start,
-  //       //     children: [
-  //       //       _buildTimeOption('Today'),
-  //       //       _buildTimeOption('Yesterday'),
-  //       //       _buildTimeOption('Last 7 days'),
-  //       //       _buildTimeOption('This month'),
-  //       //       _buildTimeOption('Custom range'),
-  //       //     ],
-  //       //   ),
-  //       // ),
-  //     ],
-  //   );
-  // }
   Widget _buildItem(SGSidebarHorizontalItem item) {
-    return InkWell(
-      onTap: () => _handleItemTap(item),
-      child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (item.icon != null) ...[
-                Icon(
-                  item.icon,
-                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
-                  size: 20,
+    // Chuyển đổi subItems thành SGPopupMenuItem
+    List<SGPopupMenuItem> popupItems = [];
+    if (item.subItems != null && item.subItems!.isNotEmpty) {
+      popupItems = item.subItems!
+          .map((subItem) => SGPopupMenuItem(
+                content: InkWell(
+                  onTap: subItem.onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        if (subItem.icon != null) ...[
+                          Icon(
+                            subItem.icon,
+                            color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          subItem.label,
+                          style: TextStyle(
+                            color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+                            fontWeight: FontWeight.normal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                item.label,
-                style: TextStyle(
-                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
-                  fontWeight: FontWeight.normal,
-                  fontSize: 14,
-                ),
-              ),
-              if (item.subItems != null && item.subItems!.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 16,
-                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
-                ),
-              ],
-            ],
-          ),
-        ),
+              ))
+          .toList();
+    }
+
+    // Tạo widget icon cho button (nếu có)
+    Widget? iconWidget;
+    if (item.icon != null) {
+      iconWidget = Icon(
+        item.icon,
+        color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
+        size: 16,
+      );
+    }
+
+    final bool isHovered = _hoveredItem == item;
+
+    final Color backgroundColor = isHovered ? (item.buttonEnterColor ?? Colors.grey.shade100) : Colors.transparent;
+
+    return SGButtonIconWithPopup(
+      popupItems: popupItems,
+      popupWidth: item.popupWidth,
+      popupOffset: item.popupOffset,
+      preferBelow: item.preferBelow,
+      popupBackgroundColor: item.popupBackgroundColor ?? Colors.white,
+      popupBorderRadius: item.popupBorderRadius,
+      popupPadding: item.popupPadding,
+      popupMaxHeight: item.popupMaxHeight,
+      popupEnableScroll: item.popupEnableScroll,
+      onPopupOpened: item.onPopupOpened,
+      onPopupClosed: item.onPopupClosed,
+      textButton: item.label,
+      iconChildButton: iconWidget,
+      colorTextButton: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+      colorBackgroundButton: backgroundColor,
+      buttonType: SGButtonType.text,
+      heightButton: item.heightButton,
+      paddingButton: item.paddingButton ?? const EdgeInsets.symmetric(horizontal: 12),
+      marginButton: item.marginButton,
+      borderRadiusButton: item.borderRadiusButton,
+      onclick: (_) => _handleItemTap(item),
+      onEnter: (context, event) {
+        _handleItemEnter(item);
+      },
+      onExit: (context, event) {
+        _handleItemExit(item);
+      },
+      contentAlignmentButton: MainAxisAlignment.spaceBetween,
+      contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
+      // Thêm icon mũi tên xuống nếu có subItems
+      textStyleButton: TextStyle(
+        color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+        fontWeight: FontWeight.normal,
+        fontSize: 12,
       ),
     );
   }

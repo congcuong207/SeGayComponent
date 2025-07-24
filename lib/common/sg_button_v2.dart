@@ -38,6 +38,7 @@ class SGButtonV2 extends StatelessWidget {
   final SGButtonType buttonType;
   final SGButtonSize buttonSize;
   final MainAxisAlignment contentAlignment;
+  final CrossAxisAlignment contentCrossAxisAlignment;
   final double? borderWidth;
 
   const SGButtonV2({
@@ -63,6 +64,7 @@ class SGButtonV2 extends StatelessWidget {
     this.buttonType = SGButtonType.primary,
     this.buttonSize = SGButtonSize.medium,
     this.contentAlignment = MainAxisAlignment.center,
+    this.contentCrossAxisAlignment = CrossAxisAlignment.center,
     this.borderWidth,
   });
 
@@ -228,7 +230,7 @@ class SGButtonV2 extends StatelessWidget {
   Widget build(BuildContext context) {
     // Define default styles based on button type and size
     final defaultStyles = _getDefaultStyles(context);
-    
+
     return MouseRegion(
       onEnter: isDisabled
           ? null
@@ -299,6 +301,7 @@ class SGButtonV2 extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: contentAlignment,
+      crossAxisAlignment: contentCrossAxisAlignment,
       children: [
         if (iconChild != null) ...[
           iconChild!,
@@ -320,12 +323,12 @@ class SGButtonV2 extends StatelessWidget {
 
   _ButtonStyles _getDefaultStyles(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Base sizes based on button size
     double height;
     double fontSize;
     EdgeInsetsGeometry padding;
-    
+
     switch (buttonSize) {
       case SGButtonSize.small:
         height = 32;
@@ -347,14 +350,14 @@ class SGButtonV2 extends StatelessWidget {
     // Button type specific styles
     Color backgroundColor;
     Color textColor;
-    
+
     switch (buttonType) {
       case SGButtonType.primary:
         backgroundColor = theme.primaryColor;
         textColor = Colors.white;
         break;
       case SGButtonType.secondary:
-        backgroundColor = theme.primaryColor.withOpacity(0.1);
+        backgroundColor = theme.primaryColor.withValues(alpha: 0.1);
         textColor = theme.primaryColor;
         break;
       case SGButtonType.outline:
