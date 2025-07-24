@@ -73,6 +73,8 @@ class SGAppColors {
   static const Color colorInputDisable = Color(0xFF858585);
 
   static const Color colorC0C0C0 = Color(0xFFC0C0C0);
+  static const Color color092C4C = Color(0xFF092C4C);
+  static const Color colorFE9F43= Color(0xFFFE9F43);
 
   static const Color grayColor = Color.fromARGB(255, 180, 180, 180);
 

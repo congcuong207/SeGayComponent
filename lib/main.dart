@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
+import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'package:se_gay_components/table_view_exemple.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
@@ -15,7 +14,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -88,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onItemSelected: (index, [subIndex]) {
             setState(() {
               selectedIndex = index;
-              log('message selectedIndex: $selectedIndex');
+              SGLog.debug("TestScreen",'message selectedIndex: $selectedIndex');
             });
           },
           body: selectedIndex == 1
@@ -142,11 +140,11 @@ class _TestScreenState extends State<TestScreen> {
       children: [
         SGInputText(
           height: 35,
-          prefixIcon: Icon(Icons.search),
+          prefixIcon: const Icon(Icons.search),
           controller: _controller,
           // width: size.width * 0.2,
           borderRadius: 10,
-          padding: EdgeInsets.all(1),
+          padding: const EdgeInsets.all(1),
 
           fontSize: 14,
           hintText: 'Tìm kiếm',
@@ -189,7 +187,7 @@ class _TestScreenState extends State<TestScreen> {
                 setState(() {
                   selectedUser = user;
                 });
-                log('message onChanged: ${selectedUser!.id}');
+                SGLog.debug("TestScreen",'message onChanged: ${selectedUser!.id}');
               },
               controller: _controller2,
             ),
@@ -211,7 +209,7 @@ class _TestScreenState extends State<TestScreen> {
                 setState(() {
                   selectedValue = value;
                 });
-                log('_controller: ${_controller.text}');
+                SGLog.debug("TestScreen",'_controller: ${_controller.text}');
               },
               hintText: 'Chọn số...',
               width: 25,

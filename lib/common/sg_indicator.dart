@@ -71,7 +71,7 @@ class _StepPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double arrowWidth = 12;
+    const double arrowWidth = 12;
     final paint =
         Paint()
           ..color =
