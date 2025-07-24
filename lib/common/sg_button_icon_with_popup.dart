@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:se_gay_components/common/sg_button_icon_v2.dart';
+import 'package:se_gay_components/common/sg_button_v2.dart';
 import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_popup_controller.dart';
 import 'sg_popup_menu.dart';
@@ -150,7 +150,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _popupController.layerLink,
-      child: SGButtonIconV2(
+      child: SGButtonV2(
         onclick: _handleButtonClick,
         width: widget.width,
         height: widget.height,

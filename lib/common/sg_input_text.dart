@@ -22,6 +22,7 @@ class SGInputText extends StatefulWidget {
   final Color? borderColor;
   final Color enabledBorderColor;
   final Color focusedBorderColor;
+  final Color cursorColor;
   final bool? isHalfWidth;
   final TextStyle? hintStyle;
   final Widget? prefixIcon;
@@ -30,6 +31,8 @@ class SGInputText extends StatefulWidget {
   final Widget? prefix;
   final double? borderRadius;
   final double radiusSize;
+  final double cursorHeight;
+  final double cursorWidth;
   final VoidCallback? onClickSuffixIcon;
   final VoidCallback? onClickPreffixIcon;
   final VoidCallback? onTap;
@@ -99,6 +102,9 @@ class SGInputText extends StatefulWidget {
     this.prefix,
     this.textAlign = TextAlign.start,
     this.expandable = false,
+    this.cursorColor = SGAppColors.color092C4C,
+    this.cursorWidth = 1,
+    this.cursorHeight = 14,
   });
 
   @override
@@ -143,8 +149,7 @@ class _SGInputTextState extends State<SGInputText> {
 
   @override
   Widget build(BuildContext context) {
-    final double calculatedWidth =
-        widget.width ?? MediaQuery.of(context).size.width / 2;
+    final double calculatedWidth = widget.width ?? MediaQuery.of(context).size.width / 2;
 
     return SizedBox(
       width: calculatedWidth,
@@ -182,7 +187,7 @@ class _SGInputTextState extends State<SGInputText> {
   Widget _buildTextField(double width) {
     final double effectiveHeight = widget.height ?? 48.0; // Default height if not specified
     final bool shouldExpand = !widget.expandable && widget.height != null;
-    
+
     return Container(
       width: width,
       height: widget.expandable ? null : effectiveHeight,
@@ -207,6 +212,9 @@ class _SGInputTextState extends State<SGInputText> {
         style: _getTextStyle(),
         textAlign: widget.textAlign,
         decoration: _getInputDecoration(),
+        cursorColor: widget.cursorColor,
+        cursorHeight: widget.cursorHeight,
+        cursorWidth: widget.cursorWidth,
         onChanged: (value) {
           if (widget.onChanged != null) {
             widget.onChanged!(value);
@@ -244,9 +252,7 @@ class _SGInputTextState extends State<SGInputText> {
       fontWeight: widget.fontWeight,
       height: 1.2,
       leadingDistribution: TextLeadingDistribution.even,
-      color: (widget.enabled ?? true)
-          ? widget.color ?? SGAppColors.neutral900
-          : SGAppColors.neutral600,
+      color: (widget.enabled ?? true) ? widget.color ?? SGAppColors.neutral900 : SGAppColors.neutral600,
     );
   }
 
@@ -254,9 +260,7 @@ class _SGInputTextState extends State<SGInputText> {
     return InputDecoration(
       counterText: widget.counterText,
       isDense: true,
-      floatingLabelBehavior: widget.isShowAlwaysLable
-          ? FloatingLabelBehavior.always
-          : FloatingLabelBehavior.auto,
+      floatingLabelBehavior: widget.isShowAlwaysLable ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
       border: _buildBorder(),
       enabledBorder: _buildEnabledBorder(),
       focusedBorder: _buildFocusedBorder(),
@@ -267,14 +271,10 @@ class _SGInputTextState extends State<SGInputText> {
       hintText: widget.hintText,
       alignLabelWithHint: true,
       filled: false,
-      hintStyle: widget.hintStyle ??
-          const TextStyle(
-              color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal,fontSize: 14),
-      contentPadding: widget.padding ?? 
-          EdgeInsets.symmetric(
-            vertical: widget.height != null ? (widget.height! - 20) / 2 : 16.0,
-            horizontal: 12.0
-          ),
+      hintStyle:
+          widget.hintStyle ?? const TextStyle(color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal, fontSize: 14),
+      contentPadding: widget.padding ??
+          EdgeInsets.symmetric(vertical: widget.height != null ? (widget.height! - 20) / 2 : 16.0, horizontal: 12.0),
     );
   }
 
@@ -309,9 +309,7 @@ class _SGInputTextState extends State<SGInputText> {
       focusColor: Colors.transparent,
       onTap: _togglePasswordVisibility,
       child: Icon(
-        obscureText
-            ? Icons.visibility_off_outlined
-            : Icons.remove_red_eye_outlined,
+        obscureText ? Icons.visibility_off_outlined : Icons.remove_red_eye_outlined,
       ),
     );
   }

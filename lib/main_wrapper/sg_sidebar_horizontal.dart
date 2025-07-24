@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:se_gay_components/common/sg_button_icon_with_popup.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_popup_menu.dart';
 
 class SGSidebarHorizontalItem {
   final String label;
@@ -110,6 +112,27 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
     );
   }
 
+  // Widget _buildItem(SGSidebarHorizontalItem item) {
+  //   return SGButtonIconWithPopup(
+  //     iconChild: Padding(padding: const EdgeInsets.all(9), child: SvgPicture.asset(AppSvgs.iconTime)),
+  //     popupOffset: const Offset(-83, 10),
+  //     popupId: 'header_time',
+  //     popupItems: [
+  //       // SGPopupMenuItem(
+  //       //   content: Column(
+  //       //     crossAxisAlignment: CrossAxisAlignment.start,
+  //       //     children: [
+  //       //       _buildTimeOption('Today'),
+  //       //       _buildTimeOption('Yesterday'),
+  //       //       _buildTimeOption('Last 7 days'),
+  //       //       _buildTimeOption('This month'),
+  //       //       _buildTimeOption('Custom range'),
+  //       //     ],
+  //       //   ),
+  //       // ),
+  //     ],
+  //   );
+  // }
   Widget _buildItem(SGSidebarHorizontalItem item) {
     return InkWell(
       onTap: () => _handleItemTap(item),
