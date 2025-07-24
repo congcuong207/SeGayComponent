@@ -8,7 +8,6 @@ import 'package:se_gay_components/constants/index.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
 import '../common/sg_button_icon_with_popup.dart';
 import '../common/sg_popup_menu.dart';
-import '../common/sg_popup_controller.dart';
 
 class SGHeader extends StatefulWidget {
   final Widget? navUserMenu;

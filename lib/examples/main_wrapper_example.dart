@@ -8,9 +8,9 @@ class MainWrapperExample extends StatefulWidget {
   final Widget child;
   
   const MainWrapperExample({
-    Key? key,
+    super.key,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   State<MainWrapperExample> createState() => _MainWrapperExampleState();
@@ -21,47 +21,20 @@ class _MainWrapperExampleState extends State<MainWrapperExample> {
   Widget build(BuildContext context) {
     final String currentPath = GoRouterState.of(context).uri.path;
 
-    // Xác định menu hiện tại đang được chọn từ path
-    final selectedMainMenuItem = _getSelectedMainMenuItem(currentPath);
-    final selectedSubMenu = _getSelectedSubMenu(currentPath);
+    // 获取当前选中的主菜单和子菜单
+    final _MenuItem selectedMainMenuItem = _getSelectedMainMenuItem(currentPath);
+    final String selectedSubMenu = _getSelectedSubMenu(currentPath);
 
     return MainWrapper(
-      headerHeight: 60,
-      sidebarWidth: 200,
-      bgHeader: Colors.white,
-      bgSidebar: const Color(0xFF232D3F),
-      bgContent: const Color.fromARGB(255, 241, 245, 249),
-      showSubItems: selectedMainMenuItem.subItems.isNotEmpty,
-      elevation: 1,
-      headerItems: _buildHeaderItems(),
-      sidebarItems: _buildSidebarItems(context, selectedMainMenuItem.id),
-      subItems: selectedMainMenuItem.subItems,
-      selectedItemId: selectedMainMenuItem.id,
-      selectedSubItemId: selectedSubMenu,
-      onSelectedMainItem: (id) {
-        // Chỉ cần điều hướng đến trang đầu tiên của menu chính nếu được chọn
-        final mainMenuItem = _getMenuItemById(id);
-        if (mainMenuItem != null) {
-          if (mainMenuItem.subItems.isEmpty) {
-            context.go(mainMenuItem.route);
-          } else {
-            context.go(mainMenuItem.subItems.first.route);
-          }
-        }
-      },
-      onSelectedSubItem: (id) {
-        // Tìm route tương ứng và điều hướng
-        final route = _findRouteBySubItemId(id);
-        if (route.isNotEmpty) {
-          context.go(route);
-        }
-      },
-      child: widget.child,
+      backgroundColor: const Color.fromARGB(255, 241, 245, 249),
+      header: _buildHeader(),
+      sidebar: _buildSidebar(context, selectedMainMenuItem.id),
+      body: widget.child,
     );
   }
 
-  String _getSelectedMainMenuItem(String currentPath) {
-    // Check sub-paths first
+  _MenuItem _getSelectedMainMenuItem(String currentPath) {
+    // 先检查子路径
     for (var item in _mainMenuItems) {
       for (var subItem in item.subItems) {
         if (currentPath == subItem.route) {
@@ -70,19 +43,19 @@ class _MainWrapperExampleState extends State<MainWrapperExample> {
       }
     }
 
-    // Then check main paths
+    // 再检查主路径
     for (var item in _mainMenuItems) {
       if (currentPath == item.route || currentPath.startsWith('${item.route}/')) {
-        return item.id;
+        return item;
       }
     }
 
-    // Default to first item
-    return _mainMenuItems.first.id;
+    // 默认返回第一个菜单项
+    return _mainMenuItems.first;
   }
 
   String _getSelectedSubMenu(String currentPath) {
-    // Tìm sub menu tương ứng với path hiện tại
+    // 查找对应于当前路径的子菜单
     for (var item in _mainMenuItems) {
       for (var subItem in item.subItems) {
         if (currentPath == subItem.route) {
@@ -114,70 +87,109 @@ class _MainWrapperExampleState extends State<MainWrapperExample> {
     return '';
   }
 
-  List<Widget> _buildHeaderItems() {
-    return [
-      IconButton(
-        onPressed: () {
-          // Điều hướng đến trang thông báo
-        },
-        icon: SvgPicture.asset(
-          SGAppSvgs.iconBell,
-          width: 20,
-          height: 20,
-          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-        ),
-        splashRadius: 20,
+  Widget _buildHeader() {
+    return Container(
+      height: 60,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('SG Components', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  // 跳转到通知页面
+                },
+                icon: SvgPicture.asset(
+                  SGAppSvgs.iconBell,
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+                splashRadius: 20,
+              ),
+              IconButton(
+                onPressed: () {
+                  // 跳转到聊天页面
+                },
+                icon: SvgPicture.asset(
+                  SGAppSvgs.iconChat,
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+                splashRadius: 20,
+              ),
+              IconButton(
+                onPressed: () {
+                  // 跳转到设置页面
+                  context.go('/settings');
+                },
+                icon: SvgPicture.asset(
+                  SGAppSvgs.iconSetting,
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                ),
+                splashRadius: 20,
+              ),
+              const SizedBox(width: 10),
+              const CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(
+                    'https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff'),
+              ),
+              const SizedBox(width: 10),
+            ],
+          ),
+        ],
       ),
-      IconButton(
-        onPressed: () {
-          // Điều hướng đến trang chat
-        },
-        icon: SvgPicture.asset(
-          SGAppSvgs.iconChat,
-          width: 20,
-          height: 20,
-          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-        ),
-        splashRadius: 20,
-      ),
-      IconButton(
-        onPressed: () {
-          // Điều hướng đến trang cài đặt
-          context.go('/settings');
-        },
-        icon: SvgPicture.asset(
-          SGAppSvgs.iconSetting,
-          width: 20,
-          height: 20,
-          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-        ),
-        splashRadius: 20,
-      ),
-      const SizedBox(width: 10),
-      const CircleAvatar(
-        radius: 16,
-        backgroundImage: NetworkImage(
-            'https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff'),
-      ),
-      const SizedBox(width: 10),
-    ];
+    );
   }
 
-  List<SGSideBarHorizontalItem> _buildSidebarItems(BuildContext context, String selectedId) {
-    return _mainMenuItems.map((item) {
-      return SGSideBarHorizontalItem(
-        id: item.id,
-        title: item.title,
-        icon: item.icon,
-        iconActive: item.iconActive,
-        activeColor: Colors.white,
-        inactiveColor: Colors.grey.shade400,
-      );
-    }).toList();
+  Widget _buildSidebar(BuildContext context, String selectedId) {
+    return Container(
+      width: 200,
+      color: const Color(0xFF232D3F),
+      child: ListView(
+        shrinkWrap: true,
+        children: _mainMenuItems.map((item) {
+          final bool isSelected = item.id == selectedId;
+          return ListTile(
+            leading: SvgPicture.asset(
+              item.icon,
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(
+                isSelected ? Colors.white : Colors.grey.shade400, 
+                BlendMode.srcIn
+              ),
+            ),
+            title: Text(
+              item.title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade400,
+              ),
+            ),
+            selected: isSelected,
+            onTap: () {
+              // 跳转到该菜单的首页或第一个子菜单
+              if (item.subItems.isEmpty) {
+                context.go(item.route);
+              } else {
+                context.go(item.subItems.first.route);
+              }
+            },
+          );
+        }).toList(),
+      ),
+    );
   }
 }
 
-// Model cho menu item
+// 菜单项模型
 class _MenuItem {
   final String id;
   final String title;
@@ -196,7 +208,7 @@ class _MenuItem {
   });
 }
 
-// Model cho sub menu item
+// 子菜单项模型
 class _SubMenuItem {
   final String id;
   final String title;
@@ -209,80 +221,80 @@ class _SubMenuItem {
   });
 }
 
-// Danh sách menu
+// 菜单列表
 final List<_MenuItem> _mainMenuItems = [
   _MenuItem(
     id: 'dashboard',
     title: 'Dashboard',
-    icon: SGAppSvgs.logo,
-    iconActive: SGAppSvgs.logo,
+    icon: SGAppSvgs.iconLogo,
+    iconActive: SGAppSvgs.iconLogo,
     route: '/dashboard',
     subItems: [
       _SubMenuItem(
         id: 'daily',
-        title: 'Báo cáo ngày',
+        title: '报告日报',
         route: '/dashboard/daily',
       ),
       _SubMenuItem(
         id: 'weekly',
-        title: 'Báo cáo tuần',
+        title: '报告周报',
         route: '/dashboard/weekly',
       ),
       _SubMenuItem(
         id: 'monthly',
-        title: 'Báo cáo tháng',
+        title: '报告月报',
         route: '/dashboard/monthly',
       ),
     ],
   ),
   _MenuItem(
     id: 'products',
-    title: 'Sản phẩm',
+    title: '产品',
     icon: SGAppSvgs.iconSliders,
     iconActive: SGAppSvgs.iconSliders,
     route: '/products',
     subItems: [
       _SubMenuItem(
         id: 'product_list',
-        title: 'Danh sách sản phẩm',
+        title: '产品列表',
         route: '/products/list',
       ),
       _SubMenuItem(
         id: 'add_product',
-        title: 'Thêm sản phẩm',
+        title: '添加产品',
         route: '/products/add',
       ),
     ],
   ),
   _MenuItem(
     id: 'customers',
-    title: 'Khách hàng',
+    title: '客户',
     icon: SGAppSvgs.iconSliders,
     iconActive: SGAppSvgs.iconSliders,
     route: '/customers',
     subItems: [
       _SubMenuItem(
         id: 'customer_list',
-        title: 'Danh sách khách hàng',
+        title: '客户列表',
         route: '/customers/list',
       ),
       _SubMenuItem(
         id: 'customer_group',
-        title: 'Nhóm khách hàng',
+        title: '客户群组',
         route: '/customers/groups',
       ),
     ],
   ),
   _MenuItem(
     id: 'reports',
-    title: 'Báo cáo',
+    title: '报告',
     icon: SGAppSvgs.iconSliders,
     iconActive: SGAppSvgs.iconSliders,
     route: '/reports',
   ),
   _MenuItem(
     id: 'settings',
-    title: 'Cài đặt',
+    title: '设置',
     icon: SGAppSvgs.iconSliders,
     iconActive: SGAppSvgs.iconSliders,
     route: '/settings',

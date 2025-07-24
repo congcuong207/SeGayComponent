@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:se_gay_components/examples/main_wrapper_example.dart';
 import 'package:se_gay_components/screens/dashboard/daily_report_screen.dart';
@@ -6,7 +5,6 @@ import 'package:se_gay_components/screens/dashboard/monthly_report_screen.dart';
 import 'package:se_gay_components/screens/dashboard/weekly_report_screen.dart';
 import 'package:se_gay_components/screens/customer/customer_group_screen.dart';
 import 'package:se_gay_components/screens/customer/customer_list_screen.dart';
-import 'package:se_gay_components/screens/product/add_product_screen.dart';
 import 'package:se_gay_components/screens/product/product_list_screen.dart';
 import 'package:se_gay_components/screens/report_screen.dart';
 import 'package:se_gay_components/screens/settings_screen.dart';
@@ -71,7 +69,7 @@ final appRouter = GoRouter(
           name: 'products-add',
           pageBuilder: (context, state) => NoTransitionPage(
             key: state.pageKey,
-            child: const AddProductScreen(),
+            child: const ProductListScreen(),
           ),
         ),
 
