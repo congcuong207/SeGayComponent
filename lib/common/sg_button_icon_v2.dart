@@ -7,7 +7,6 @@ class SGButtonIconV2 extends StatelessWidget {
   final Function(BuildContext context, PointerExitEvent event)? onExit;
   final Function(BuildContext context, PointerEnterEvent event)? onEnter;
 
-  final String icon;
   final double? width;
   final double? height;
   final Color? colorBackground;
@@ -23,7 +22,6 @@ class SGButtonIconV2 extends StatelessWidget {
     this.onEnter,
     this.onExit,
     this.onclick,
-    required this.icon,
     this.width,
     this.height,
     this.iconChild,

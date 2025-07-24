@@ -48,9 +48,6 @@ class SGSearchBox extends StatelessWidget {
   /// Whether to show the filter button
   final bool showFilterButton;
 
-  /// The filter icon asset path
-  final String filterIcon;
-
   /// Callback when the search text changes
   final Function(String)? onChanged;
 
@@ -86,7 +83,6 @@ class SGSearchBox extends StatelessWidget {
     this.controller,
     this.searchIcon = "",
     this.showFilterButton = true,
-    this.filterIcon = "",
     this.onChanged,
     this.onSubmitted,
     this.onFilterPressed,
@@ -156,7 +152,7 @@ class SGSearchBox extends StatelessWidget {
             SGButtonIconV2(
               margin: const EdgeInsets.all(4),
               padding: const EdgeInsets.all(4),
-              icon: filterIcon,
+              iconChild: iconLeft,
               width: 26,
               onclick: onFilterPressed ?? (context) {},
             ),
