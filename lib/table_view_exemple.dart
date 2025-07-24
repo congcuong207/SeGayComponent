@@ -136,8 +136,11 @@ class _TableViewExempleState extends State<TableViewExemple> {
       width: size.width * 0.2,
       child: SGInputText(
         controller: _searchController,
-        width: size.width * 0.2,
+        // width: size.width * 0.2,
         borderRadius: 10,
+        // enabled: false,
+        onlyLine: true,
+        showBorder: false,
         hintText: 'Tìm kiếm',
         onChanged: (value) {
           setState(() {

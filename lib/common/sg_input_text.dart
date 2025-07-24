@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
@@ -31,7 +33,7 @@ class SGInputText extends StatefulWidget {
   final double? borderRadius;
   final double radiusSize;
   final VoidCallback? onClickSuffixIcon;
-  final VoidCallback? onClickPreffixIcon;
+  final VoidCallback? onClickPrefixIcon;
   final VoidCallback? onTap;
   final TapRegionCallback? onTapOutside;
   final double? height;
@@ -42,7 +44,7 @@ class SGInputText extends StatefulWidget {
   final FocusNode? focusNode;
   final Function(String)? onSubmitted;
   final TextInputType? keyboardInputType;
-  final bool isShowAlwaysLable;
+  final bool isShowAlwaysLabel;
   final Alignment? alignment;
   final EdgeInsetsGeometry? padding;
   final List<TextInputFormatter>? inputFormatters;
@@ -50,6 +52,8 @@ class SGInputText extends StatefulWidget {
   final double? width;
   final TextAlign textAlign;
   final bool expandable;
+  final bool onlyLine;
+  final bool showBorder;
 
   const SGInputText({
     super.key,
@@ -61,7 +65,7 @@ class SGInputText extends StatefulWidget {
     this.suffixIcon,
     this.borderRadius,
     this.onClickSuffixIcon,
-    this.onClickPreffixIcon,
+    this.onClickPrefixIcon,
     this.obscureText = false,
     this.height,
     this.fontSize,
@@ -85,7 +89,7 @@ class SGInputText extends StatefulWidget {
     this.onTapOutside,
     this.hintText,
     this.maxLines,
-    this.isShowAlwaysLable = false,
+    this.isShowAlwaysLabel = false,
     this.alignment,
     this.padding,
     this.textInputAction,
@@ -99,6 +103,8 @@ class SGInputText extends StatefulWidget {
     this.prefix,
     this.textAlign = TextAlign.start,
     this.expandable = false,
+    this.onlyLine = false,
+    this.showBorder = true,
   });
 
   @override
@@ -109,6 +115,7 @@ class _SGInputTextState extends State<SGInputText> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool obscureText = false;
+  bool _isHovering = false;
 
   @override
   void initState() {
@@ -183,37 +190,41 @@ class _SGInputTextState extends State<SGInputText> {
     final double effectiveHeight = widget.height ?? 48.0; // Default height if not specified
     final bool shouldExpand = !widget.expandable && widget.height != null;
     
-    return Container(
-      width: width,
-      height: widget.expandable ? null : effectiveHeight,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(widget.radiusSize),
-      ),
-      child: TextFormField(
-        controller: _controller,
-        textAlignVertical: TextAlignVertical.center,
-        maxLength: widget.maxLength,
-        maxLines: shouldExpand ? null : _getMaxLines(),
-        minLines: shouldExpand ? null : (widget.expandable ? 3 : 1),
-        expands: shouldExpand,
-        onTap: widget.onTap,
-        readOnly: widget.readOnly,
-        onTapOutside: widget.onTapOutside,
-        keyboardType: _getKeyboardType(),
-        enabled: widget.enabled ?? true,
-        focusNode: _focusNode,
-        obscureText: obscureText,
-        inputFormatters: _getInputFormatters(),
-        style: _getTextStyle(),
-        textAlign: widget.textAlign,
-        decoration: _getInputDecoration(),
-        onChanged: (value) {
-          if (widget.onChanged != null) {
-            widget.onChanged!(value);
-          }
-        },
-        textInputAction: widget.textInputAction,
-        onFieldSubmitted: widget.onSubmitted,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: Container(
+        width: width,
+        height: widget.expandable ? null : effectiveHeight,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(widget.radiusSize),
+        ),
+        child: TextFormField(
+          controller: _controller,
+          textAlignVertical: TextAlignVertical.center,
+          maxLength: widget.maxLength,
+          maxLines: shouldExpand ? null : _getMaxLines(),
+          minLines: shouldExpand ? null : (widget.expandable ? 3 : 1),
+          expands: shouldExpand,
+          onTap: widget.onTap,
+          readOnly: widget.readOnly,
+          onTapOutside: widget.onTapOutside,
+          keyboardType: _getKeyboardType(),
+          enabled: widget.enabled ?? true,
+          focusNode: _focusNode,
+          obscureText: obscureText,
+          inputFormatters: _getInputFormatters(),
+          style: _getTextStyle(),
+          textAlign: widget.textAlign,
+          decoration: _getInputDecoration(),
+          onChanged: (value) {
+            if (widget.onChanged != null) {
+              widget.onChanged!(value);
+            }
+          },
+          textInputAction: widget.textInputAction,
+          onFieldSubmitted: widget.onSubmitted,
+        ),
       ),
     );
   }
@@ -251,15 +262,41 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   InputDecoration _getInputDecoration() {
+    final bool showUnderline = widget.onlyLine && (widget.enabled ?? true);
+    
+    final bool showRegularBorder = widget.showBorder && !widget.onlyLine;
+    
     return InputDecoration(
       counterText: widget.counterText,
       isDense: true,
-      floatingLabelBehavior: widget.isShowAlwaysLable
+      floatingLabelBehavior: widget.isShowAlwaysLabel
           ? FloatingLabelBehavior.always
           : FloatingLabelBehavior.auto,
-      border: _buildBorder(),
-      enabledBorder: _buildEnabledBorder(),
-      focusedBorder: _buildFocusedBorder(),
+      border: showRegularBorder ? _buildBorder() : _buildTransparentBorder(),
+      enabledBorder: showUnderline
+          ? UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: _isHovering || _focusNode.hasFocus 
+                    ? widget.focusedBorderColor 
+                    : Colors.transparent,
+                width: _isHovering || _focusNode.hasFocus ? 2 : 0,
+              ),
+            )
+          : (showRegularBorder ? _buildEnabledBorder() : _buildTransparentBorder()),
+      focusedBorder: showUnderline
+          ? UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: widget.focusedBorderColor,
+                width: 2,
+              ),
+            )
+          : (showRegularBorder ? _buildFocusedBorder() : _buildTransparentBorder()),
+      disabledBorder: showRegularBorder 
+          ? OutlineInputBorder(
+              borderRadius: BorderRadius.circular(widget.radiusSize),
+              borderSide: BorderSide(color: widget.enabledBorderColor.withOpacity(0.5)),
+            ) 
+          : _buildTransparentBorder(),
       suffixIcon: _buildSuffixIcon(),
       prefixIcon: widget.prefixIcon,
       suffix: !widget.isPassword ? widget.suffix : null,
@@ -272,19 +309,37 @@ class _SGInputTextState extends State<SGInputText> {
               color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal,fontSize: 14),
       contentPadding: widget.padding ?? 
           EdgeInsets.symmetric(
-            vertical: widget.height != null ? (widget.height! - 20) / 2 : 16.0,
+            vertical: widget.height != null ? (widget.height! - 20) / 2 : 12.0,
             horizontal: 12.0
           ),
     );
   }
 
   OutlineInputBorder _buildBorder() {
+    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(widget.radiusSize),
+        borderSide: const BorderSide(
+          color: Colors.transparent,
+          width: 0,
+        ),
+      );
+    }
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(widget.radiusSize),
     );
   }
 
   OutlineInputBorder _buildEnabledBorder() {
+    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(widget.radiusSize),
+        borderSide: const BorderSide(
+          color: Colors.transparent,
+          width: 0,
+        ),
+      );
+    }
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(widget.radiusSize),
       borderSide: BorderSide(color: widget.enabledBorderColor),
@@ -292,6 +347,15 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   OutlineInputBorder _buildFocusedBorder() {
+    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(widget.radiusSize),
+        borderSide: const BorderSide(
+          color: Colors.transparent, 
+          width: 0,
+        ),
+      );
+    }
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(widget.radiusSize),
       borderSide: BorderSide(color: widget.focusedBorderColor),
@@ -320,5 +384,15 @@ class _SGInputTextState extends State<SGInputText> {
     setState(() {
       obscureText = !obscureText;
     });
+  }
+
+  OutlineInputBorder _buildTransparentBorder() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(widget.radiusSize),
+      borderSide: const BorderSide(
+        color: Colors.transparent,
+        width: 0,
+      ),
+    );
   }
 }
