@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 
 class SGButtonIconV2 extends StatelessWidget {
   final Function(BuildContext context)? onclick;
@@ -8,7 +7,6 @@ class SGButtonIconV2 extends StatelessWidget {
   final Function(BuildContext context, PointerExitEvent event)? onExit;
   final Function(BuildContext context, PointerEnterEvent event)? onEnter;
 
-  final String icon;
   final double? width;
   final double? height;
   final Color? colorBackground;
@@ -24,7 +22,6 @@ class SGButtonIconV2 extends StatelessWidget {
     this.onEnter,
     this.onExit,
     this.onclick,
-    required this.icon,
     this.width,
     this.height,
     this.iconChild,
@@ -60,14 +57,7 @@ class SGButtonIconV2 extends StatelessWidget {
             color: colorBackground ?? Colors.grey.shade100,
             borderRadius: BorderRadius.circular(borderRadius ?? 6),
           ),
-          child: Center(
-            child: iconChild ??
-                SvgPicture.asset(
-                  icon,
-                  width: iconSize ?? 18,
-                  height: iconSize ?? 18,
-                ),
-          ),
+          child: Center(child: iconChild),
         ),
       ),
     );

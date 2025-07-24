@@ -5,7 +5,6 @@ import 'sg_popup_controller.dart';
 import 'sg_popup_menu.dart';
 
 class SGButtonIconWithPopup extends StatefulWidget {
-  final String icon;
   final List<SGPopupMenuItem> popupItems;
   final double? width;
   final double? height;
@@ -32,7 +31,6 @@ class SGButtonIconWithPopup extends StatefulWidget {
 
   const SGButtonIconWithPopup({
     super.key,
-    required this.icon,
     required this.popupItems,
     this.width,
     this.height,
@@ -70,7 +68,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   @override
   void initState() {
     super.initState();
-    String popupId = widget.popupId ?? 'popup_${widget.icon}_${widget.hashCode}';
+    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
     _popupController = SGPopupController(
       id: popupId,
       animationDuration: widget.animationDuration,
@@ -93,7 +91,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   }
 
   void _handleButtonClick(BuildContext context) {
-    String popupId = widget.popupId ?? 'popup_${widget.icon}_${widget.hashCode}';
+    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
     SGLog.debug("SGButtonIconWithPopup", ' Button clicked: $popupId');
     SGLog.debug("SGButtonIconWithPopup", ' isShowing before action: ${_popupController.isShowing}');
 
@@ -141,7 +139,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   @override
   void dispose() {
-    String popupId = widget.popupId ?? 'popup_${widget.icon}_${widget.hashCode}';
+    String popupId = widget.popupId ?? 'popup_${widget.iconChild?.toString()}_${widget.hashCode}';
     SGLog.debug("SGButtonIconWithPopup", ' Disposing controller: $popupId');
     _popupController.dispose();
     _scrollController.dispose();
@@ -153,7 +151,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
     return CompositedTransformTarget(
       link: _popupController.layerLink,
       child: SGButtonIconV2(
-        icon: widget.icon,
         onclick: _handleButtonClick,
         width: widget.width,
         height: widget.height,

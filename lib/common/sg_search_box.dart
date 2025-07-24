@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:se_gay_components/common/sg_button_icon_v2.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
-import 'package:se_gay_components/constants/sg_app_svgs.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
 
 class SGSearchBox extends StatelessWidget {
+  final Widget? iconLeft;
+
   /// Width of the search box
   final double? width;
 
@@ -48,9 +48,6 @@ class SGSearchBox extends StatelessWidget {
   /// Whether to show the filter button
   final bool showFilterButton;
 
-  /// The filter icon asset path
-  final String filterIcon;
-
   /// Callback when the search text changes
   final Function(String)? onChanged;
 
@@ -71,6 +68,7 @@ class SGSearchBox extends StatelessWidget {
 
   const SGSearchBox({
     super.key,
+    this.iconLeft,
     this.width,
     this.height = 34,
     this.margin,
@@ -83,9 +81,8 @@ class SGSearchBox extends StatelessWidget {
     this.cursorWidth = 1,
     this.cursorHeight = 14,
     this.controller,
-    this.searchIcon = SGAppSvgs.iconSearch,
+    this.searchIcon = "",
     this.showFilterButton = true,
-    this.filterIcon = SGAppSvgs.iconSliders,
     this.onChanged,
     this.onSubmitted,
     this.onFilterPressed,
@@ -109,11 +106,7 @@ class SGSearchBox extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            searchIcon,
-            width: 18,
-            height: 18,
-          ),
+          iconLeft ?? const SizedBox.shrink(),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -159,7 +152,7 @@ class SGSearchBox extends StatelessWidget {
             SGButtonIconV2(
               margin: const EdgeInsets.all(4),
               padding: const EdgeInsets.all(4),
-              icon: filterIcon,
+              iconChild: iconLeft,
               width: 26,
               onclick: onFilterPressed ?? (context) {},
             ),
