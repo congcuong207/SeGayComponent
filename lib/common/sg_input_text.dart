@@ -117,13 +117,14 @@ class _SGInputTextState extends State<SGInputText> {
     _controller = widget.controller ?? TextEditingController();
     _focusNode = widget.focusNode ?? FocusNode();
 
-    _controller.addListener(_updateState);
+    // Remove the listener that might be interfering with text deletion
+    // _controller.addListener(_updateState);
     _focusNode.addListener(_updateState);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_updateState);
+    // _controller.removeListener(_updateState);
     _focusNode.removeListener(_updateState);
     if (widget.controller == null) {
       _controller.dispose();
@@ -135,7 +136,9 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   void _updateState() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -177,14 +180,22 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   Widget _buildTextField(double width) {
-    return SizedBox(
+    final double effectiveHeight = widget.height ?? 48.0; // Default height if not specified
+    final bool shouldExpand = !widget.expandable && widget.height != null;
+    
+    return Container(
       width: width,
-      height: widget.expandable ? null : widget.height,
+      height: widget.expandable ? null : effectiveHeight,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(widget.radiusSize),
+      ),
       child: TextFormField(
         controller: _controller,
         textAlignVertical: TextAlignVertical.center,
         maxLength: widget.maxLength,
-        maxLines: _getMaxLines(),
+        maxLines: shouldExpand ? null : _getMaxLines(),
+        minLines: shouldExpand ? null : (widget.expandable ? 3 : 1),
+        expands: shouldExpand,
         onTap: widget.onTap,
         readOnly: widget.readOnly,
         onTapOutside: widget.onTapOutside,
@@ -196,7 +207,11 @@ class _SGInputTextState extends State<SGInputText> {
         style: _getTextStyle(),
         textAlign: widget.textAlign,
         decoration: _getInputDecoration(),
-        onChanged: widget.onChanged,
+        onChanged: (value) {
+          if (widget.onChanged != null) {
+            widget.onChanged!(value);
+          }
+        },
         textInputAction: widget.textInputAction,
         onFieldSubmitted: widget.onSubmitted,
       ),
@@ -227,6 +242,8 @@ class _SGInputTextState extends State<SGInputText> {
     return TextStyle(
       fontSize: widget.fontSize ?? 16,
       fontWeight: widget.fontWeight,
+      height: 1.2,
+      leadingDistribution: TextLeadingDistribution.even,
       color: (widget.enabled ?? true)
           ? widget.color ?? SGAppColors.neutral900
           : SGAppColors.neutral600,
@@ -236,6 +253,7 @@ class _SGInputTextState extends State<SGInputText> {
   InputDecoration _getInputDecoration() {
     return InputDecoration(
       counterText: widget.counterText,
+      isDense: true,
       floatingLabelBehavior: widget.isShowAlwaysLable
           ? FloatingLabelBehavior.always
           : FloatingLabelBehavior.auto,
@@ -247,11 +265,16 @@ class _SGInputTextState extends State<SGInputText> {
       suffix: !widget.isPassword ? widget.suffix : null,
       prefix: widget.prefix,
       hintText: widget.hintText,
-      
+      alignLabelWithHint: true,
+      filled: false,
       hintStyle: widget.hintStyle ??
           const TextStyle(
               color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal,fontSize: 14),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+      contentPadding: widget.padding ?? 
+          EdgeInsets.symmetric(
+            vertical: widget.height != null ? (widget.height! - 20) / 2 : 16.0,
+            horizontal: 12.0
+          ),
     );
   }
 

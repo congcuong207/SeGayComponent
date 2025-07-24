@@ -21,6 +21,7 @@ class ApiBase {
       responseHeader: false,
       request: false,
       responseBody: true,
+      // ignore: avoid_print
       logPrint: (o) => print(o.toString()),
     ));
   }
