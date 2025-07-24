@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_button_icon_v2.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
-import 'package:se_gay_components/constants/sg_app_svgs.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
 
 class SGSearchBox extends StatelessWidget {
@@ -85,9 +84,9 @@ class SGSearchBox extends StatelessWidget {
     this.cursorWidth = 1,
     this.cursorHeight = 14,
     this.controller,
-    this.searchIcon = SGAppSvgs.iconSearch,
+    this.searchIcon = "",
     this.showFilterButton = true,
-    this.filterIcon = SGAppSvgs.iconSliders,
+    this.filterIcon = "",
     this.onChanged,
     this.onSubmitted,
     this.onFilterPressed,
