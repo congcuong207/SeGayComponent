@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:se_gay_components/common/sg_button_icon_v2.dart';
 import 'package:se_gay_components/common/sg_search_box.dart';
 import 'package:se_gay_components/constants/index.dart';
@@ -55,7 +54,7 @@ class _SGHeaderState extends State<SGHeader> {
       decoration: widget.decoration,
       child: Row(
         children: [
-          widget.imageLogoLeft != null ? SvgPicture.asset(widget.imageLogoLeft!) : SvgPicture.asset(SGAppSvgs.iconLogo),
+          // widget.imageLogoLeft != null ? SvgPicture.asset(widget.imageLogoLeft!) : SvgPicture.asset(SGAppSvgs.iconLogo),
           const SizedBox(width: 24),
           Expanded(
             child: widget.navUserMenu ??
