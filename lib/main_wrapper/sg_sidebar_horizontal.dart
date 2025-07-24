@@ -95,25 +95,15 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
       children: [
         const Divider(
           color: SGAppColors.neutral300,
+          height: 1,
         ),
         Container(
           width: double.infinity,
-          height: 50,
           decoration: const BoxDecoration(
             color: Colors.white,
           ),
           child: Row(
-            children: [
-              const SizedBox(width: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: widget.items.map((item) => _buildItem(item)).toList(),
-                  ),
-                ),
-              ),
-            ],
+            children: widget.items.map((item) => _buildItem(item)).toList(),
           ),
         ),
       ],
@@ -126,14 +116,6 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
       child: Container(
         height: 50,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: item.isActive ? Colors.blue : Colors.transparent,
-              width: 3,
-            ),
-          ),
-        ),
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -141,7 +123,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
               if (item.icon != null) ...[
                 Icon(
                   item.icon,
-                  color: item.isActive ? Colors.blue : Colors.grey[600],
+                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -149,8 +131,8 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
               Text(
                 item.label,
                 style: TextStyle(
-                  color: item.isActive ? Colors.blue : Colors.grey[800],
-                  fontWeight: item.isActive ? FontWeight.bold : FontWeight.normal,
+                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+                  fontWeight: FontWeight.normal,
                   fontSize: 14,
                 ),
               ),
@@ -159,7 +141,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
                 Icon(
                   Icons.keyboard_arrow_down,
                   size: 16,
-                  color: item.isActive ? Colors.blue : Colors.grey[600],
+                  color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
                 ),
               ],
             ],

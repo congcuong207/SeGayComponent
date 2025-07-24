@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:se_gay_components/examples/popup_hierarchy_example.dart';
+import 'package:se_gay_components/core/routes/app_router.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
+      title: 'SE Gay Components',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const PopupMenuHierarchyExample(),
+      routerConfig: appRouter,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

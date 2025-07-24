@@ -6,6 +6,9 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_search_box.dart';
 import 'package:se_gay_components/constants/index.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
+import '../common/sg_button_icon_with_popup.dart';
+import '../common/sg_popup_menu.dart';
+import '../common/sg_popup_controller.dart';
 
 class SGHeader extends StatefulWidget {
   final Widget? navUserMenu;
@@ -34,10 +37,17 @@ class SGHeader extends StatefulWidget {
 }
 
 class _SGHeaderState extends State<SGHeader> {
-  // Variables for popup management
-  @override
-  void dispose() {
-    super.dispose();
+  // Helper method for time options in popup
+  Widget _buildTimeOption(String title) {
+    return InkWell(
+      onTap: () {
+        debugPrint('$title selected');
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(title),
+      ),
+    );
   }
 
   @override
@@ -95,15 +105,43 @@ class _SGHeaderState extends State<SGHeader> {
                             icon: SGAppSvgs.iconSetting,
                             onclick: (_) {},
                           ),
-                          SGButtonIcon(
+                          SGButtonIconWithPopup(
                             icon: SGAppSvgs.iconChat,
-                            onclick: (_) {},
+                            popupOffset: const Offset(-83, 10),
+                            popupId: 'header_chat',
+                            popupItems: [
+                              SGPopupMenuItem(
+                                content: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildTimeOption('Today'),
+                                    _buildTimeOption('Yesterday'),
+                                    _buildTimeOption('Last 7 days'),
+                                    _buildTimeOption('This month'),
+                                    _buildTimeOption('Custom range'),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          SGButtonIcon(
+                          SGButtonIconWithPopup(
                             icon: SGAppSvgs.iconTime,
-                            onclick: (_) {},
-                            onEnter: (buttonContext, event) {},
-                            onExit: (buttonContext, event) {},
+                            popupOffset: const Offset(-83, 10),
+                            popupId: 'header_time',
+                            popupItems: [
+                              SGPopupMenuItem(
+                                content: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildTimeOption('Today'),
+                                    _buildTimeOption('Yesterday'),
+                                    _buildTimeOption('Last 7 days'),
+                                    _buildTimeOption('This month'),
+                                    _buildTimeOption('Custom range'),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(width: 5),
                           const CircleAvatar(
