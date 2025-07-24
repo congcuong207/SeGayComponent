@@ -255,9 +255,7 @@ class _SGInputTextState extends State<SGInputText> {
       fontWeight: widget.fontWeight,
       height: 1.2,
       leadingDistribution: TextLeadingDistribution.even,
-      color: (widget.enabled ?? true)
-          ? widget.color ?? SGAppColors.neutral900
-          : SGAppColors.neutral600,
+      color:  widget.color ?? SGAppColors.neutral900
     );
   }
 

@@ -15,6 +15,7 @@ class SGButtonIcon extends StatefulWidget {
   final bool isOutlined;
   final double borderRadius;
   final Color? colorHover;
+  final Color? colorTextHover;
   final Color? colorText;
   final Color? defaultBGColor;
   final Color? colorIcon;
@@ -37,6 +38,7 @@ class SGButtonIcon extends StatefulWidget {
     this.isOutlined = false,
     this.borderRadius = 5,
     this.colorHover,
+    this.colorTextHover,
     this.colorText,
     this.defaultBGColor,
     this.colorIcon,
@@ -84,7 +86,7 @@ class _SGButtonState extends State<SGButtonIcon> {
               color: !widget.isOutlined
                   ? widget.colorText ?? Colors.white
                   : _hovering
-                      ? widget.colorHover
+                      ? widget.colorTextHover ?? widget.colorHover
                       : Colors.white,
             ),
           ),

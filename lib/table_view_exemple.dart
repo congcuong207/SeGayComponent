@@ -170,24 +170,27 @@ class _TableViewExempleState extends State<TableViewExemple> {
         SizedBox(
           width: size.width * 0.15,
           child: SGDropdownInputButton<String>(
-            controller: controller,
-            value: value,
-            items: items
-                .map((item) => DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    ))
-                .toList(),
-            onChanged: onChanged,
-            sizeBorderCircular: 10,
-            colorBorder: SGAppColors.neutral400,
-            enableSearch: false,
-            isShowSuffixIcon: true,
-            hintText: 'Chọn ${title.toLowerCase()}',
-            textAlign: TextAlign.left,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
+              height: 35,
+              controller: controller,
+              textOverflow: TextOverflow.ellipsis,
+              value: value,
+              items: items
+                  .map((item) => DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      ))
+                  .toList(),
+              onChanged: onChanged,
+              sizeBorderCircular: 10,
+              colorBorder: SGAppColors.neutral400,
+              showUnderlineBorderOnly: true,
+              enableSearch: false,
+              isClearController: false,
+              isShowSuffixIcon: true,
+              hintText: 'Chọn ${title.toLowerCase()}',
+              textAlign: TextAlign.left,
+              contentPadding:
+                  const EdgeInsets.only(left: 10, top: 8, bottom: 8)),
         ),
       ],
     );
@@ -371,20 +374,20 @@ class _TableViewExempleState extends State<TableViewExemple> {
               children: [
                 _buildSearchField(size),
                 const SizedBox(width: 20),
-                SGButtonIcon(
-                  // enabled: true,
-                  paddingIconLeft: 10,
-                  isOutlined: true,
-                  borderWidth: 3,
-                  defaultBGColor: Colors.amber,
-                  // iconButton: 'assets/images/android.png',
-                  padding: const EdgeInsets.all(5),
-                  text: 'text',
-                  colorHover: Colors.red,
-                  onPressed: () {
-                    log('message onPressed');
-                  },
-                ),
+                // SGButtonIcon(
+                //   // enabled: true,
+                //   paddingIconLeft: 10,
+                //   isOutlined: true,
+                //   borderWidth: 3,
+                //   defaultBGColor: Colors.amber,
+                //   // iconButton: 'assets/images/android.png',
+                //   padding: const EdgeInsets.all(5),
+                //   text: 'text',
+                //   colorHover: Colors.red,
+                //   onPressed: () {
+                //     log('message onPressed');
+                //   },
+                // ),
                 _buildFilterDropdown(
                   'Loại ngày nghỉ',
                   _leaveTypes,
