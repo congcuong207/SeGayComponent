@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DailyReportScreen extends StatelessWidget {
-  const DailyReportScreen({Key? key}) : super(key: key);
+  const DailyReportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class DailyReportScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color),
         ),
         title: Text(title),

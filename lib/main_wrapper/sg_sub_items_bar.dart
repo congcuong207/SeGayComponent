@@ -33,7 +33,7 @@ class SGSubItemsBar extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: 24),
-            ...subItems!.map((subItem) => _buildSubItem(subItem)).toList(),
+            ...subItems!.map((subItem) => _buildSubItem(subItem)),
           ],
         ),
       ),

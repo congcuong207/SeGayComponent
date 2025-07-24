@@ -23,7 +23,7 @@ class _MainWrapperExampleState extends State<MainWrapperExample> {
 
     // 获取当前选中的主菜单和子菜单
     final _MenuItem selectedMainMenuItem = _getSelectedMainMenuItem(currentPath);
-    final String selectedSubMenu = _getSelectedSubMenu(currentPath);
+    _getSelectedSubMenu(currentPath);
 
     return MainWrapper(
       backgroundColor: const Color.fromARGB(255, 241, 245, 249),
@@ -64,26 +64,6 @@ class _MainWrapperExampleState extends State<MainWrapperExample> {
       }
     }
 
-    return '';
-  }
-
-  _MenuItem? _getMenuItemById(String id) {
-    for (var item in _mainMenuItems) {
-      if (item.id == id) {
-        return item;
-      }
-    }
-    return null;
-  }
-
-  String _findRouteBySubItemId(String id) {
-    for (var item in _mainMenuItems) {
-      for (var subItem in item.subItems) {
-        if (subItem.id == id) {
-          return subItem.route;
-        }
-      }
-    }
     return '';
   }
 

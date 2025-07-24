@@ -35,8 +35,8 @@ class SGPopupMenu extends StatelessWidget {
     if (enableScroll || maxHeight != null) {
       content = SingleChildScrollView(
         controller: scrollController,
-        child: content,
         physics: const BouncingScrollPhysics(),
+        child: content,
       );
     }
     
@@ -62,7 +62,7 @@ class SGPopupMenu extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10.0,
               offset: const Offset(0, 5),
             ),

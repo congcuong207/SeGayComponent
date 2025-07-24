@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomerListScreen extends StatefulWidget {
-  const CustomerListScreen({Key? key}) : super(key: key);
+  const CustomerListScreen({super.key});
 
   @override
   State<CustomerListScreen> createState() => _CustomerListScreenState();
@@ -233,10 +233,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
+          const Padding(
+            padding: EdgeInsets.all(12.0),
             child: Row(
-              children: const [
+              children: [
                 Expanded(
                   flex: 2,
                   child: Text(
@@ -433,9 +433,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         group,

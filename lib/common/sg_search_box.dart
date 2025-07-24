@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:se_gay_components/common/sg_button_icon.dart';
+import 'package:se_gay_components/common/sg_button_icon_v2.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/constants/sg_app_svgs.dart';
 import 'package:se_gay_components/themes/sg_app_font.dart';
@@ -156,7 +156,7 @@ class SGSearchBox extends StatelessWidget {
             ),
           ),
           if (showFilterButton)
-            SGButtonIcon(
+            SGButtonIconV2(
               margin: const EdgeInsets.all(4),
               padding: const EdgeInsets.all(4),
               icon: filterIcon,

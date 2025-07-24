@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:se_gay_components/common/sg_button.dart';
-import 'package:se_gay_components/common/sg_button_icon.dart';
-import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_button_icon_v2.dart';
 import 'package:se_gay_components/common/sg_search_box.dart';
 import 'package:se_gay_components/constants/index.dart';
-import 'package:se_gay_components/themes/sg_app_font.dart';
 import '../common/sg_button_icon_with_popup.dart';
 import '../common/sg_popup_menu.dart';
 
@@ -74,33 +71,33 @@ class _SGHeaderState extends State<SGHeader> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         spacing: 10,
                         children: [
-                          SGButton(
-                            prefixWidget: Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: SvgPicture.asset(
-                                SGAppSvgs.iconPlus,
-                                width: 12,
-                                height: 12,
-                              ),
-                            ),
-                            onclick: () {},
-                            state: SGButtonState.active,
-                            text: "Thêm mới",
-                            color: SGAppColors.colorFE9F43,
-                            loadingColor: SGAppColors.neutral0,
-                            borderRadius: 6,
-                            height: 30,
-                            textStyle: SGAppFont.headline6(
-                              color: SGAppColors.neutral0,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
+                          // SGButton(
+                          //   prefixWidget: Padding(
+                          //     padding: const EdgeInsets.only(right: 6),
+                          //     child: SvgPicture.asset(
+                          //       SGAppSvgs.iconPlus,
+                          //       width: 12,
+                          //       height: 12,
+                          //     ),
+                          //   ),
+                          //   onclick: () {},
+                          //   state: SGButtonState.active,
+                          //   text: "Thêm mới",
+                          //   color: SGAppColors.colorFE9F43,
+                          //   loadingColor: SGAppColors.neutral0,
+                          //   borderRadius: 6,
+                          //   height: 30,
+                          //   textStyle: SGAppFont.headline6(
+                          //     color: SGAppColors.neutral0,
+                          //     fontWeight: FontWeight.w400,
+                          //   ),
+                          // ),
                           Container(
                             width: 1,
                             height: 24,
                             color: Colors.grey.shade300,
                           ),
-                          SGButtonIcon(
+                          SGButtonIconV2(
                             icon: SGAppSvgs.iconSetting,
                             onclick: (_) {},
                           ),

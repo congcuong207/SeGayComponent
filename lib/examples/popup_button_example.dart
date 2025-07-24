@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../common/sg_button.dart';
 import '../common/sg_button_icon_with_popup.dart';
-import '../common/sg_popup_controller.dart';
 import '../common/sg_popup_menu.dart';
 import '../constants/sg_app_svgs.dart';
 
@@ -43,13 +42,13 @@ class _PopupButtonExampleState extends State<PopupButtonExample> {
                       buttons: [
                         SGButton(
                           text: 'Today',
-                          onclick: () {
+                          onPressed: () {
                             debugPrint('Today selected');
                           },
                         ),
                         SGButton(
                           text: 'Yesterday',
-                          onclick: () {
+                          onPressed: () {
                             debugPrint('Yesterday selected');
                           },
                         ),

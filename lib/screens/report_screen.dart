@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({Key? key}) : super(key: key);
+  const ReportScreen({super.key});
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
@@ -338,14 +338,14 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
+            const Row(
               children: [
                 Icon(
                   Icons.arrow_upward,
                   color: Colors.green,
                   size: 14,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   '+12.5% so với trước đó',
                   style: TextStyle(

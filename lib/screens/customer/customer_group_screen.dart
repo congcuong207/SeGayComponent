@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomerGroupScreen extends StatefulWidget {
-  const CustomerGroupScreen({Key? key}) : super(key: key);
+  const CustomerGroupScreen({super.key});
 
   @override
   State<CustomerGroupScreen> createState() => _CustomerGroupScreenState();
@@ -374,7 +374,7 @@ class _CustomerGroupScreenState extends State<CustomerGroupScreen> {
 
     return Row(
       children: colors.map((color) {
-        final isSelected = selectedColor.value == color.value;
+        final isSelected = selectedColor == color;
         return GestureDetector(
           onTap: () => onColorChanged(color),
           child: Container(
@@ -391,7 +391,7 @@ class _CustomerGroupScreenState extends State<CustomerGroupScreen> {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 4,
                         spreadRadius: 1,
                       )
