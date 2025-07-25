@@ -348,9 +348,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     final showAbove =
         spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
     
-    // Giới hạn chiều rộng của popup không vượt quá 400px
     final popupWidth = math.min(widget.width ?? size.width, 400.0);
-    // Xác định căn chỉnh dựa trên chiều rộng
     final bool useLeftAlignment = popupWidth >= 400;
 
     return OverlayEntry(

@@ -13,10 +13,12 @@ class SGButtonIcon extends StatefulWidget {
   final double paddingIconLeft;
   final bool enabled;
   final bool isOutlined;
+  final bool isBorder;
   final double borderRadius;
   final Color? colorHover;
   final Color? colorTextHover;
   final Color? colorText;
+  final Color? colorBorder;
   final Color? defaultBGColor;
   final Color? colorIcon;
   final EdgeInsetsGeometry? padding;
@@ -36,10 +38,12 @@ class SGButtonIcon extends StatefulWidget {
     this.paddingIconLeft = 2,
     this.enabled = true,
     this.isOutlined = false,
+    this.isBorder = false,
     this.borderRadius = 5,
     this.colorHover,
     this.colorTextHover,
     this.colorText,
+    this.colorBorder,
     this.defaultBGColor,
     this.colorIcon,
     this.padding,
@@ -87,7 +91,9 @@ class _SGButtonState extends State<SGButtonIcon> {
                   ? widget.colorText ?? Colors.white
                   : _hovering
                       ? widget.colorTextHover ?? widget.colorHover
-                      : Colors.white,
+                      : widget.isBorder
+                          ? widget.colorText
+                          : Colors.white,
             ),
           ),
         ),
@@ -107,12 +113,18 @@ class _SGButtonState extends State<SGButtonIcon> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
               border: !widget.isOutlined
-                  ? null
+                  ? Border.all(
+                      color: widget.colorBorder ?? Colors.black,
+                      width: widget.borderWidth ?? 2)
                   : _hovering
                       ? Border.all(
                           color: widget.colorHover ?? Colors.black,
                           width: widget.borderWidth ?? 2)
-                      : null,
+                      : widget.isBorder
+                          ? Border.all(
+                              color: widget.colorBorder ?? Colors.black,
+                              width: widget.borderWidth ?? 2)
+                          : null,
               color: widget.defaultBGColor,
               borderRadius: BorderRadius.circular(widget.borderRadius)),
           child: child,

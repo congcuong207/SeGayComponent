@@ -36,6 +36,8 @@ class SGInputText extends StatefulWidget {
   final VoidCallback? onClickPrefixIcon;
   final VoidCallback? onTap;
   final TapRegionCallback? onTapOutside;
+  final MainAxisAlignment mainAxisAlignment;
+  final CrossAxisAlignment crossAxisAlignment;
   final double? height;
   final double? fontSize;
   final FontWeight? fontWeight;
@@ -105,6 +107,8 @@ class SGInputText extends StatefulWidget {
     this.expandable = false,
     this.onlyLine = false,
     this.showBorder = true,
+    this.mainAxisAlignment = MainAxisAlignment.center,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
   });
 
   @override
@@ -156,11 +160,12 @@ class _SGInputTextState extends State<SGInputText> {
     return SizedBox(
       width: calculatedWidth,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: widget.crossAxisAlignment,
+        mainAxisAlignment: widget.mainAxisAlignment,
         children: [
-          _buildLabel(),
-          const SizedBox(height: 10),
-          _buildTextField(calculatedWidth),
+          if (widget.label != null) _buildLabel(),
+          SizedBox(height: widget.label != null ? 10 : 0),
+          _buildTextField(widget.width),
         ],
       ),
     );
@@ -186,10 +191,11 @@ class _SGInputTextState extends State<SGInputText> {
     );
   }
 
-  Widget _buildTextField(double width) {
-    final double effectiveHeight = widget.height ?? 48.0; // Default height if not specified
+  Widget _buildTextField(double? width) {
+    final double effectiveHeight =
+        widget.height ?? 48.0; // Default height if not specified
     final bool shouldExpand = !widget.expandable && widget.height != null;
-    
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
@@ -197,6 +203,7 @@ class _SGInputTextState extends State<SGInputText> {
         width: width,
         height: widget.expandable ? null : effectiveHeight,
         decoration: BoxDecoration(
+          // color: Colors.red,
           borderRadius: BorderRadius.circular(widget.radiusSize),
         ),
         child: TextFormField(
@@ -251,19 +258,18 @@ class _SGInputTextState extends State<SGInputText> {
 
   TextStyle _getTextStyle() {
     return TextStyle(
-      fontSize: widget.fontSize ?? 16,
-      fontWeight: widget.fontWeight,
-      height: 1.2,
-      leadingDistribution: TextLeadingDistribution.even,
-      color:  widget.color ?? SGAppColors.neutral900
-    );
+        fontSize: widget.fontSize ?? 16,
+        fontWeight: widget.fontWeight,
+        height: 1.2,
+        leadingDistribution: TextLeadingDistribution.even,
+        color: widget.color ?? SGAppColors.neutral900);
   }
 
   InputDecoration _getInputDecoration() {
     final bool showUnderline = widget.onlyLine && (widget.enabled ?? true);
-    
+
     final bool showRegularBorder = widget.showBorder && !widget.onlyLine;
-    
+
     return InputDecoration(
       counterText: widget.counterText,
       isDense: true,
@@ -274,13 +280,15 @@ class _SGInputTextState extends State<SGInputText> {
       enabledBorder: showUnderline
           ? UnderlineInputBorder(
               borderSide: BorderSide(
-                color: _isHovering || _focusNode.hasFocus 
-                    ? widget.focusedBorderColor 
+                color: _isHovering || _focusNode.hasFocus
+                    ? widget.focusedBorderColor
                     : Colors.transparent,
                 width: _isHovering || _focusNode.hasFocus ? 2 : 0,
               ),
             )
-          : (showRegularBorder ? _buildEnabledBorder() : _buildTransparentBorder()),
+          : (showRegularBorder
+              ? _buildEnabledBorder()
+              : _buildTransparentBorder()),
       focusedBorder: showUnderline
           ? UnderlineInputBorder(
               borderSide: BorderSide(
@@ -288,12 +296,15 @@ class _SGInputTextState extends State<SGInputText> {
                 width: 2,
               ),
             )
-          : (showRegularBorder ? _buildFocusedBorder() : _buildTransparentBorder()),
-      disabledBorder: showRegularBorder 
+          : (showRegularBorder
+              ? _buildFocusedBorder()
+              : _buildTransparentBorder()),
+      disabledBorder: showRegularBorder
           ? OutlineInputBorder(
               borderRadius: BorderRadius.circular(widget.radiusSize),
-              borderSide: BorderSide(color: widget.enabledBorderColor.withOpacity(0.5)),
-            ) 
+              borderSide:
+                  BorderSide(color: widget.enabledBorderColor.withOpacity(0.5)),
+            )
           : _buildTransparentBorder(),
       suffixIcon: _buildSuffixIcon(),
       prefixIcon: widget.prefixIcon,
@@ -304,17 +315,20 @@ class _SGInputTextState extends State<SGInputText> {
       filled: false,
       hintStyle: widget.hintStyle ??
           const TextStyle(
-              color: Color(0XFFB5B4B4), fontWeight: FontWeight.normal,fontSize: 14),
-      contentPadding: widget.padding ?? 
+              color: Color(0XFFB5B4B4),
+              fontWeight: FontWeight.normal,
+              fontSize: 14),
+      contentPadding: widget.padding ??
           EdgeInsets.symmetric(
-            vertical: widget.height != null ? (widget.height! - 20) / 2 : 12.0,
-            horizontal: 12.0
-          ),
+              vertical:
+                  widget.height != null ? (widget.height! - 20) / 2 : 12.0,
+              horizontal: 12.0),
     );
   }
 
   OutlineInputBorder _buildBorder() {
-    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+    if (!widget.showBorder ||
+        (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
       return OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.radiusSize),
         borderSide: const BorderSide(
@@ -329,7 +343,8 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   OutlineInputBorder _buildEnabledBorder() {
-    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+    if (!widget.showBorder ||
+        (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
       return OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.radiusSize),
         borderSide: const BorderSide(
@@ -345,11 +360,12 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   OutlineInputBorder _buildFocusedBorder() {
-    if (!widget.showBorder || (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
+    if (!widget.showBorder ||
+        (widget.onlyLine && !_isHovering && !_focusNode.hasFocus)) {
       return OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.radiusSize),
         borderSide: const BorderSide(
-          color: Colors.transparent, 
+          color: Colors.transparent,
           width: 0,
         ),
       );
