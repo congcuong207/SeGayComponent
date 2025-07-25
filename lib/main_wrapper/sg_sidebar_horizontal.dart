@@ -28,6 +28,7 @@ class SGSidebarHorizontalItem {
   final double popupWidth;
   final Color? popupBackgroundColor;
   final Color? buttonEnterColor;
+  final Color? sidebarBackgroundColor;
   final double popupBorderRadius;
   final EdgeInsetsGeometry popupPadding;
   final bool preferBelow;
@@ -80,6 +81,7 @@ class SGSidebarHorizontalItem {
     this.groupTitleStyle,
     this.groupTitlePadding = const EdgeInsets.only(left: 12, right: 12, top: 16, bottom: 8),
     this.showGroupTitle = false,
+    this.sidebarBackgroundColor,
   });
 }
 
@@ -193,9 +195,8 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 48, // Đặt chiều cao cố định để đảm bảo không có vấn đề về kích thước
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: widget.items.first.sidebarBackgroundColor ?? Colors.transparent,
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
