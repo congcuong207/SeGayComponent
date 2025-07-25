@@ -30,7 +30,7 @@ class SgTable<T> extends StatefulWidget {
   final bool showCheckboxes;
   final Function(List<T>)? onSelectionChanged;
   final double checkboxColumnWidth;
-
+  
   // Action column options
   final bool showActions;
   final Function(T)? onViewAction;
@@ -126,8 +126,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
         _updateAllSelectedState();
       }
     }
-
-    if (widget.columns != oldWidget.columns ||
+    
+    if (widget.columns != oldWidget.columns || 
         widget.showActions != oldWidget.showActions ||
         widget.showCheckboxes != oldWidget.showCheckboxes ||
         widget.actionColumnTitle != oldWidget.actionColumnTitle) {
@@ -215,7 +215,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     
     // Add regular columns
     _effectiveColumns.addAll(widget.columns);
-
+    
     // Add action column if enabled
     if (widget.showActions) {
       _effectiveColumns.add(
@@ -517,7 +517,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
           totalWidth: totalWidth,
         );
       }
-
+      
       return _buildCell(
         child: InkWell(
           onTap: hasSort ? () => _onSortColumn(index) : null,
@@ -560,7 +560,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     return List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
-
+      
       // Special handling for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -580,12 +580,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
       return _buildCell(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8),
-          alignment: column.cellAlignment == TextAlign.center
-              ? Alignment.center
-              : column.cellAlignment == TextAlign.right
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
-          child: column.cellBuilder(item), 
+            alignment: column.cellAlignment == TextAlign.center
+                ? Alignment.center
+                : column.cellAlignment == TextAlign.right
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+            child: column.cellBuilder(item),
         ),
         width: column.width,
         isLast: isLast,

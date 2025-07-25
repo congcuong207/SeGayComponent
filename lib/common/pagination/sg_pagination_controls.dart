@@ -49,7 +49,7 @@ class SGPaginationControls extends StatelessWidget {
                 fontSize: 12,
                 contentPadding: const EdgeInsets.all(1),
                 sizeBorderCircular: 5,
-                enableSearch: false,
+                enableSearch: true,
                 isShowSuffixIcon: false,
                 colorSelectedText: SGAppColors.error500,
                 value: rowsPerPage,
