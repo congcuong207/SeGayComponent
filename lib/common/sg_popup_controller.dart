@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 
 /// Callback được gọi khi popup thay đổi trạng thái
 typedef PopupStateChangedCallback = void Function(bool isOpen);
@@ -35,12 +34,8 @@ class SGPopupManager {
 
   // Register a popup opening
   void registerPopupOpening(String popupId, SGPopupController controller) {
-    SGLog.debug("SGPopupManager", 'Registering popup opening: $popupId');
-    SGLog.debug("SGPopupManager", 'Active popup: $_activePopupId');
-
     // Prevent recursion
     if (_processingPopupChange) {
-      SGLog.debug("SGPopupManager", 'Already processing a popup change, ignoring');
       return;
     }
 
@@ -49,14 +44,12 @@ class SGPopupManager {
     try {
       // Close any active popup first
       if (_activeController != null && _activePopupId != popupId) {
-        SGLog.debug("SGPopupManager", 'Closing active popup: $_activePopupId to open: $popupId');
         _activeController!.hidePopupInternal();
       }
 
       // Register this as the active popup
       _activePopupId = popupId;
       _activeController = controller;
-      SGLog.debug("SGPopupManager", 'New active popup: $popupId');
       _notifyListeners();
     } finally {
       _processingPopupChange = false;
@@ -65,12 +58,9 @@ class SGPopupManager {
 
   // Register a popup closing
   void registerPopupClosing(String popupId) {
-    SGLog.debug("SGPopupManager", 'Registering popup closing: $popupId');
-    SGLog.debug("SGPopupManager", 'Current active popup: $_activePopupId');
 
     // Prevent recursion
     if (_processingPopupChange) {
-      SGLog.debug("SGPopupManager", 'Already processing a popup change, ignoring');
       return;
     }
 
@@ -78,7 +68,6 @@ class SGPopupManager {
 
     try {
       if (_activePopupId == popupId) {
-        SGLog.debug("SGPopupManager", 'Clearing active popup reference');
         _activePopupId = null;
         _activeController = null;
         _notifyListeners();
@@ -95,9 +84,7 @@ class SGPopupManager {
 
   // Close all active popups - Can be called from anywhere
   void closeAllPopups() {
-    SGLog.debug("SGPopupManager", 'closeAllPopups() called');
     if (_activeController != null) {
-      SGLog.debug("SGPopupManager", 'Closing active popup: $_activePopupId');
       _activeController!.hidePopup();
     }
   }
@@ -136,9 +123,6 @@ class SGPopupController {
     Offset offset = const Offset(0, 5),
     bool preferBelow = true,
   }) {
-    SGLog.debug("SGPopupController", '$popupId: Show popup called');
-    SGLog.debug("SGPopupController", '$popupId: isShowing = $isShowing');
-
     // Reset force close flag
     _forceClose = false;
 
@@ -147,13 +131,11 @@ class SGPopupController {
 
     // If we're already showing, hide current popup
     if (isShowing) {
-      SGLog.debug("SGPopupController", '$popupId: Already showing, hiding first');
       hidePopupInternal();
     }
 
     // If this was a self-toggle, return now (don't show again)
     if (isSelfToggle) {
-      SGLog.debug("SGPopupController", '$popupId: Self toggle detected, not showing again');
       _manager.registerPopupClosing(popupId);
       onPopupStateChanged?.call(false);
       return;
@@ -161,24 +143,16 @@ class SGPopupController {
 
     // Mark that we're in the process of opening
     _isOpening = true;
-    SGLog.debug("SGPopupController", ' $popupId: Starting to open popup');
 
     // Register with popup manager (this may close other popups)
     _manager.registerPopupOpening(popupId, this);
 
     // Check if we were force closed during registration
     if (_forceClose) {
-      SGLog.debug("SGPopupController", '$popupId: Force close flag set, not opening');
       _isOpening = false;
       onPopupStateChanged?.call(false);
       return;
     }
-
-    // Calculate screen size and position to ensure popup fits on screen
-    final screenSize = MediaQuery.of(context).size;
-    final screenInsets = MediaQuery.of(context).viewInsets;
-    final renderBox = context.findRenderObject() as RenderBox?;
-    final position = renderBox?.localToGlobal(Offset.zero);
 
     // Now create and show the popup with animation
     _overlayEntry = OverlayEntry(
@@ -216,22 +190,18 @@ class SGPopupController {
     );
 
     Overlay.of(context).insert(_overlayEntry!);
-    SGLog.debug("SGPopupController", '$popupId: Popup inserted into overlay');
     _isOpening = false;
     onPopupStateChanged?.call(true);
   }
 
   /// Internal method to hide popup without notifying manager
   void hidePopupInternal() {
-    SGLog.debug("SGPopupController", '$popupId: hidePopupInternal called');
     if (_isOpening) {
       // If we're in the process of opening, set a flag to abort
-      SGLog.debug("SGPopupController", '$popupId: Setting force close flag');
       _forceClose = true;
     }
 
     if (_overlayEntry != null) {
-      SGLog.debug("SGPopupController", '$popupId: Removing from overlay (internal)');
       _overlayEntry?.remove();
       _overlayEntry = null;
     }
@@ -239,18 +209,13 @@ class SGPopupController {
 
   /// Hide the current popup
   void hidePopup() {
-    SGLog.debug("SGPopupController", '$popupId: Hide popup called');
-    SGLog.debug("SGPopupController", '$popupId: isShowing = $isShowing');
-
     hidePopupInternal();
     _manager.registerPopupClosing(popupId);
     onPopupStateChanged?.call(false);
-    SGLog.debug("SGPopupController", '$popupId: Popup removed');
   }
 
   /// Dispose the controller
   void dispose() {
-    SGLog.debug("SGPopupController", '$popupId: Dispose called');
     hidePopup();
   }
 }

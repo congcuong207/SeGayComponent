@@ -6,7 +6,7 @@ import 'sg_popup_controller.dart';
 import 'sg_popup_menu.dart';
 
 class SGButtonIconWithPopup extends StatefulWidget {
-  final List<SGPopupMenuItem> popupItems;
+  final List<Widget> popupItems;
   final double popupWidth;
   final Color? popupBackgroundColor;
   final double popupBorderRadius;
@@ -51,7 +51,7 @@ class SGButtonIconWithPopup extends StatefulWidget {
     this.popupWidth = 200,
     this.popupBackgroundColor,
     this.popupBorderRadius = 8.0,
-    this.popupPadding = const EdgeInsets.symmetric(vertical: 8.0),
+    this.popupPadding = EdgeInsets.zero,
     this.popupOffset = const Offset(0, 5),
     this.preferBelow = true,
     this.popupId,
@@ -122,9 +122,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   void _handleButtonClick(BuildContext context) {
     widget.onclick?.call(context);
     String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
-    SGLog.debug("SGButtonIconWithPopup", ' Button clicked: $popupId');
-    SGLog.debug("SGButtonIconWithPopup", ' isShowing before action: ${_popupController.isShowing}');
-
     // Create the popup widget with the enhanced features
     final popupWidget = SGPopupMenu(
       items: widget.popupItems,
