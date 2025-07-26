@@ -214,8 +214,14 @@ class SGPopupController {
     onPopupStateChanged?.call(false);
   }
 
+  /// Remove the popup state changed listener
+  void removeOnPopupStateChangedListener() {
+    onPopupStateChanged = null;
+  }
+
   /// Dispose the controller
   void dispose() {
-    hidePopup();
+    hidePopupInternal();
+    _manager.registerPopupClosing(popupId);
   }
 }
