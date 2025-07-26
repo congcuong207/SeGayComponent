@@ -168,6 +168,7 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   void dispose() {
     String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     SGLog.debug("SGButtonIconWithPopup", ' Disposing controller: $popupId');
+    _popupController.removeOnPopupStateChangedListener();
     _popupController.dispose();
     _scrollController.dispose();
     super.dispose();
