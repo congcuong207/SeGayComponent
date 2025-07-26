@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
@@ -54,7 +56,10 @@ class SGPaginationControls extends StatelessWidget {
                 colorSelectedText: SGAppColors.error500,
                 value: rowsPerPage,
                 items: items,
-                onChanged: onRowsPerPageChanged,
+                onChanged: (value) {
+                  log('onChanged: $value');
+                  onRowsPerPageChanged(value);
+                },
               ),
               const SizedBox(width: 8),
               const Text('Entries'),
