@@ -12,6 +12,8 @@ class SGPaginationControls extends StatelessWidget {
   final List<DropdownMenuItem<int>> items;
   final Function(int?) onRowsPerPageChanged;
   final Function(int) onPageChanged;
+  final TextStyle? styleLabelRowsPerPage;
+  final TextStyle? styleEntries;
 
   const SGPaginationControls({
     super.key,
@@ -23,6 +25,8 @@ class SGPaginationControls extends StatelessWidget {
     required this.items,
     required this.onPageChanged,
     required this.onRowsPerPageChanged,
+    this.styleLabelRowsPerPage,
+    this.styleEntries,
   });
 
   @override
@@ -33,17 +37,22 @@ class SGPaginationControls extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(
             horizontal: 16,
-            // vertical: 12,
           ),
           child: Row(
             children: [
-              SGText(text: labelRowsPerPage ?? 'Row Per Page'),
+              SGText(
+                text: labelRowsPerPage ?? 'Row Per Page',
+                style: styleLabelRowsPerPage ??
+                    const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: SGAppColors.neutral900,
+                    ),
+              ),
               const SizedBox(width: 8),
               SGDropdownInputButton<int>(
                 controller: controllerDropdownPage,
-                // inputType: TextInputType.number,
-                // defaultValue: 10,
-                width: 25,
+                width: 42,
                 height: 25,
                 textAlign: TextAlign.center,
                 fontSize: 12,
@@ -51,32 +60,40 @@ class SGPaginationControls extends StatelessWidget {
                 sizeBorderCircular: 5,
                 enableSearch: true,
                 isShowSuffixIcon: false,
-                colorSelectedText: SGAppColors.error500,
+                colorSelectedText: SGAppColors.colorFE9F43,
+                colorBorder: SGAppColors.colorC0C0C0,
+                colorBorderFocus: SGAppColors.colorC0C0C0,
                 value: rowsPerPage,
                 items: items,
                 onChanged: onRowsPerPageChanged,
               ),
               const SizedBox(width: 8),
-              const Text('Entries'),
+              SGText(
+                text: 'Mục',
+                style: styleEntries ??
+                    const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: SGAppColors.neutral900,
+                    ),
+              ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed:
-                    currentPage > 1
-                        ? () {
-                          onPageChanged(currentPage - 1);
-                        }
-                        : null,
+                icon: const Icon(Icons.chevron_left_rounded, size: 24,),
+                onPressed: currentPage > 1
+                    ? () {
+                        onPageChanged(currentPage - 1);
+                      }
+                    : null,
               ),
               _buildPageNumbers(),
               IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed:
-                    currentPage < totalPages
-                        ? () {
-                          onPageChanged(currentPage + 1);
-                        }
-                        : null,
+                icon: const Icon(Icons.chevron_right_rounded, size: 24,),
+                onPressed: currentPage < totalPages
+                    ? () {
+                        onPageChanged(currentPage + 1);
+                      }
+                    : null,
               ),
             ],
           ),
@@ -143,21 +160,29 @@ class SGPaginationControls extends StatelessWidget {
 
   Widget _buildPageButton(int page) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              currentPage == page ? Colors.orange[400] : Colors.grey[200],
-          foregroundColor: currentPage == page ? Colors.white : Colors.black,
+          backgroundColor: currentPage == page ? SGAppColors.colorFE9F43 : SGAppColors.neutral100,
+          foregroundColor: currentPage == page ? Colors.white : SGAppColors.neutral500,
           minimumSize: const Size(36, 36),
           padding: EdgeInsets.zero,
-          elevation: 0,
-          shape: const CircleBorder(),
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
         onPressed: () {
           onPageChanged(page);
         },
-        child: Text(page.toString()),
+        child: Text(
+          page.toString(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: currentPage == page ? Colors.white : SGAppColors.neutral900,
+          ),
+        ),
       ),
     );
   }

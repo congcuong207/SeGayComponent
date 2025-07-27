@@ -7,6 +7,8 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'dart:math' as math;
 
+import 'package:se_gay_components/core/utils/sg_log.dart';
+
 class SGDropdownInputButton<T> extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
@@ -31,6 +33,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final TextAlign? textAlign;
   final TextAlign? textAlignItem;
   final TextOverflow? textOverflow;
+  final Color? textColor;
   final EdgeInsetsGeometry? contentPadding;
   final T? value;
   final T? defaultValue;
@@ -70,6 +73,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.textAlign,
     this.textAlignItem,
     this.textOverflow,
+    this.textColor,
     this.contentPadding,
     this.defaultValue,
     this.hintText,
@@ -84,8 +88,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   });
 
   @override
-  State<SGDropdownInputButton<T>> createState() =>
-      _SGDropdownInputButtonState<T>();
+  State<SGDropdownInputButton<T>> createState() => _SGDropdownInputButtonState<T>();
 }
 
 class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
@@ -130,8 +133,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (widget.value != null) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
-    } else if (widget.defaultValue != null &&
-        widget.items.any((item) => item.value == widget.defaultValue)) {
+    } else if (widget.defaultValue != null && widget.items.any((item) => item.value == widget.defaultValue)) {
       _setControllerTextByValue(widget.defaultValue);
       _lastSelectedValue = widget.defaultValue;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -152,7 +154,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (oldWidget.value != widget.value) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
-      log('didUpdateWidget: ${widget.value} - ${_lastSelectedValue}');
+      SGLog.info('SGDropdownInputButton', 'didUpdateWidget: ${widget.value} - $_lastSelectedValue');
     }
 
     if (oldWidget.items != widget.items) {
@@ -220,9 +222,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   void _handleTextAndCloseOverlay(String currentText) {
     final match = widget.items.firstWhere(
       (item) {
-        final itemText = item.child is Text
-            ? ((item.child as Text).data ?? '')
-            : item.value.toString();
+        final itemText = item.child is Text ? ((item.child as Text).data ?? '') : item.value.toString();
         final result = itemText == currentText;
         return result;
       },
@@ -262,9 +262,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         _filteredItems = widget.items;
       } else {
         _filteredItems = widget.items.where((item) {
-          final itemText = item.child is Text
-              ? ((item.child as Text).data ?? '')
-              : item.value.toString();
+          final itemText = item.child is Text ? ((item.child as Text).data ?? '') : item.value.toString();
           return itemText.toLowerCase().contains(searchValue);
         }).toList();
       }
@@ -331,8 +329,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   OverlayEntry _createOverlayEntry() {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
-    final RenderObject? overlay =
-        Overlay.of(context).context.findRenderObject();
+    final RenderObject? overlay = Overlay.of(context).context.findRenderObject();
     final RenderBox box = renderBox;
     final Offset position = box.localToGlobal(Offset.zero, ancestor: overlay);
 
@@ -341,13 +338,10 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     final spaceBelow = screenHeight - (position.dy + size.height);
 
     const itemHeight = 44.0;
-    final double estimatedPopupHeight = _filteredItems.isEmpty
-        ? 60
-        : math.min(300, _filteredItems.length * itemHeight);
+    final double estimatedPopupHeight = _filteredItems.isEmpty ? 60 : math.min(300, _filteredItems.length * itemHeight);
 
-    final showAbove =
-        spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
-    
+    final showAbove = spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
+
     final popupWidth = math.min(widget.width ?? size.width, 400.0);
     final bool useLeftAlignment = popupWidth >= 400;
 
@@ -357,22 +351,17 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
-          targetAnchor: useLeftAlignment
-              ? (showAbove ? Alignment.topLeft : Alignment.bottomLeft)
-              : (showAbove ? Alignment.topCenter : Alignment.bottomCenter),
-          followerAnchor: useLeftAlignment
-              ? (showAbove ? Alignment.bottomLeft : Alignment.topLeft)
-              : (showAbove ? Alignment.bottomCenter : Alignment.topCenter),
+          targetAnchor: useLeftAlignment ? (showAbove ? Alignment.topLeft : Alignment.bottomLeft) : (showAbove ? Alignment.topCenter : Alignment.bottomCenter),
+          followerAnchor: useLeftAlignment ? (showAbove ? Alignment.bottomLeft : Alignment.topLeft) : (showAbove ? Alignment.bottomCenter : Alignment.topCenter),
           offset: Offset(0.0, showAbove ? -4 : 4),
           child: Material(
             elevation: 4.0,
             borderRadius: widget.showUnderlineBorderOnly
                 ? null
                 : BorderRadius.circular(
-                    widget.sizeBorderCircularItem ??
-                        widget.sizeBorderCircular ??
-                        12,
+                    widget.sizeBorderCircularItem ?? widget.sizeBorderCircular ?? 12,
                   ),
+            color: widget.colorBackgroundPopup ?? Colors.white,
             child: _buildDropdownList(),
           ),
         ),
@@ -389,16 +378,14 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       child: ListView(
         padding: EdgeInsets.zero,
         shrinkWrap: true,
-        children: _filteredItems.isNotEmpty
-            ? _filteredItems.map(_buildDropdownItem).toList()
-            : [_buildEmptyView()],
+        children: _filteredItems.isNotEmpty ? _filteredItems.map(_buildDropdownItem).toList() : [_buildEmptyView()],
       ),
     );
   }
 
   Widget _buildDropdownItem(DropdownMenuItem<T> item) {
     final isSelected = item.value == (widget.value ?? widget.defaultValue);
-    log('isSelected: $isSelected ${item.value} - ${widget.value} - ${widget.defaultValue}');
+    SGLog.info('SGDropdownInputButton', 'isSelected: $isSelected ${item.value} - ${widget.value} - ${widget.defaultValue}');
 
     Widget child = item.child;
     if (child is Text) {
@@ -407,9 +394,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         textAlign: widget.textAlignItem ?? TextAlign.center,
         style: TextStyle(
           fontSize: widget.fontSize,
-          color: isSelected
-              ? (widget.colorSelectedText ?? Colors.blue)
-              : Colors.black,
+          color: isSelected ? (widget.colorSelectedText ?? Colors.blue) : Colors.black,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       );
@@ -421,15 +406,12 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       }),
       onExit: (_) => setState(() => _hoveredItem = null),
       child: InkWell(
-        hoverColor: widget.colorHoverItem ??
-            SGAppColors.colorBorderGray.withOpacity(0.15),
+        hoverColor: widget.colorHoverItem ?? SGAppColors.colorBorderGray.withOpacity(0.15),
         onTapDown: (_) {
           _onItemSelected(item);
         },
         child: Container(
-          padding: widget.width != null && widget.width! <= 30
-              ? const EdgeInsets.only(top: 5, bottom: 5)
-              : const EdgeInsets.all(5),
+          padding: widget.width != null && widget.width! <= 30 ? const EdgeInsets.only(top: 5, bottom: 5) : const EdgeInsets.all(5),
           child: child,
         ),
       ),
@@ -480,10 +462,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
             enableInteractiveSelection: widget.enableSearch,
             keyboardType: widget.inputType ?? TextInputType.text,
             inputFormatters: _buildInputFormatters(),
-            textAlign: widget.textAlign ??
-                (widget.showUnderlineBorderOnly
-                    ? TextAlign.left
-                    : TextAlign.center),
+            textAlign: widget.textAlign ?? (widget.showUnderlineBorderOnly ? TextAlign.left : TextAlign.center),
             style: _buildTextStyle(),
             maxLines: widget.maxLines ?? 1,
             decoration: _buildInputDecoration(),
@@ -496,9 +475,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   List<TextInputFormatter>? _buildInputFormatters() {
-    return widget.inputType == TextInputType.number
-        ? [FilteringTextInputFormatter.digitsOnly]
-        : null;
+    return widget.inputType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : null;
   }
 
   TextStyle _buildTextStyle() {
@@ -506,9 +483,9 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       fontSize: widget.fontSize ?? 14,
       fontWeight: widget.fontWeight ?? FontWeight.normal,
       overflow: widget.textOverflow,
+      color: widget.textColor ?? SGAppColors.neutral900,
       height: 1.2, // Tăng height để văn bản không bị sát dòng
-      leadingDistribution:
-          TextLeadingDistribution.even, // Phân phối đều khoảng cách
+      leadingDistribution: TextLeadingDistribution.even, // Phân phối đều khoảng cách
     );
 
     // Ưu tiên style từ widget nếu có
@@ -536,8 +513,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         enabledBorder: _buildUnderlineBorder(false),
         focusedBorder: _buildUnderlineBorder(true),
         suffixIcon: _buildSuffixIcon(),
-        contentPadding: widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       );
     } else {
       // Standard outline border
@@ -562,8 +538,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           ),
         ),
         suffixIcon: _buildSuffixIcon(),
-        contentPadding: widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       );
     }
   }
@@ -572,9 +547,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   InputBorder _buildUnderlineBorder(bool isFocused) {
     // Khi hover hoặc focus: hiển thị border
     if (_isHovering || isFocused) {
-      final color = isFocused
-          ? (widget.colorBorderFocus ?? SGAppColors.info500)
-          : (widget.colorBorder ?? SGAppColors.colorBorderGray);
+      final color = isFocused ? (widget.colorBorderFocus ?? SGAppColors.info500) : (widget.colorBorder ?? SGAppColors.colorBorderGray);
 
       return UnderlineInputBorder(
         borderSide: BorderSide(
@@ -647,11 +620,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   void _handleEditingComplete() {
     if (!widget.enableSearch) {
       final match = widget.items.firstWhere(
-        (item) =>
-            (item.child is Text
-                ? ((item.child as Text).data ?? '')
-                : item.value.toString()) ==
-            widget.controller.text,
+        (item) => (item.child is Text ? ((item.child as Text).data ?? '') : item.value.toString()) == widget.controller.text,
         orElse: () => DropdownMenuItem<T>(value: null, child: const SizedBox()),
       );
       if (match.value == null) {
