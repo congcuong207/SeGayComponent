@@ -13,6 +13,8 @@ class SgTableColumn<T> {
   final double? width;
   final bool isNumeric;
   final bool searchable;
+  final TextStyle? titleStyle;
+  final int? maxLinesTitle;
 
   SgTableColumn({
     required this.title,
@@ -24,6 +26,8 @@ class SgTableColumn<T> {
     this.width,
     this.isNumeric = false,
     this.searchable = true,
+    this.titleStyle,
+    this.maxLinesTitle,
   });
 }
 
@@ -94,9 +98,12 @@ class TableColumnBuilder {
     double? width,
     double? fontSize,
     int? maxLines,
+    int? maxLinesTitle,
     bool isNumeric = false,
     Color? textColor,
     bool searchable = true,
+    TextStyle? styleTextValue,
+    TextStyle? titleStyle,
   }) {
     return SgTableColumn<T>(
       title: title,
@@ -107,6 +114,7 @@ class TableColumnBuilder {
         textAlign: align,
         overflow: TextOverflow.ellipsis,
         maxLines: maxLines ?? 2,
+        style: styleTextValue,
       ),
       sortValueGetter: sortValue ?? ((item) => getValue(item)),
       searchValueGetter: searchValue ?? ((item) => getValue(item)),
@@ -115,6 +123,8 @@ class TableColumnBuilder {
       width: width,
       isNumeric: isNumeric,
       searchable: searchable,
+      titleStyle: titleStyle,
+      maxLinesTitle: maxLinesTitle ?? 1,
     );
   }
 
@@ -125,6 +135,7 @@ class TableColumnBuilder {
     TextAlign align = TextAlign.center,
     double? width = 180,
     bool searchable = true,
+    TextStyle? titleStyle,
   }) {
     final dateFormat = format ?? DateFormat('dd/MM/yyyy HH:mm:ss');
     return SgTableColumn<T>(
@@ -140,6 +151,7 @@ class TableColumnBuilder {
       titleAlignment: align,
       width: width,
       searchable: searchable,
+      titleStyle: titleStyle,
     );
   }
 

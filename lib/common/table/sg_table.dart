@@ -19,18 +19,19 @@ class SgTable<T> extends StatefulWidget {
   final double gridLineWidth;
   final bool showVerticalLines;
   final bool showHorizontalLines;
+  final bool showLastLineLeftRight;
+  final bool showLastLineTopBottom;
   final bool allowRowSelection;
   final BorderRadius? borderRadius;
   final Function(T)? onRowTap;
   final String? searchTerm;
   final bool caseSensitiveSearch;
   final bool Function(T)? customFilter;
-  
-  // Checkbox selection
+
   final bool showCheckboxes;
   final Function(List<T>)? onSelectionChanged;
   final double checkboxColumnWidth;
-  
+
   // Action column options
   final bool showActions;
   final Function(T)? onViewAction;
@@ -42,6 +43,13 @@ class SgTable<T> extends StatefulWidget {
   final double? actionIconSize;
   final double? actionColumnWidth;
   final String? actionColumnTitle;
+
+  final double? scaleCheckbox;
+
+  final Color? activeColor;
+  final Color? checkColor;
+  final BorderSide? side;
+  final BeveledRectangleBorder? shape;
 
   const SgTable({
     super.key,
@@ -59,6 +67,8 @@ class SgTable<T> extends StatefulWidget {
     this.showVerticalLines = true,
     this.showHorizontalLines = true,
     this.allowRowSelection = true,
+    this.showLastLineLeftRight = false,
+    this.showLastLineTopBottom = false,
     this.borderRadius,
     this.onRowTap,
     this.searchTerm,
@@ -77,6 +87,11 @@ class SgTable<T> extends StatefulWidget {
     this.actionIconSize,
     this.actionColumnWidth = 120.0,
     this.actionColumnTitle = "Hành động",
+    this.scaleCheckbox = 1,
+    this.activeColor = Colors.blueAccent,
+    this.checkColor = Colors.white,
+    this.side,
+    this.shape,
   });
 
   @override
@@ -91,7 +106,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _selectedRowIndex;
   late List<SgTableColumn<T>> _effectiveColumns;
   String? _lastSearchTerm;
-  
+
   // Checkbox selection state
   final Set<T> _selectedItems = {};
   bool _allSelected = false;
@@ -119,15 +134,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
     if (widget.data != oldWidget.data) {
       _sortedData = List.from(widget.data);
       _filterAndSortData();
-      
+
       // Update selected items when data changes
       if (widget.showCheckboxes) {
         _selectedItems.removeWhere((item) => !widget.data.contains(item));
         _updateAllSelectedState();
       }
     }
-    
-    if (widget.columns != oldWidget.columns || 
+
+    if (widget.columns != oldWidget.columns ||
         widget.showActions != oldWidget.showActions ||
         widget.showCheckboxes != oldWidget.showCheckboxes ||
         widget.actionColumnTitle != oldWidget.actionColumnTitle) {
@@ -140,48 +155,48 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _filterAndSortData();
     }
   }
-  
+
   // Add methods for checkbox handling
   void _toggleSelectAll(bool? selected) {
     if (selected == null) return;
-    
+
     setState(() {
       _allSelected = selected;
-      
+
       if (_allSelected) {
         _selectedItems.addAll(_sortedData);
       } else {
         _selectedItems.clear();
       }
-      
+
       _notifySelectionChanged();
     });
   }
-  
+
   void _toggleSelectItem(T item, bool? selected) {
     if (selected == null) return;
-    
+
     setState(() {
       if (selected) {
         _selectedItems.add(item);
       } else {
         _selectedItems.remove(item);
       }
-      
+
       _updateAllSelectedState();
       _notifySelectionChanged();
     });
   }
-  
+
   void _updateAllSelectedState() {
     if (_sortedData.isEmpty) {
       _allSelected = false;
       return;
     }
-    
+
     _allSelected = _sortedData.every((item) => _selectedItems.contains(item));
   }
-  
+
   void _notifySelectionChanged() {
     if (widget.onSelectionChanged != null) {
       widget.onSelectionChanged!(_selectedItems.toList());
@@ -191,7 +206,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Update the _buildEffectiveColumns method for better checkbox visuals
   void _buildEffectiveColumns() {
     _effectiveColumns = [];
-    
+
     // Add checkbox column if needed
     if (widget.showCheckboxes) {
       _effectiveColumns.add(
@@ -199,12 +214,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
           title: '',
           width: widget.checkboxColumnWidth,
           cellBuilder: (item) => Transform.scale(
-            scale: 1.2,
+            scale: widget.scaleCheckbox,
             child: Checkbox(
               value: _selectedItems.contains(item),
               onChanged: (selected) => _toggleSelectItem(item, selected),
-              activeColor: Colors.blue,
-              checkColor: Colors.white,
+              activeColor: widget.activeColor,
+              checkColor: widget.checkColor,
+              side: widget.side,
+              shape: widget.shape,
             ),
           ),
           cellAlignment: TextAlign.center,
@@ -212,10 +229,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
         ),
       );
     }
-    
+
     // Add regular columns
     _effectiveColumns.addAll(widget.columns);
-    
+
     // Add action column if enabled
     if (widget.showActions) {
       _effectiveColumns.add(
@@ -249,8 +266,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
   void _filterData() {
     setState(() {
-      if ((widget.searchTerm == null || widget.searchTerm!.isEmpty) &&
-          widget.customFilter == null) {
+      if ((widget.searchTerm == null || widget.searchTerm!.isEmpty) && widget.customFilter == null) {
         _filteredData = List.from(widget.data);
       } else {
         _filteredData = widget.data.where((item) {
@@ -259,16 +275,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
           }
 
           if (widget.searchTerm != null && widget.searchTerm!.isNotEmpty) {
-            final term = widget.caseSensitiveSearch
-                ? widget.searchTerm!
-                : widget.searchTerm!.toLowerCase();
+            final term = widget.caseSensitiveSearch ? widget.searchTerm! : widget.searchTerm!.toLowerCase();
 
             bool foundMatch = false;
             for (var column in widget.columns) {
               if (column.searchable && column.searchValueGetter != null) {
                 final value = column.searchValueGetter!(item);
-                final stringValue =
-                    widget.caseSensitiveSearch ? value : value.toLowerCase();
+                final stringValue = widget.caseSensitiveSearch ? value : value.toLowerCase();
                 if (stringValue.contains(term)) {
                   foundMatch = true;
                   break;
@@ -321,9 +334,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
           comparison = aValue.toString().compareTo(bValue.toString());
         }
 
-        return _sortDirection == SortDirection.ascending
-            ? comparison
-            : -comparison;
+        return _sortDirection == SortDirection.ascending ? comparison : -comparison;
       });
     });
   }
@@ -368,15 +379,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   Widget _buildSortIcon(int columnIndex) {
-    if (_sortColumnIndex != columnIndex ||
-        _sortDirection == SortDirection.none) {
+    if (_sortColumnIndex != columnIndex || _sortDirection == SortDirection.none) {
       return const SizedBox.shrink(); // Return no space at all
     }
 
     return Icon(
-      _sortDirection == SortDirection.ascending
-          ? Icons.arrow_upward
-          : Icons.arrow_downward,
+      _sortDirection == SortDirection.ascending ? Icons.arrow_upward : Icons.arrow_downward,
       size: 16,
       color: SGAppColors.neutral700,
     );
@@ -395,8 +403,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     final totalWidth = _calculateTotalWidth();
     final effectiveWidth = totalWidth;
 
-    final exactHeight =
-        widget.rowHeight + (_sortedData.length * widget.rowHeight);
+    final exactHeight = widget.rowHeight + (_sortedData.length * widget.rowHeight);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -418,14 +425,17 @@ class _SgTableState<T> extends State<SgTable<T>> {
                         color: widget.gridLineColor,
                         width: widget.gridLineWidth,
                       ),
+                      top: BorderSide(
+                        color: widget.gridLineColor,
+                        width: widget.gridLineWidth,
+                      ),
                     ),
                   ),
                   child: SizedBox(
                     width: effectiveWidth,
                     height: widget.rowHeight,
                     child: Row(
-                      children:
-                          _buildHeaderCells(false, effectiveWidth, totalWidth),
+                      children: _buildHeaderCells(false, effectiveWidth, totalWidth),
                     ),
                   ),
                 ),
@@ -447,15 +457,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
                       } else if (isChecked) {
                         backgroundColor = widget.checkedRowColor;
                       } else {
-                        backgroundColor = isEven
-                            ? widget.evenRowBackgroundColor
-                            : widget.oddRowBackgroundColor;
+                        backgroundColor = isEven ? widget.evenRowBackgroundColor : widget.oddRowBackgroundColor;
                       }
 
                       return DecoratedBox(
                         decoration: BoxDecoration(
                           color: backgroundColor,
-                          border: widget.showHorizontalLines && !isLast
+                          border: (widget.showHorizontalLines && (!isLast || widget.showLastLineTopBottom))
                               ? Border(
                                   bottom: BorderSide(
                                     color: widget.gridLineColor,
@@ -464,14 +472,25 @@ class _SgTableState<T> extends State<SgTable<T>> {
                                 )
                               : null,
                         ),
-                        child: SizedBox(
-                          width: effectiveWidth,
-                          height: widget.rowHeight,
-                          child: InkWell(
-                            onTap: () => _onRowSelected(index),
-                            child: Row(
-                              children: _buildRowCells(_sortedData[index],
-                                  false, effectiveWidth, totalWidth),
+                        child: MouseRegion(
+                          onEnter: (event) {
+                            setState(() {
+                              _selectedRowIndex = index;
+                            });
+                          },
+                          onExit: (event) {
+                            setState(() {
+                              _selectedRowIndex = null;
+                            });
+                          },
+                          child: SizedBox(
+                            width: effectiveWidth,
+                            height: widget.rowHeight,
+                            child: InkWell(
+                              onTap: () => _onRowSelected(index),
+                              child: Row(
+                                children: _buildRowCells(_sortedData[index], false, effectiveWidth, totalWidth),
+                              ),
                             ),
                           ),
                         ),
@@ -488,24 +507,25 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   // Update the header checkbox to match the style
-  List<Widget> _buildHeaderCells(
-      bool shouldExpand, double screenWidth, double totalWidth) {
+  List<Widget> _buildHeaderCells(bool shouldExpand, double screenWidth, double totalWidth) {
     return List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final hasSort = column.sortValueGetter != null;
       final isLast = index == _effectiveColumns.length - 1;
-      
+
       // Special case for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
           child: Center(
             child: Transform.scale(
-              scale: 1.2,
+              scale: widget.scaleCheckbox,
               child: Checkbox(
                 value: _allSelected,
                 onChanged: _toggleSelectAll,
-                activeColor: Colors.blue,
-                checkColor: Colors.white,
+                activeColor: widget.activeColor,
+                checkColor: widget.checkColor,
+                side: widget.side,
+                shape: widget.shape,
               ),
             ),
           ),
@@ -517,7 +537,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
           totalWidth: totalWidth,
         );
       }
-      
+
       return _buildCell(
         child: InkWell(
           onTap: hasSort ? () => _onSortColumn(index) : null,
@@ -536,11 +556,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     fontWeight: FontWeight.bold,
                     textAlign: column.titleAlignment,
                     color: widget.textHeaderColor ?? Colors.white,
+                    style: column.titleStyle,
+                    maxLines: column.maxLinesTitle,
+                    overflow: column.maxLinesTitle == 1 ? TextOverflow.ellipsis : null,
                   ),
                 ),
                 // Only add the icon when it should actually be visible
-                if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) 
-                  _buildSortIcon(index),
+                if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) _buildSortIcon(index),
               ],
             ),
           ),
@@ -555,12 +577,11 @@ class _SgTableState<T> extends State<SgTable<T>> {
     });
   }
 
-  List<Widget> _buildRowCells(
-      T item, bool shouldExpand, double screenWidth, double totalWidth) {
+  List<Widget> _buildRowCells(T item, bool shouldExpand, double screenWidth, double totalWidth) {
     return List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
-      
+
       // Special handling for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -580,12 +601,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
       return _buildCell(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8),
-            alignment: column.cellAlignment == TextAlign.center
-                ? Alignment.center
-                : column.cellAlignment == TextAlign.right
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-            child: column.cellBuilder(item),
+          alignment: column.cellAlignment == TextAlign.center
+              ? Alignment.center
+              : column.cellAlignment == TextAlign.right
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+          child: column.cellBuilder(item),
         ),
         width: column.width,
         isLast: isLast,
@@ -597,17 +618,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
     });
   }
 
-  Widget _buildCell(
-      {required Widget child,
-      double? width,
-      bool isLast = false,
-      int? columnIndex,
-      bool shouldExpand = false,
-      double? screenWidth,
-      double? totalWidth}) {
-    final baseWidth = columnIndex != null
-        ? (_columnWidths[columnIndex] ?? (width ?? 120.0))
-        : (width ?? 120.0);
+  Widget _buildCell({required Widget child, double? width, bool isLast = false, int? columnIndex, bool shouldExpand = false, double? screenWidth, double? totalWidth}) {
+    final baseWidth = columnIndex != null ? (_columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
 
     final adjustedWidth = baseWidth;
 
@@ -624,7 +636,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
         Container(
           width: adjustedWidth,
           height: widget.rowHeight,
-          decoration: widget.showVerticalLines && !isLast
+          decoration: widget.showVerticalLines && (!isLast || widget.showLastLineLeftRight)
               ? BoxDecoration(
                   border: Border(
                     right: BorderSide(
@@ -645,10 +657,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
             child: MouseRegion(
               cursor: SystemMouseCursors.resizeLeftRight,
               child: GestureDetector(
-                onHorizontalDragStart: (details) =>
-                    _startResize(columnIndex, details.globalPosition.dx),
-                onHorizontalDragUpdate: (details) =>
-                    _updateResize(details.globalPosition.dx),
+                onHorizontalDragStart: (details) => _startResize(columnIndex, details.globalPosition.dx),
+                onHorizontalDragUpdate: (details) => _updateResize(details.globalPosition.dx),
                 onHorizontalDragEnd: (_) => _endResize(),
                 child: Container(
                   color: Colors.transparent,
@@ -669,9 +679,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   void _updateResize(double currentX) {
-    if (_resizingColumnIndex == null ||
-        _resizeStartX == null ||
-        _resizeStartWidth == null) {
+    if (_resizingColumnIndex == null || _resizeStartX == null || _resizeStartWidth == null) {
       return;
     }
 
