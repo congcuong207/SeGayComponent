@@ -103,7 +103,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
       animationDuration: widget.animationDuration,
       onPopupStateChanged: _handlePopupStateChanged,
     );
-    SGLog.debug("SGButtonIconWithPopup", ' Initialized controller with ID: $popupId');
   }
 
   void _handlePopupStateChanged(bool isOpen) {
@@ -135,7 +134,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
     );
 
     // Show the popup
-    SGLog.debug("SGButtonIconWithPopup", ' Calling showPopup: $popupId');
     _popupController.showPopup(
       context,
       popupWidget,
@@ -144,7 +142,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
     );
 
     // Check the status after showing
-    SGLog.debug("SGButtonIconWithPopup", ' isShowing after action: ${_popupController.isShowing}');
   }
 
   @override
@@ -167,7 +164,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
   @override
   void dispose() {
     String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
-    SGLog.debug("SGButtonIconWithPopup", ' Disposing controller: $popupId');
     _popupController.removeOnPopupStateChangedListener();
     _popupController.dispose();
     _scrollController.dispose();

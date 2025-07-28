@@ -289,7 +289,6 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
     final bool isHovered = _hoveredItem == item;
 
     final Color backgroundColor = isHovered ? (item.buttonEnterColor ?? Colors.grey.shade300) : Colors.transparent;
-    SGLog.debug("SGSidebarHorizontal", ' isHovered: $isHovered, _hoveredItem: ${_hoveredItem?.label}, item: ${item.label}');
 
     // Bọc trong MouseRegion để xử lý hover trực tiếp
     return MouseRegion(

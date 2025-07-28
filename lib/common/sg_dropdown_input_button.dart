@@ -153,13 +153,11 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (oldWidget.value != widget.value) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
-      log('didUpdateWidget: ${widget.value} - ${_lastSelectedValue}');
       _onTextChanged();
     }
 
     if (oldWidget.items != widget.items) {
       _filteredItems = widget.items;
-      log('didUpdateWidget3: ${widget.items} - ${_filteredItems}');
       _onTextChanged();
     }
   }
@@ -403,7 +401,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   Widget _buildDropdownItem(DropdownMenuItem<T> item) {
     final isSelected = item.value == (widget.value ?? widget.defaultValue);
-    log('isSelected: $isSelected ${item.value} - ${widget.value} - ${widget.defaultValue}');
 
     Widget child = item.child;
     if (child is Text) {
@@ -429,7 +426,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         hoverColor: widget.colorHoverItem ??
             SGAppColors.colorBorderGray.withOpacity(0.15),
         onTapDown: (_) {
-          log('onTapDown: ${item.value}');
           _onItemSelected(item);
         },
         child: Container(

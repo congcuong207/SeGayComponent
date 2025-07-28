@@ -57,7 +57,6 @@ class SGPaginationControls extends StatelessWidget {
                 value: rowsPerPage,
                 items: items,
                 onChanged: (value) {
-                  log('onChanged: $value');
                   onRowsPerPageChanged(value);
                 },
               ),
