@@ -5,6 +5,9 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 import 'dart:async'; // Import Timer
+import 'dart:collection'; // Import LinkedHashMap
+import 'sg_table_header.dart'; // Import component header
+import 'sg_table_row.dart'; // Import component row
 
 // Enum để định nghĩa hướng sắp xếp
 enum SortDirection { none, ascending, descending }
@@ -12,7 +15,7 @@ enum SortDirection { none, ascending, descending }
 // Widget chính SgTable - Bảng dữ liệu có thể tùy chỉnh với nhiều tính năng
 class SgTable<T> extends StatefulWidget {
   //---------------------------
-  // TODO NHÓM DỮ LIỆU CHÍNH
+  // NHÓM DỮ LIỆU CHÍNH
   //---------------------------
   /// Danh sách các cột của bảng
   final List<SgTableColumn<T>> columns;
@@ -21,7 +24,7 @@ class SgTable<T> extends StatefulWidget {
   final List<T> data;
   
   //---------------------------
-  // TODO NHÓM KÍCH THƯỚC & GIAO DIỆN
+  // NHÓM KÍCH THƯỚC & GIAO DIỆN
   //---------------------------
   /// Chiều cao của mỗi hàng
   final double rowHeight;
@@ -33,7 +36,7 @@ class SgTable<T> extends StatefulWidget {
   final ScrollController? verticalController;
 
   //---------------------------
-  // TODO NHÓM MÀU SẮC
+  // NHÓM MÀU SẮC
   //---------------------------
   /// Màu chữ trong header
   final Color? textHeaderColor;
@@ -54,7 +57,7 @@ class SgTable<T> extends StatefulWidget {
   final Color checkedRowColor;
 
   //---------------------------
-  // TODO NHÓM ĐƯỜNG KẺ LƯỚI
+  // NHÓM ĐƯỜNG KẺ LƯỚI
   //---------------------------
   /// Màu của đường kẻ lưới
   final Color gridLineColor;
@@ -75,7 +78,7 @@ class SgTable<T> extends StatefulWidget {
   final bool showLastLineTopBottom;
 
   //---------------------------
-  // TODO NHÓM TƯƠNG TÁC & LỰA CHỌN
+  // NHÓM TƯƠNG TÁC & LỰA CHỌN
   //---------------------------
   /// Cho phép chọn hàng khi click
   final bool allowRowSelection;
@@ -84,7 +87,7 @@ class SgTable<T> extends StatefulWidget {
   final Function(T)? onRowTap;
 
   //---------------------------
-  // TODO NHÓM TÌM KIẾM & LỌC
+  // NHÓM TÌM KIẾM & LỌC
   //---------------------------
   /// Từ khóa tìm kiếm
   final String? searchTerm;
@@ -96,7 +99,7 @@ class SgTable<T> extends StatefulWidget {
   final bool Function(T)? customFilter;
 
   //---------------------------
-  // TODO NHÓM CHECKBOX
+  // NHÓM CHECKBOX
   //---------------------------
   /// Hiển thị cột checkbox chọn nhiều
   final bool showCheckboxes;
@@ -123,7 +126,7 @@ class SgTable<T> extends StatefulWidget {
   final BeveledRectangleBorder? shape;
 
   //---------------------------
-  // TODO NHÓM CỘT HÀNH ĐỘNG
+  // NHÓM CỘT HÀNH ĐỘNG
   //---------------------------
   /// Hiển thị cột hành động
   final bool showActions;
@@ -230,7 +233,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Trạng thái dữ liệu
   late List<T> _sortedData;
   late List<T> _filteredData;
-  int? _selectedRowIndex;
+  
+  // ValueNotifiers để giảm thiểu setState
+  final ValueNotifier<int?> _selectedRowNotifier = ValueNotifier<int?>(null);
+  final ValueNotifier<bool> _allSelectedNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<Set<T>> _selectedItemsNotifier = ValueNotifier<Set<T>>({});
+  
   late List<SgTableColumn<T>> _effectiveColumns;
   String? _lastSearchTerm;
 
@@ -255,6 +263,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
   final Map<int, Widget> _rowCache = {};
   final Map<int, List<Widget>> _cellsCache = {};
   bool _shouldRebuildCache = true;
+  
+  // Cache cho header để tối ưu hiệu suất
+  Widget? _headerCache;
+  bool _shouldRebuildHeader = true;
+  
+  // LRU Cache cho rows để tránh memory leak
+  final LinkedHashMap<int, Widget> _lruRowCache = LinkedHashMap<int, Widget>();
+  final int _maxCacheSize = 100; // Số lượng row tối đa cache
 
   // Memoization cho tổng chiều rộng bảng
   late double _cachedTotalWidth;
@@ -269,6 +285,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _processData();
     _cachedTotalWidth = _calculateTotalWidth();
     _shouldRecalculateWidth = false;
+    
+    // Đồng bộ giá trị ValueNotifiers
+    _selectedItemsNotifier.value = _selectedItems;
+    _allSelectedNotifier.value = _allSelected;
 
     // Đăng ký listener sau khi build frame đầu tiên
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -286,6 +306,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _resizeDebounceTimer?.cancel(); // Hủy timer resize
     _clearCaches();
     _backgroundColorCache.clear(); // Xóa cache màu nền
+    
+    // Dispose các ValueNotifier
+    _selectedRowNotifier.dispose();
+    _allSelectedNotifier.dispose();
+    _selectedItemsNotifier.dispose();
+    
     super.dispose();
   }
 
@@ -300,10 +326,18 @@ class _SgTableState<T> extends State<SgTable<T>> {
         widget.showCheckboxes != oldWidget.showCheckboxes ||
         widget.actionColumnTitle != oldWidget.actionColumnTitle;
     final bool searchChanged = widget.searchTerm != _lastSearchTerm;
+    final bool headerStyleChanged = 
+        widget.headerBackgroundColor != oldWidget.headerBackgroundColor ||
+        widget.gridLineColor != oldWidget.gridLineColor ||
+        widget.gridLineWidth != oldWidget.gridLineWidth ||
+        widget.textHeaderColor != oldWidget.textHeaderColor;
 
-    if (dataChanged || columnsChanged || searchChanged) {
+    if (dataChanged || columnsChanged || searchChanged || headerStyleChanged) {
       _shouldRebuildCache = true;
       _shouldRecalculateWidth = true;
+      if (columnsChanged || headerStyleChanged) {
+        _shouldRebuildHeader = true;
+      }
       _clearCaches();
 
       if (dataChanged) {
@@ -346,6 +380,31 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _clearCaches() {
     _rowCache.clear();
     _cellsCache.clear();
+    _lruRowCache.clear();
+    _headerCache = null;
+  }
+
+  // Cập nhật LRU cache
+  void _updateLRUCache(int index, Widget widget) {
+    // Nếu cache đã đầy, xóa phần tử cũ nhất (đầu tiên trong LinkedHashMap)
+    if (_lruRowCache.length >= _maxCacheSize) {
+      final firstKey = _lruRowCache.keys.first;
+      _lruRowCache.remove(firstKey);
+    }
+    
+    // Thêm hoặc cập nhật phần tử trong cache
+    _lruRowCache[index] = widget;
+  }
+
+  // Lấy widget từ LRU cache
+  Widget? _getFromLRUCache(int index) {
+    final widget = _lruRowCache[index];
+    if (widget != null) {
+      // Di chuyển phần tử này lên cuối (mới nhất) bằng cách xóa và thêm lại
+      _lruRowCache.remove(index);
+      _lruRowCache[index] = widget;
+    }
+    return widget;
   }
 
   //---------------------------
@@ -498,42 +557,84 @@ class _SgTableState<T> extends State<SgTable<T>> {
   //---------------------------
   // Lọc và sắp xếp dữ liệu
   void _filterAndSortData() {
-    _filterData();
-    _sortData();
-  }
-
-  // Lọc dữ liệu dựa trên searchTerm và customFilter
-  void _filterData() {
     if ((widget.searchTerm == null || widget.searchTerm!.isEmpty) && widget.customFilter == null) {
-      _filteredData = List.from(widget.data);
+      // Nếu không có điều kiện lọc, chỉ sắp xếp
+      _sortedData = List.from(widget.data);
+      if (_sortColumnIndex != null && _sortDirection != SortDirection.none) {
+        _sortData();
+      }
     } else {
-      _filteredData = widget.data.where((item) {
-        if (widget.customFilter != null && !widget.customFilter!(item)) {
-          return false;
-        }
-
-        if (widget.searchTerm != null && widget.searchTerm!.isNotEmpty) {
-          final term = widget.caseSensitiveSearch ? widget.searchTerm! : widget.searchTerm!.toLowerCase();
-
-          for (var column in widget.columns) {
-            if (column.searchable && column.searchValueGetter != null) {
-              final value = column.searchValueGetter!(item);
-              final stringValue = widget.caseSensitiveSearch ? value : value.toLowerCase();
-              if (stringValue.contains(term)) {
-                return true;
-              }
-            }
-          }
-          return false;
-        }
-        return true;
-      }).toList();
+      // Áp dụng filter và sort trong cùng một lần duyệt mảng
+      _filterAndSortCombined();
     }
-
+    
     setState(() {
-      _sortedData = List.from(_filteredData);
       _shouldRebuildCache = true;
     });
+  }
+  
+  // Phương thức kết hợp filter và sort để tối ưu hiệu năng
+  void _filterAndSortCombined() {
+    // Tạo danh sách mới và filter dữ liệu
+    _sortedData = widget.data.where((item) {
+      // Áp dụng custom filter trước
+      if (widget.customFilter != null && !widget.customFilter!(item)) {
+        return false;
+      }
+
+      // Sau đó áp dụng search term filter nếu có
+      if (widget.searchTerm != null && widget.searchTerm!.isNotEmpty) {
+        final term = widget.caseSensitiveSearch ? widget.searchTerm! : widget.searchTerm!.toLowerCase();
+        
+        for (var column in widget.columns) {
+          if (column.searchable && column.searchValueGetter != null) {
+            final value = column.searchValueGetter!(item);
+            final stringValue = widget.caseSensitiveSearch ? value : value.toLowerCase();
+            if (stringValue.contains(term)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      return true;
+    }).toList();
+
+    // Sắp xếp trực tiếp sau khi filter nếu cần
+    if (_sortColumnIndex != null && 
+        _sortDirection != SortDirection.none &&
+        _sortColumnIndex! < widget.columns.length &&
+        widget.columns[_sortColumnIndex!].sortValueGetter != null) {
+      
+      final sortValueGetter = widget.columns[_sortColumnIndex!].sortValueGetter!;
+      
+      // Sử dụng compute cho dataset lớn
+      if (_sortedData.length > 1000) {
+        compute<_SortParams<T>, List<T>>(
+          _sortCompute,
+          _SortParams(
+            data: _sortedData,
+            getter: sortValueGetter,
+            direction: _sortDirection,
+          )
+        ).then((result) {
+          setState(() {
+            _sortedData = result;
+            _shouldRebuildCache = true;
+          });
+        });
+      } else {
+        // Sort trực tiếp cho dataset nhỏ
+        _sortedData.sort((a, b) {
+          return _compareItems(a, b, sortValueGetter, _sortDirection);
+        });
+      }
+    }
+  }
+
+  // Lọc dữ liệu không được dùng nữa - giữ lại để tương thích API
+  void _filterData() {
+    _filterAndSortData();
   }
 
   // Sắp xếp dữ liệu dựa trên cột được chọn
@@ -630,6 +731,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
       }
 
       _shouldRebuildCache = true;
+      _shouldRebuildHeader = true; // Đánh dấu cần rebuild header khi thay đổi sắp xếp
       _clearCaches();
     });
   }
@@ -641,51 +743,53 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _toggleSelectAll(bool? selected) {
     if (selected == null) return;
 
-    setState(() {
-      _allSelected = selected;
+    _allSelected = selected;
+    _allSelectedNotifier.value = selected;
 
-      if (_allSelected) {
-        _selectedItems.addAll(_sortedData);
-      } else {
-        _selectedItems.clear();
-      }
-
-      _notifySelectionChanged();
-      _shouldRebuildCache = true;
-    });
+    if (_allSelected) {
+      _selectedItems.addAll(_sortedData);
+    } else {
+      _selectedItems.clear();
+    }
+    
+    _selectedItemsNotifier.value = Set.from(_selectedItems);
+    _notifySelectionChanged();
+    _shouldRebuildCache = true;
   }
 
   // Xử lý chọn một hàng cụ thể
   void _toggleSelectItem(T item, bool? selected) {
     if (selected == null) return;
 
-    setState(() {
-      if (selected) {
-        _selectedItems.add(item);
-      } else {
-        _selectedItems.remove(item);
-      }
+    if (selected) {
+      _selectedItems.add(item);
+    } else {
+      _selectedItems.remove(item);
+    }
+    
+    _selectedItemsNotifier.value = Set.from(_selectedItems);
+    _updateAllSelectedState();
+    _notifySelectionChanged();
 
-      _updateAllSelectedState();
-      _notifySelectionChanged();
-
-      // Chỉ rebuild row cần thiết
-      final index = _sortedData.indexOf(item);
-      if (index >= 0) {
-        _rowCache.remove(index);
-        _cellsCache.remove(index);
-      }
-    });
+    // Chỉ rebuild row cần thiết
+    final index = _sortedData.indexOf(item);
+    if (index >= 0) {
+      _rowCache.remove(index);
+      _cellsCache.remove(index);
+    }
   }
 
   // Cập nhật trạng thái chọn tất cả dựa trên các mục đã chọn
   void _updateAllSelectedState() {
     if (_sortedData.isEmpty) {
       _allSelected = false;
+      _allSelectedNotifier.value = false;
       return;
     }
 
-    _allSelected = _sortedData.every((item) => _selectedItems.contains(item));
+    final allSelected = _sortedData.every((item) => _selectedItems.contains(item));
+    _allSelected = allSelected;
+    _allSelectedNotifier.value = allSelected;
   }
 
   // Thông báo thay đổi lựa chọn qua callback
@@ -702,17 +806,17 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _onRowSelected(int index) {
     if (!widget.allowRowSelection) return;
 
-    setState(() {
-      if (_selectedRowIndex == index) {
-        _selectedRowIndex = null;
-      } else {
-        _selectedRowIndex = index;
-      }
+    final currentSelectedRowIndex = _selectedRowNotifier.value;
+    
+    if (currentSelectedRowIndex == index) {
+      _selectedRowNotifier.value = null;
+    } else {
+      _selectedRowNotifier.value = index;
+    }
 
-      // Chỉ rebuild các row cần thiết
-      _rowCache.remove(_selectedRowIndex);
-      _rowCache.remove(index);
-    });
+    // Chỉ rebuild các row cần thiết
+    _rowCache.remove(_selectedRowNotifier.value);
+    _rowCache.remove(index);
 
     // Đảm bảo hàng được chọn nằm trong tầm nhìn
     _animateToIndex(index);
@@ -755,15 +859,35 @@ class _SgTableState<T> extends State<SgTable<T>> {
     }
   };
 
-  // Cache cho màu nền
+  // Pre-compute colors khi khởi tạo
   final Map<String, Color> _backgroundColorCache = {};
+  
+  // Khởi tạo cache màu sắc
+  void _initColorCache() {
+    // Selected & checked
+    _backgroundColorCache['selected_checked_even'] = widget.selectedRowColor;
+    _backgroundColorCache['selected_checked_odd'] = widget.selectedRowColor;
+    
+    // Selected only
+    _backgroundColorCache['selected_even'] = widget.selectedRowColor;
+    _backgroundColorCache['selected_odd'] = widget.selectedRowColor;
+    
+    // Checked only
+    _backgroundColorCache['checked_even'] = widget.checkedRowColor;
+    _backgroundColorCache['checked_odd'] = widget.checkedRowColor;
+    
+    // Normal rows
+    _backgroundColorCache['even'] = widget.evenRowBackgroundColor;
+    _backgroundColorCache['odd'] = widget.oddRowBackgroundColor;
+  }
 
   // Lấy màu nền cho hàng dựa trên trạng thái
   Color _getBackgroundColor(int index, bool isSelected, bool isChecked) {
     final isEven = index % 2 == 0;
     final key = _backgroundColorKeys[isSelected]![isChecked]![isEven]!;
 
-    return _backgroundColorCache[key] ??= (() {
+    // Sử dụng pre-computed color
+    return _backgroundColorCache[key] ?? (() {
       if (isSelected) {
         return widget.selectedRowColor;
       } else if (isChecked) {
@@ -777,6 +901,47 @@ class _SgTableState<T> extends State<SgTable<T>> {
   //---------------------------
   // XÂY DỰNG GIAO DIỆN
   //---------------------------
+  // Xây dựng và cache header cho table
+  Widget _buildHeaderWithCache(double totalWidth, double effectiveWidth) {
+    if (!_shouldRebuildHeader && _headerCache != null) {
+      return _headerCache!;
+    }
+    
+    final headerWidget = SgTableHeader<T>(
+      key: ValueKey('header_${widget.hashCode}'),
+      columns: _effectiveColumns,
+      headerBackgroundColor: widget.headerBackgroundColor,
+      gridLineColor: widget.gridLineColor,
+      gridLineWidth: widget.gridLineWidth,
+      textHeaderColor: widget.textHeaderColor,
+      showLastLineLeftRight: widget.showLastLineLeftRight,
+      showVerticalLines: widget.showVerticalLines,
+      rowHeight: widget.rowHeight,
+      totalWidth: totalWidth,
+      effectiveWidth: effectiveWidth,
+      showCheckboxes: widget.showCheckboxes,
+      columnWidths: _columnWidths,
+      onSortColumn: _onSortColumn,
+      onStartResize: _startResize,
+      onUpdateResize: _updateResize,
+      onEndResize: _endResize,
+      onToggleSelectAll: _toggleSelectAll,
+      allSelected: _allSelected,
+      sortColumnIndex: _sortColumnIndex,
+      sortDirection: _sortDirection,
+      checkboxColumnWidth: widget.checkboxColumnWidth,
+      scaleCheckbox: widget.scaleCheckbox,
+      activeColor: widget.activeColor,
+      checkColor: widget.checkColor,
+      side: widget.side,
+      shape: widget.shape,
+    );
+    
+    _headerCache = headerWidget;
+    _shouldRebuildHeader = false;
+    return headerWidget;
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalWidth = _calculateTotalWidth();
@@ -788,6 +953,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     // Rebuild cache nếu cần
     if (_shouldRebuildCache) {
       _clearCaches();
+      _initColorCache(); // Khởi tạo cache màu sắc
       _shouldRebuildCache = false;
     }
 
@@ -798,29 +964,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hàng tiêu đề - tối ưu với const và memoization
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: widget.headerBackgroundColor,
-              border: Border(
-                bottom: BorderSide(
-                  color: widget.gridLineColor,
-                  width: widget.gridLineWidth,
-                ),
-                top: BorderSide(
-                  color: widget.gridLineColor,
-                  width: widget.gridLineWidth,
-                ),
-              ),
-            ),
-            child: SizedBox(
-              width: totalWidth,
-              height: widget.rowHeight,
-              child: Row(
-                children: _buildHeaderCells(false, effectiveWidth, totalWidth),
-              ),
-            ),
-          ),
+          // Header với cache
+          _buildHeaderWithCache(totalWidth, effectiveWidth),
+          
           // Phần thân bảng - với ListView.builder được tối ưu
           Expanded(
             child: ListView.builder(
@@ -830,30 +976,72 @@ class _SgTableState<T> extends State<SgTable<T>> {
               ),
               key: PageStorageKey<String>('table_${widget.hashCode}'),
               clipBehavior: Clip.hardEdge,
-              cacheExtent: widget.rowHeight * 10, // Cache 10 rows trước/sau
+              cacheExtent: widget.rowHeight * 20, // Tăng cache lên 20 rows trước/sau
               itemCount: _sortedData.length,
-              itemExtent: widget.rowHeight, // Cố định chiều cao row để tối ưu hơn
+              // Không sử dụng cả itemExtent và prototypeItem cùng lúc
+              // itemExtent: widget.rowHeight, // Cố định chiều cao row để tối ưu hơn
               addAutomaticKeepAlives: false, // Tắt để tối ưu hiệu năng
               addRepaintBoundaries: true, // Giữ lại tính năng này để tối ưu render
+              prototypeItem: _sortedData.isNotEmpty ? _buildPrototypeRow(effectiveWidth, totalWidth) : null, // Thêm prototype để tối ưu hiệu suất
               itemBuilder: (context, index) {
-                // Sử dụng cache thông minh
-                Widget? cachedWidget = _rowCache[index];
+                // Sử dụng LRU cache thông minh
+                Widget? cachedWidget = _getFromLRUCache(index);
                 if (cachedWidget != null) {
                   return cachedWidget;
                 }
     
-                // Tạo widget mới với key để tối ưu
-                final rowWidget = RepaintBoundary(
-                  key: ValueKey('${widget.hashCode}_row_$index'),
-                  child: _buildTableRow(index, effectiveWidth, totalWidth),
+                final item = _sortedData[index];
+
+                return ValueListenableBuilder<int?>(
+                  valueListenable: _selectedRowNotifier,
+                  builder: (context, selectedRowIndex, _) {
+                    final isSelected = selectedRowIndex == index;
+                    
+                    return ValueListenableBuilder<Set<T>>(
+                      valueListenable: _selectedItemsNotifier,
+                      builder: (context, selectedItems, _) {
+                        final isChecked = selectedItems.contains(item);
+                        
+                        // Tạo widget mới với key để tối ưu
+                        final rowWidget = SgTableRow<T>(
+                          key: ValueKey('${widget.hashCode}_row_$index'),
+                          item: item,
+                          index: index,
+                          totalRows: _sortedData.length,
+                          columns: _effectiveColumns,
+                          rowHeight: widget.rowHeight,
+                          totalWidth: totalWidth,
+                          effectiveWidth: effectiveWidth,
+                          isSelected: isSelected,
+                          isChecked: isChecked,
+                          showHorizontalLines: widget.showHorizontalLines,
+                          showLastLineTopBottom: widget.showLastLineTopBottom,
+                          gridLineColor: widget.gridLineColor,
+                          gridLineWidth: widget.gridLineWidth,
+                          backgroundColor: _getBackgroundColor(index, isSelected, isChecked),
+                          onRowSelected: _onRowSelected,
+                          onHover: (idx, isHovering) {
+                            if (!_isScrolling && isHovering && _selectedRowNotifier.value != idx) {
+                              _selectedRowNotifier.value = idx;
+                              _rowCache.remove(_selectedRowNotifier.value);
+                            } else if (!_isScrolling && !isHovering && _selectedRowNotifier.value == idx) {
+                              _selectedRowNotifier.value = null;
+                              _rowCache.remove(idx);
+                            }
+                          },
+                          columnWidths: _columnWidths,
+                          showVerticalLines: widget.showVerticalLines,
+                          showLastLineLeftRight: widget.showLastLineLeftRight,
+                          showCheckboxes: widget.showCheckboxes,
+                        );
+                        
+                        // Cập nhật LRU cache
+                        _updateLRUCache(index, rowWidget);
+                        return rowWidget;
+                      },
+                    );
+                  },
                 );
-    
-                // Giới hạn cache size để tránh memory leak
-                if (_rowCache.length > 50) {
-                  _rowCache.clear();
-                }
-                _rowCache[index] = rowWidget;
-                return rowWidget;
               },
             ),
           ),
@@ -865,52 +1053,69 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Xây dựng hàng dữ liệu
   Widget _buildTableRow(int index, double effectiveWidth, double totalWidth) {
     final isLast = index == _sortedData.length - 1;
-    final isChecked = _selectedItems.contains(_sortedData[index]);
     final item = _sortedData[index];
-    final isSelected = _selectedRowIndex == index;
-
-    // Sử dụng màu nền đã cache
-    final backgroundColor = _getBackgroundColor(index, isSelected, isChecked);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: (widget.showHorizontalLines && (!isLast || widget.showLastLineTopBottom))
-            ? Border(
-                bottom: BorderSide(
-                  color: widget.gridLineColor,
-                  width: widget.gridLineWidth,
+    
+    return ValueListenableBuilder<int?>(
+      valueListenable: _selectedRowNotifier,
+      builder: (context, selectedRowIndex, _) {
+        final isSelected = selectedRowIndex == index;
+        
+        return ValueListenableBuilder<Set<T>>(
+          valueListenable: _selectedItemsNotifier,
+          builder: (context, selectedItems, _) {
+            final isChecked = selectedItems.contains(item);
+            
+            // Sử dụng màu nền đã cache
+            final backgroundColor = _getBackgroundColor(index, isSelected, isChecked);
+            
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                border: (widget.showHorizontalLines && (!isLast || widget.showLastLineTopBottom))
+                    ? Border(
+                        bottom: BorderSide(
+                          color: widget.gridLineColor,
+                          width: widget.gridLineWidth,
+                        ),
+                      )
+                    : null,
+              ),
+              child: SizedBox(
+                width: totalWidth,
+                height: widget.rowHeight,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    onTap: () => _onRowSelected(index),
+                    onHover: (isHovering) {
+                      // Tối ưu hover effect - chỉ cập nhật khi cần thiết
+                      if (!_isScrolling && isHovering && _selectedRowNotifier.value != index) {
+                        _selectedRowNotifier.value = index;
+                        _rowCache.remove(_selectedRowNotifier.value);
+                      } else if (!_isScrolling && !isHovering && _selectedRowNotifier.value == index) {
+                        _selectedRowNotifier.value = null;
+                        _rowCache.remove(index);
+                      }
+                    },
+                    child: Row(
+                      children: _buildRowCells(item, false, effectiveWidth, totalWidth, index),
+                    ),
+                  ),
                 ),
-              )
-            : null,
-      ),
-      child: SizedBox(
-        width: totalWidth,
-        height: widget.rowHeight,
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: () => _onRowSelected(index),
-            onHover: (isHovering) {
-              // Tối ưu hover effect - chỉ cập nhật khi cần thiết
-              if (!_isScrolling && isHovering && _selectedRowIndex != index) {
-                setState(() {
-                  _selectedRowIndex = index;
-                  _rowCache.remove(_selectedRowIndex);
-                });
-              } else if (!_isScrolling && !isHovering && _selectedRowIndex == index) {
-                setState(() {
-                  _selectedRowIndex = null;
-                  _rowCache.remove(index);
-                });
-              }
-            },
-            child: Row(
-              children: _buildRowCells(item, false, effectiveWidth, totalWidth, index),
-            ),
-          ),
-        ),
-      ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Tạo một row mẫu để sử dụng làm prototype
+  Widget _buildPrototypeRow(double effectiveWidth, double totalWidth) {
+    return SizedBox(
+      height: widget.rowHeight,
+      width: totalWidth,
+      child: const SizedBox(), // Container trống có kích thước đúng
     );
   }
 
