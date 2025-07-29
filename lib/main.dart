@@ -6,6 +6,7 @@ import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'package:se_gay_components/table_view_exemple.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
+import 'package:se_gay_components/file_upload_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -81,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
               MenuItem(icon: Icons.abc, label: "Home", idMenu: "H"),
               MenuItem(icon: Icons.abc, label: "Home", idMenu: "M")
             ]),
+            MenuItem(icon: Icons.upload_file, label: "File Upload", idMenu: "FileUpload"),
           ],
           selectedIndex: selectedIndex,
           onItemSelected: (index, [subIndex]) {
@@ -91,7 +93,9 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           body: selectedIndex == 1
               ? const TestScreen()
-              : const TableViewExemple()),
+              : selectedIndex == 2
+                  ? const FileUploadExample()
+                  : const TableViewExemple()),
     );
   }
 }
