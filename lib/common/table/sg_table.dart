@@ -249,11 +249,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
         if (_effectiveColumns[i].isFullWidth) {
           if (widget.showCheckboxes && widget.showActions) {
             _columnWidths[i] =
-                (widget.widthScreen - widget.checkboxColumnWidth) /
+                (widget.widthScreen - widget.checkboxColumnWidth - widget.actionColumnWidth!) /
                     (_effectiveColumns.length - 2);
           } else if (widget.showCheckboxes) {
             _columnWidths[i] =
-                widget.widthScreen / _effectiveColumns.length - 1;
+                (widget.widthScreen - widget.checkboxColumnWidth) /
+                    (_effectiveColumns.length - 1);
           } else if (widget.showActions) {
             _columnWidths[i] =
                 (widget.widthScreen - widget.actionColumnWidth!) /
