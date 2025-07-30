@@ -43,6 +43,7 @@ class SgTable<T> extends StatefulWidget {
   final double? actionIconSize;
   final double? actionColumnWidth;
   final String? actionColumnTitle;
+  final double widthScreen;
 
   const SgTable({
     super.key,
@@ -79,6 +80,7 @@ class SgTable<T> extends StatefulWidget {
     this.actionColumnWidth = 120.0,
     this.actionColumnTitle = "Hành động",
     this.titleStyleHeader,
+    this.widthScreen = 1080,
   });
 
   @override
@@ -239,7 +241,28 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _initColumnWidths() {
     _columnWidths = {};
     for (int i = 0; i < _effectiveColumns.length; i++) {
-      _columnWidths[i] = _effectiveColumns[i].width ?? 120.0;
+      if (_effectiveColumns[i].width != null) {
+        _columnWidths[i] = _effectiveColumns[i].width!;
+      } else {
+        // Default width if not specified
+        _columnWidths[i] = 120.0;
+        if (_effectiveColumns[i].isFullWidth) {
+          if (widget.showCheckboxes && widget.showActions) {
+            _columnWidths[i] =
+                (widget.widthScreen - widget.checkboxColumnWidth) /
+                    (_effectiveColumns.length - 2);
+          } else if (widget.showCheckboxes) {
+            _columnWidths[i] =
+                widget.widthScreen / _effectiveColumns.length - 1;
+          } else if (widget.showActions) {
+            _columnWidths[i] =
+                (widget.widthScreen - widget.actionColumnWidth!) /
+                    (_effectiveColumns.length - 1);
+          } else {
+            _columnWidths[i] = widget.widthScreen / _effectiveColumns.length;
+          }
+        }
+      }
     }
     _originalColumnWidths = Map.from(_columnWidths);
   }

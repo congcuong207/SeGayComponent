@@ -13,6 +13,7 @@ class SgTableColumn<T> {
   final double? width;
   final bool isNumeric;
   final bool searchable;
+  final bool isFullWidth;
 
   SgTableColumn({
     required this.title,
@@ -24,6 +25,7 @@ class SgTableColumn<T> {
     this.width,
     this.isNumeric = false,
     this.searchable = true,
+    this.isFullWidth = false,
   });
 }
 
@@ -97,6 +99,7 @@ class TableColumnBuilder {
     bool isNumeric = false,
     Color? textColor,
     bool searchable = true,
+    bool isFullWidth = false,
   }) {
     return SgTableColumn<T>(
       title: title,
@@ -115,6 +118,7 @@ class TableColumnBuilder {
       width: width,
       isNumeric: isNumeric,
       searchable: searchable,
+      isFullWidth: isFullWidth,
     );
   }
 
