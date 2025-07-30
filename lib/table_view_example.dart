@@ -29,10 +29,13 @@ class TableV2Example extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quản lý tài sản'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: SGTableV2(),
+      body: const SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SGTableV2(),
+        ),
       ),
     );
   }
