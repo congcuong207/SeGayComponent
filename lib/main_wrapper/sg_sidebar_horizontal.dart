@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_button_icon_with_popup.dart';
 import 'package:se_gay_components/common/sg_button_v2.dart';
 import 'package:se_gay_components/common/sg_popup_menu.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 
 // Thêm class mới cho nhóm sub-items
 class SGSubItemGroup {
@@ -314,7 +313,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
       },
       // Giới hạn kích thước bằng Container với constraints
       child: Container(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           maxWidth: 200, // Giới hạn chiều rộng tối đa cho mỗi item
           minWidth: 80, // Đảm bảo chiều rộng tối thiểu
         ),
