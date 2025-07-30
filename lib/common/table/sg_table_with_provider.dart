@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 import 'sg_table_header.dart';
@@ -219,7 +218,6 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
   // Controller cuộn
   final ScrollController _scrollController = ScrollController();
   bool _isScrolling = false;
-  bool _isProcessingScroll = false; // Thêm biến để theo dõi xử lý scroll
 
   // Danh sách cột hiệu quả (bao gồm cột checkbox và hành động nếu cần)
   late List<SgTableColumn<T>> _effectiveColumns;

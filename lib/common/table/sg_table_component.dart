@@ -78,7 +78,7 @@ class SgTableActionColumn<T> extends SgTableColumn<T> {
     double? sizeIcon,
   ) {
     // Tạo key duy nhất cho bộ tham số này
-    final String cacheKey = '${T.toString()}_${onViewAction.hashCode}_${onEditAction.hashCode}_${onDeleteAction.hashCode}_${colorItemView}_${colorItemEdit}_${colorItemDelete}_${sizeIcon}';
+    final String cacheKey = '${T.toString()}_${onViewAction.hashCode}_${onEditAction.hashCode}_${onDeleteAction.hashCode}_${colorItemView}_${colorItemEdit}_${colorItemDelete}_$sizeIcon';
     
     // Nếu đã có trong cache, trả về từ cache
     if (_cellBuilderCache.containsKey(cacheKey)) {
@@ -86,7 +86,7 @@ class SgTableActionColumn<T> extends SgTableColumn<T> {
     }
     
     // Tạo builder mới và cache lại
-    Widget Function(T) builder = (item) => Row(
+    builder(item) => Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (onViewAction != null)
