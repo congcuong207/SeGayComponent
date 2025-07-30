@@ -10,6 +10,7 @@ class SgTable<T> extends StatefulWidget {
   final List<T> data;
   final double rowHeight;
   final Color? textHeaderColor;
+  final TextStyle? titleStyleHeader;
   final Color headerBackgroundColor;
   final Color oddRowBackgroundColor;
   final Color evenRowBackgroundColor;
@@ -25,12 +26,12 @@ class SgTable<T> extends StatefulWidget {
   final String? searchTerm;
   final bool caseSensitiveSearch;
   final bool Function(T)? customFilter;
-  
+
   // Checkbox selection
   final bool showCheckboxes;
   final Function(List<T>)? onSelectionChanged;
   final double checkboxColumnWidth;
-  
+
   // Action column options
   final bool showActions;
   final Function(T)? onViewAction;
@@ -77,6 +78,7 @@ class SgTable<T> extends StatefulWidget {
     this.actionIconSize,
     this.actionColumnWidth = 120.0,
     this.actionColumnTitle = "Hành động",
+    this.titleStyleHeader,
   });
 
   @override
@@ -91,7 +93,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _selectedRowIndex;
   late List<SgTableColumn<T>> _effectiveColumns;
   String? _lastSearchTerm;
-  
+
   // Checkbox selection state
   final Set<T> _selectedItems = {};
   bool _allSelected = false;
@@ -119,15 +121,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
     if (widget.data != oldWidget.data) {
       _sortedData = List.from(widget.data);
       _filterAndSortData();
-      
+
       // Update selected items when data changes
       if (widget.showCheckboxes) {
         _selectedItems.removeWhere((item) => !widget.data.contains(item));
         _updateAllSelectedState();
       }
     }
-    
-    if (widget.columns != oldWidget.columns || 
+
+    if (widget.columns != oldWidget.columns ||
         widget.showActions != oldWidget.showActions ||
         widget.showCheckboxes != oldWidget.showCheckboxes ||
         widget.actionColumnTitle != oldWidget.actionColumnTitle) {
@@ -140,48 +142,48 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _filterAndSortData();
     }
   }
-  
+
   // Add methods for checkbox handling
   void _toggleSelectAll(bool? selected) {
     if (selected == null) return;
-    
+
     setState(() {
       _allSelected = selected;
-      
+
       if (_allSelected) {
         _selectedItems.addAll(_sortedData);
       } else {
         _selectedItems.clear();
       }
-      
+
       _notifySelectionChanged();
     });
   }
-  
+
   void _toggleSelectItem(T item, bool? selected) {
     if (selected == null) return;
-    
+
     setState(() {
       if (selected) {
         _selectedItems.add(item);
       } else {
         _selectedItems.remove(item);
       }
-      
+
       _updateAllSelectedState();
       _notifySelectionChanged();
     });
   }
-  
+
   void _updateAllSelectedState() {
     if (_sortedData.isEmpty) {
       _allSelected = false;
       return;
     }
-    
+
     _allSelected = _sortedData.every((item) => _selectedItems.contains(item));
   }
-  
+
   void _notifySelectionChanged() {
     if (widget.onSelectionChanged != null) {
       widget.onSelectionChanged!(_selectedItems.toList());
@@ -191,7 +193,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Update the _buildEffectiveColumns method for better checkbox visuals
   void _buildEffectiveColumns() {
     _effectiveColumns = [];
-    
+
     // Add checkbox column if needed
     if (widget.showCheckboxes) {
       _effectiveColumns.add(
@@ -212,10 +214,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
         ),
       );
     }
-    
+
     // Add regular columns
     _effectiveColumns.addAll(widget.columns);
-    
+
     // Add action column if enabled
     if (widget.showActions) {
       _effectiveColumns.add(
@@ -439,7 +441,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
                       final isEven = index % 2 == 0;
                       final isLast = index == _sortedData.length - 1;
                       final isSelected = _selectedRowIndex == index;
-                      final isChecked = _selectedItems.contains(_sortedData[index]);
+                      final isChecked =
+                          _selectedItems.contains(_sortedData[index]);
 
                       Color backgroundColor;
                       if (isSelected) {
@@ -494,7 +497,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
       final column = _effectiveColumns[index];
       final hasSort = column.sortValueGetter != null;
       final isLast = index == _effectiveColumns.length - 1;
-      
+
       // Special case for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -517,7 +520,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
           totalWidth: totalWidth,
         );
       }
-      
+
       return _buildCell(
         child: InkWell(
           onTap: hasSort ? () => _onSortColumn(index) : null,
@@ -533,13 +536,19 @@ class _SgTableState<T> extends State<SgTable<T>> {
                 Expanded(
                   child: SGText(
                     text: column.title,
-                    fontWeight: FontWeight.bold,
                     textAlign: column.titleAlignment,
                     color: widget.textHeaderColor ?? Colors.white,
+                    style: widget.titleStyleHeader ??
+                        const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                   ),
                 ),
                 // Only add the icon when it should actually be visible
-                if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) 
+                if (hasSort &&
+                    _sortColumnIndex == index &&
+                    _sortDirection != SortDirection.none)
                   _buildSortIcon(index),
               ],
             ),
@@ -560,7 +569,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     return List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
-      
+
       // Special handling for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -580,12 +589,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
       return _buildCell(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8),
-            alignment: column.cellAlignment == TextAlign.center
-                ? Alignment.center
-                : column.cellAlignment == TextAlign.right
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-            child: column.cellBuilder(item),
+          alignment: column.cellAlignment == TextAlign.center
+              ? Alignment.center
+              : column.cellAlignment == TextAlign.right
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+          child: column.cellBuilder(item),
         ),
         width: column.width,
         isLast: isLast,
