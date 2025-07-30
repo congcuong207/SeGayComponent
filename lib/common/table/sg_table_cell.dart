@@ -36,21 +36,33 @@ class _SgTableCellState<T> extends State<SgTableCell<T>> {
   late Widget _cellContent;
   bool _isContentBuilt = false;
   
+  // Cache style và alignment
+  late Alignment _alignment;
+  late EdgeInsetsGeometry _padding;
+  
   @override
   void initState() {
     super.initState();
     _buildCellContent();
+    _initAlignmentAndPadding();
   }
   
   @override
   void didUpdateWidget(SgTableCell<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Chỉ rebuild khi cần thiết
-    if (widget.item != oldWidget.item || 
-        widget.cellBuilder != oldWidget.cellBuilder ||
-        widget.cellAlignment != oldWidget.cellAlignment) {
+    // So sánh sâu hơn, không chỉ reference equality
+    final bool needsRebuild = widget.item != oldWidget.item || 
+        widget.cellBuilder != oldWidget.cellBuilder;
+    
+    final bool needsUpdateAlignment = widget.cellAlignment != oldWidget.cellAlignment;
+        
+    if (needsRebuild) {
       _buildCellContent();
+    }
+    
+    if (needsUpdateAlignment) {
+      _initAlignmentAndPadding();
     }
   }
   
@@ -59,8 +71,28 @@ class _SgTableCellState<T> extends State<SgTableCell<T>> {
     _isContentBuilt = true;
   }
   
+  void _initAlignmentAndPadding() {
+    // Xác định alignment dựa trên cellAlignment
+    _alignment = widget.cellAlignment == TextAlign.center
+        ? Alignment.center
+        : widget.cellAlignment == TextAlign.right
+            ? Alignment.centerRight
+            : Alignment.centerLeft;
+    
+    // Chỉ áp dụng padding cho text cells (không phải center)
+    _padding = widget.cellAlignment == TextAlign.center
+        ? EdgeInsets.zero
+        : const EdgeInsets.symmetric(horizontal: 8);
+  }
+  
   @override
   Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: _buildCellContainer(),
+    );
+  }
+  
+  Widget _buildCellContainer() {
     if (widget.isLast) {
       return SizedBox(
         width: widget.width,
@@ -97,12 +129,8 @@ class _SgTableCellState<T> extends State<SgTableCell<T>> {
     }
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: widget.cellAlignment == TextAlign.center
-          ? Alignment.center
-          : widget.cellAlignment == TextAlign.right
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
+      padding: _padding,
+      alignment: _alignment,
       child: _cellContent,
     );
   }

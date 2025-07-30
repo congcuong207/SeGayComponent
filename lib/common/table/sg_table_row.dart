@@ -56,10 +56,71 @@ class SgTableRow<T> extends StatefulWidget {
 class _SgTableRowState<T> extends State<SgTableRow<T>> {
   bool _isHovering = false;
   
+  // Tối ưu bằng cách cache các cells
+  late List<Widget> _cachedCells;
+  bool _needsRebuildCells = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    _buildAndCacheCells();
+  }
+  
+  @override
+  void didUpdateWidget(SgTableRow<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Kiểm tra chính xác xem có cần rebuild cells không
+    _needsRebuildCells = widget.item != oldWidget.item ||
+        widget.columns != oldWidget.columns ||
+        widget.columnWidths != oldWidget.columnWidths ||
+        widget.showVerticalLines != oldWidget.showVerticalLines ||
+        widget.showLastLineLeftRight != oldWidget.showLastLineLeftRight ||
+        widget.gridLineColor != oldWidget.gridLineColor ||
+        widget.gridLineWidth != oldWidget.gridLineWidth;
+        
+    if (_needsRebuildCells) {
+      _buildAndCacheCells();
+    }
+  }
+  
+  void _buildAndCacheCells() {
+    _cachedCells = _buildCells();
+    _needsRebuildCells = false;
+  }
+  
+  List<Widget> _buildCells() {
+    return List.generate(widget.columns.length, (index) {
+      final column = widget.columns[index];
+      final isLast = index == widget.columns.length - 1;
+      final baseWidth = widget.columnWidths[index] ?? (column.width ?? 120.0);
+      
+      return SgTableCell<T>(
+        key: ValueKey<String>('cell_${widget.index}_$index'),
+        item: widget.item,
+        cellBuilder: column.cellBuilder,
+        width: baseWidth,
+        height: widget.rowHeight,
+        isLast: isLast,
+        cellAlignment: column.cellAlignment,
+        showVerticalLines: widget.showVerticalLines,
+        showLastLineLeftRight: widget.showLastLineLeftRight,
+        gridLineColor: widget.gridLineColor,
+        gridLineWidth: widget.gridLineWidth,
+      );
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     final isLast = widget.index == widget.totalRows - 1;
     
+    // Nếu cần rebuild, làm điều đó trước
+    if (_needsRebuildCells) {
+      _buildAndCacheCells();
+    }
+    
+    // Sử dụng RepaintBoundary để giảm vẽ lại toàn bộ bảng
     return RepaintBoundary(
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -89,7 +150,7 @@ class _SgTableRowState<T> extends State<SgTableRow<T>> {
                 }
               },
               child: Row(
-                children: _buildCells(),
+                children: _cachedCells,
               ),
             ),
           ),
@@ -97,27 +158,4 @@ class _SgTableRowState<T> extends State<SgTableRow<T>> {
       ),
     );
   }
-  
-  List<Widget> _buildCells() {
-    return List.generate(widget.columns.length, (index) {
-      final column = widget.columns[index];
-      final isLast = index == widget.columns.length - 1;
-      final baseWidth = widget.columnWidths[index] ?? (column.width ?? 120.0);
-      
-      return SgTableCell<T>(
-        item: widget.item,
-        cellBuilder: column.cellBuilder,
-        width: baseWidth,
-        height: widget.rowHeight,
-        isLast: isLast,
-        cellAlignment: column.cellAlignment,
-        showVerticalLines: widget.showVerticalLines,
-        showLastLineLeftRight: widget.showLastLineLeftRight,
-        gridLineColor: widget.gridLineColor,
-        gridLineWidth: widget.gridLineWidth,
-      );
-    });
-  }
-  
-  // Không cần _buildCell nữa vì đã dùng SgTableCell
 } 

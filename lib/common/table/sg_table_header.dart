@@ -68,34 +68,39 @@ class SgTableHeader<T> extends StatefulWidget {
 }
 
 class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
+  // Cache header cells
+  late List<Widget> _headerCells;
+  bool _needsRebuild = true;
+
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: widget.headerBackgroundColor,
-        border: Border(
-          bottom: BorderSide(
-            color: widget.gridLineColor,
-            width: widget.gridLineWidth,
-          ),
-          top: BorderSide(
-            color: widget.gridLineColor,
-            width: widget.gridLineWidth,
-          ),
-        ),
-      ),
-      child: SizedBox(
-        width: widget.totalWidth,
-        height: widget.rowHeight,
-        child: Row(
-          children: _buildHeaderCells(),
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _buildHeaderCells();
   }
-  
-  List<Widget> _buildHeaderCells() {
-    return List.generate(widget.columns.length, (index) {
+
+  @override
+  void didUpdateWidget(SgTableHeader<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Chỉ rebuild khi cần thiết
+    _needsRebuild = widget.columns != oldWidget.columns ||
+                    widget.columnWidths != oldWidget.columnWidths ||
+                    widget.sortColumnIndex != oldWidget.sortColumnIndex ||
+                    widget.sortDirection != oldWidget.sortDirection ||
+                    widget.allSelected != oldWidget.allSelected ||
+                    widget.showVerticalLines != oldWidget.showVerticalLines ||
+                    widget.showLastLineLeftRight != oldWidget.showLastLineLeftRight ||
+                    widget.textHeaderColor != oldWidget.textHeaderColor ||
+                    widget.gridLineColor != oldWidget.gridLineColor ||
+                    widget.gridLineWidth != oldWidget.gridLineWidth;
+    
+    if (_needsRebuild) {
+      _buildHeaderCells();
+    }
+  }
+
+  void _buildHeaderCells() {
+    _headerCells = List.generate(widget.columns.length, (index) {
       final column = widget.columns[index];
       final hasSort = column.sortValueGetter != null;
       final isLast = index == widget.columns.length - 1;
@@ -157,8 +162,43 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
         columnIndex: index,
       );
     });
+    
+    _needsRebuild = false;
   }
   
+  @override
+  Widget build(BuildContext context) {
+    // Nếu cần rebuild, làm điều đó trước
+    if (_needsRebuild) {
+      _buildHeaderCells();
+    }
+
+    return RepaintBoundary(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: widget.headerBackgroundColor,
+          border: Border(
+            bottom: BorderSide(
+              color: widget.gridLineColor,
+              width: widget.gridLineWidth,
+            ),
+            top: BorderSide(
+              color: widget.gridLineColor,
+              width: widget.gridLineWidth,
+            ),
+          ),
+        ),
+        child: SizedBox(
+          width: widget.totalWidth,
+          height: widget.rowHeight,
+          child: Row(
+            children: _headerCells,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSortIcon(int columnIndex) {
     if (widget.sortColumnIndex != columnIndex || widget.sortDirection == SortDirection.none) {
       return const SizedBox.shrink(); // Return no space at all

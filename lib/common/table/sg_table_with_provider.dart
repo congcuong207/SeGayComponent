@@ -221,6 +221,7 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
   final ScrollController _scrollController = ScrollController();
   Timer? _scrollEndTimer;
   bool _isScrolling = false;
+  bool _isProcessingScroll = false; // Thêm biến để theo dõi xử lý scroll
   
   // Danh sách cột hiệu quả (bao gồm cột checkbox và hành động nếu cần)
   late List<SgTableColumn<T>> _effectiveColumns;
@@ -228,8 +229,8 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
   // Cache màu nền
   final Map<String, Color> _backgroundColorCache = {};
   
-  // Prototype row cho ListView
-  Widget? _prototypeItem;
+  // Cache kết quả tính toán width
+  final Map<String, double> _columnWidthCache = {};
   
   // Lưu trữ thông tin filter để xử lý trong Provider
   String? _lastSearchTerm;
@@ -264,6 +265,7 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
     _scrollController.dispose();
     _scrollEndTimer?.cancel();
     _backgroundColorCache.clear();
+    _columnWidthCache.clear(); // Xóa cache column width
     super.dispose();
   }
   
@@ -278,6 +280,7 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
         
     if (columnsChanged) {
       _buildEffectiveColumns();
+      _columnWidthCache.clear(); // Xóa cache khi cột thay đổi
     }
     
     // Đánh dấu cần cập nhật filter nếu có thay đổi
@@ -298,18 +301,21 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
     }
   }
   
-  // Lắng nghe sự kiện cuộn để tối ưu hiệu suất
+  // Lắng nghe sự kiện cuộn để tối ưu hiệu suất - Cải tiến với throttling
   void _scrollListener() {
     if (!_scrollController.hasClients) return;
 
-    if (_scrollController.position.isScrollingNotifier.value && !_isScrolling) {
+    if (_scrollController.position.isScrollingNotifier.value && !_isProcessingScroll) {
       _isScrolling = true;
+      _isProcessingScroll = true;
 
       _scrollEndTimer?.cancel();
-      _scrollEndTimer = Timer(const Duration(milliseconds: 300), () {
+      // Sử dụng Future.delayed thay cho Timer để giảm overhead
+      Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
           setState(() {
             _isScrolling = false;
+            _isProcessingScroll = false;
           });
         }
       });
@@ -403,14 +409,6 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
     return _backgroundColorCache[key]!;
   }
   
-  // Tạo prototype row cho ListView
-  Widget _buildPrototypeRow() {
-    return SizedBox(
-      height: widget.rowHeight,
-      child: const SizedBox(),
-    );
-  }
-  
   @override
   Widget build(BuildContext context) {
     return SgTableStateProvider.create<T>(
@@ -443,8 +441,6 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
         
         final exactHeight = widget.rowHeight + (provider.sortedData.length * widget.rowHeight);
         
-        _prototypeItem ??= _buildPrototypeRow();
-        
         return SizedBox(
           width: totalWidth,
           height: exactHeight,
@@ -452,37 +448,39 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              SgTableHeader<T>(
-                columns: _effectiveColumns,
-                headerBackgroundColor: widget.headerBackgroundColor,
-                gridLineColor: widget.gridLineColor,
-                gridLineWidth: widget.gridLineWidth,
-                textHeaderColor: widget.textHeaderColor,
-                showLastLineLeftRight: widget.showLastLineLeftRight,
-                showVerticalLines: widget.showVerticalLines,
-                rowHeight: widget.rowHeight,
-                totalWidth: totalWidth,
-                effectiveWidth: effectiveWidth,
-                showCheckboxes: widget.showCheckboxes,
-                columnWidths: provider.columnWidths,
-                onSortColumn: (index) => provider.toggleSort(index, _effectiveColumns),
-                onStartResize: (index, startX) => provider.startResize(index, startX),
-                onUpdateResize: (currentX) => provider.updateResize(currentX),
-                onEndResize: () => provider.endResize(),
-                onToggleSelectAll: (selected) => provider.toggleSelectAll(selected),
-                allSelected: provider.allSelected,
-                sortColumnIndex: provider.sortColumnIndex,
-                sortDirection: provider.sortDirection,
-                checkboxColumnWidth: widget.checkboxColumnWidth,
-                scaleCheckbox: widget.scaleCheckbox,
-                activeColor: widget.activeColor,
-                checkColor: widget.checkColor,
-                side: widget.side,
-                shape: widget.shape,
+              // Header với RepaintBoundary
+              RepaintBoundary(
+                child: SgTableHeader<T>(
+                  columns: _effectiveColumns,
+                  headerBackgroundColor: widget.headerBackgroundColor,
+                  gridLineColor: widget.gridLineColor,
+                  gridLineWidth: widget.gridLineWidth,
+                  textHeaderColor: widget.textHeaderColor,
+                  showLastLineLeftRight: widget.showLastLineLeftRight,
+                  showVerticalLines: widget.showVerticalLines,
+                  rowHeight: widget.rowHeight,
+                  totalWidth: totalWidth,
+                  effectiveWidth: effectiveWidth,
+                  showCheckboxes: widget.showCheckboxes,
+                  columnWidths: provider.columnWidths,
+                  onSortColumn: (index) => provider.toggleSort(index, _effectiveColumns),
+                  onStartResize: (index, startX) => provider.startResize(index, startX),
+                  onUpdateResize: (currentX) => provider.updateResize(currentX),
+                  onEndResize: () => provider.endResize(),
+                  onToggleSelectAll: (selected) => provider.toggleSelectAll(selected),
+                  allSelected: provider.allSelected,
+                  sortColumnIndex: provider.sortColumnIndex,
+                  sortDirection: provider.sortDirection,
+                  checkboxColumnWidth: widget.checkboxColumnWidth,
+                  scaleCheckbox: widget.scaleCheckbox,
+                  activeColor: widget.activeColor,
+                  checkColor: widget.checkColor,
+                  side: widget.side,
+                  shape: widget.shape,
+                ),
               ),
               
-              // Phần thân bảng với ListView
+              // Phần thân bảng với ListView được cải tiến
               Expanded(
                 child: ListView.builder(
                   controller: widget.verticalController ?? _scrollController,
@@ -495,7 +493,18 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
                   itemCount: provider.sortedData.length,
                   addAutomaticKeepAlives: false,
                   addRepaintBoundaries: true,
-                  prototypeItem: _prototypeItem,
+                  itemExtent: widget.rowHeight, // Thêm itemExtent cố định
+                  findChildIndexCallback: (key) {
+                    // Logic tìm index từ key để tái sử dụng widget
+                    if (key is ValueKey<String>) {
+                      final keyString = key.value;
+                      final parts = keyString.split('_');
+                      if (parts.length > 1) {
+                        return int.tryParse(parts.last);
+                      }
+                    }
+                    return null;
+                  },
                   itemBuilder: (context, index) {
                     final item = provider.sortedData[index];
                     
@@ -505,7 +514,7 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
                         final isChecked = provider.selectedItems.contains(item);
                         
                         return SgTableRow<T>(
-                          key: ValueKey('${widget.hashCode}_row_$index'),
+                          key: ValueKey<String>('${widget.hashCode}_row_$index'),
                           item: item,
                           index: index,
                           totalRows: provider.sortedData.length,
@@ -551,12 +560,23 @@ class _SgTableWithProviderState<T> extends State<SgTableWithProvider<T>> {
     );
   }
   
-  // Tính tổng chiều rộng của bảng
+  // Tính tổng chiều rộng của bảng - tối ưu với cache
   double _calculateTotalWidth(Map<int, double> columnWidths) {
+    // Tạo key cho cache từ giá trị columnWidths
+    final cacheKey = columnWidths.entries.map((e) => '${e.key}:${e.value}').join('_');
+    
+    // Kiểm tra cache trước khi tính toán
+    if (_columnWidthCache.containsKey(cacheKey)) {
+      return _columnWidthCache[cacheKey]!;
+    }
+    
     double totalWidth = 0;
     for (int i = 0; i < _effectiveColumns.length; i++) {
       totalWidth += columnWidths[i] ?? (_effectiveColumns[i].width ?? 120.0);
     }
+    
+    // Lưu kết quả vào cache
+    _columnWidthCache[cacheKey] = totalWidth;
     return totalWidth;
   }
 } 

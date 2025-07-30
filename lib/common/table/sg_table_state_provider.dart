@@ -11,6 +11,9 @@ class SgTableStateProvider<T> extends ChangeNotifier {
   List<T> _filteredData = [];
   List<T> _sortedData = [];
   
+  // Cache kết quả sắp xếp để tối ưu hiệu năng
+  final Map<String, List<T>> _cachedSortResults = {};
+  
   // Trạng thái sắp xếp
   int? _sortColumnIndex;
   SortDirection _sortDirection = SortDirection.none;
@@ -26,6 +29,11 @@ class SgTableStateProvider<T> extends ChangeNotifier {
   int? _resizingColumnIndex;
   double? _resizeStartX;
   double? _resizeStartWidth;
+  
+  // Cache filter results để tránh tính toán lại
+  String? _lastFilterTerm;
+  bool? _lastCaseSensitiveFilter;
+  dynamic _lastCustomFilterRef;
   
   // Các hàm callback
   final Function(T)? onRowTap;
@@ -78,17 +86,36 @@ class SgTableStateProvider<T> extends ChangeNotifier {
     _selectedItems.removeWhere((item) => !_data.contains(item));
     _updateAllSelectedState();
     
+    // Xóa cache khi dữ liệu thay đổi
+    _cachedSortResults.clear();
+    
     _filterAndSortData();
     notifyListeners();
   }
   
-  // Lọc và sắp xếp dữ liệu
+  // Lọc và sắp xếp dữ liệu với tối ưu cache
   void _filterAndSortData({
     String? searchTerm,
     bool caseSensitiveSearch = false,
     bool Function(T)? customFilter,
     List<SgTableColumn<T>>? columns,
   }) {
+    // Kiểm tra cache filter trước khi tính toán
+    final filterCacheKey = '${searchTerm ?? ""}_${caseSensitiveSearch}_${customFilter?.hashCode}';
+    
+    // Nếu filter không thay đổi, giữ nguyên _filteredData
+    if (filterCacheKey == '${_lastFilterTerm ?? ""}_${_lastCaseSensitiveFilter}_${_lastCustomFilterRef?.hashCode}' && 
+        _filteredData.isNotEmpty) {
+      // Không cần filter lại, chỉ sắp xếp nếu cần
+      if (_sortColumnIndex != null && 
+          _sortDirection != SortDirection.none && 
+          columns != null &&
+          _sortColumnIndex! < columns.length) {
+        _applySorting(columns[_sortColumnIndex!]);
+      }
+      return;
+    }
+    
     // Nếu không có điều kiện lọc
     if ((searchTerm == null || searchTerm.isEmpty) && customFilter == null) {
       _filteredData = List.from(_data);
@@ -117,6 +144,11 @@ class SgTableStateProvider<T> extends ChangeNotifier {
       }).toList();
     }
     
+    // Cập nhật cache filter
+    _lastFilterTerm = searchTerm;
+    _lastCaseSensitiveFilter = caseSensitiveSearch;
+    _lastCustomFilterRef = customFilter;
+    
     _sortedData = List.from(_filteredData);
     
     // Áp dụng sắp xếp nếu cần
@@ -128,15 +160,27 @@ class SgTableStateProvider<T> extends ChangeNotifier {
     }
   }
   
-  // Áp dụng sắp xếp
+  // Áp dụng sắp xếp với tối ưu cache
   void _applySorting(SgTableColumn<T> column) {
     if (column.sortValueGetter == null) return;
+    
+    // Tạo key cho cache sort
+    final sortCacheKey = '${_sortColumnIndex}_${_sortDirection}_${_filteredData.length}';
+    
+    // Kiểm tra xem đã có trong cache chưa
+    if (_cachedSortResults.containsKey(sortCacheKey)) {
+      _sortedData = List.from(_cachedSortResults[sortCacheKey]!);
+      return;
+    }
     
     final sortValueGetter = column.sortValueGetter!;
     
     _sortedData.sort((a, b) {
       return _compareItems(a, b, sortValueGetter, _sortDirection);
     });
+    
+    // Lưu kết quả vào cache
+    _cachedSortResults[sortCacheKey] = List.from(_sortedData);
   }
   
   // So sánh hai item để sắp xếp
@@ -303,6 +347,14 @@ class SgTableStateProvider<T> extends ChangeNotifier {
       columns: columns,
     );
     notifyListeners();
+  }
+
+  // Xóa cache khi cần thiết
+  void clearCache() {
+    _cachedSortResults.clear();
+    _lastFilterTerm = null;
+    _lastCaseSensitiveFilter = null;
+    _lastCustomFilterRef = null;
   }
   
   /// Helper static để tạo và sử dụng SgTableStateProvider

@@ -16,7 +16,7 @@ class SgTableColumn<T> {
   final TextStyle? titleStyle;
   final int? maxLinesTitle;
 
-  SgTableColumn({
+  const SgTableColumn({
     required this.title,
     required this.cellBuilder,
     this.sortValueGetter,
@@ -40,6 +40,9 @@ class SgTableActionColumn<T> extends SgTableColumn<T> {
   final Color? colorItemDelete;
   final double? sizeIcon;
 
+  // Cache dùng cho cell builder để tránh tạo lại các widget không cần thiết
+  static final Map<String, Widget Function(dynamic)> _cellBuilderCache = {};
+
   SgTableActionColumn({
     this.colorItemView,
     this.colorItemEdit,
@@ -51,41 +54,74 @@ class SgTableActionColumn<T> extends SgTableColumn<T> {
     this.onEditAction,
     this.onDeleteAction,
   }) : super(
-          cellBuilder: (item) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (onViewAction != null)
-                IconButton(
-                  icon: Icon(Icons.visibility, size: sizeIcon ?? 20),
-                  tooltip: 'Xem',
-                  color: colorItemView ?? Colors.green,
-                  onPressed: () => onViewAction(item),
-                  constraints: const BoxConstraints(minWidth: 30),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                ),
-              if (onEditAction != null)
-                IconButton(
-                  icon: Icon(Icons.edit, size: sizeIcon ?? 20),
-                  tooltip: 'Sửa',
-                  color: colorItemEdit ?? Colors.blue,
-                  onPressed: () => onEditAction(item),
-                  constraints: const BoxConstraints(minWidth: 30),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                ),
-              if (onDeleteAction != null)
-                IconButton(
-                  icon: Icon(Icons.delete, size: sizeIcon ?? 20),
-                  tooltip: 'Xóa',
-                  color: colorItemDelete ?? Colors.red,
-                  onPressed: () => onDeleteAction(item),
-                  constraints: const BoxConstraints(minWidth: 30),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                ),
-            ],
+          cellBuilder: _createCachedCellBuilder(
+            onViewAction,
+            onEditAction, 
+            onDeleteAction,
+            colorItemView,
+            colorItemEdit,
+            colorItemDelete,
+            sizeIcon
           ),
           titleAlignment: TextAlign.center,
           cellAlignment: TextAlign.center,
         );
+        
+  // Tạo cell builder có cache để tránh rebuild không cần thiết
+  static Widget Function(T) _createCachedCellBuilder<T>(
+    Function(T)? onViewAction,
+    Function(T)? onEditAction,
+    Function(T)? onDeleteAction,
+    Color? colorItemView,
+    Color? colorItemEdit,
+    Color? colorItemDelete,
+    double? sizeIcon,
+  ) {
+    // Tạo key duy nhất cho bộ tham số này
+    final String cacheKey = '${T.toString()}_${onViewAction.hashCode}_${onEditAction.hashCode}_${onDeleteAction.hashCode}_${colorItemView}_${colorItemEdit}_${colorItemDelete}_${sizeIcon}';
+    
+    // Nếu đã có trong cache, trả về từ cache
+    if (_cellBuilderCache.containsKey(cacheKey)) {
+      return _cellBuilderCache[cacheKey]! as Widget Function(T);
+    }
+    
+    // Tạo builder mới và cache lại
+    Widget Function(T) builder = (item) => Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (onViewAction != null)
+          IconButton(
+            icon: Icon(Icons.visibility, size: sizeIcon ?? 20),
+            tooltip: 'Xem',
+            color: colorItemView ?? Colors.green,
+            onPressed: () => onViewAction(item),
+            constraints: const BoxConstraints(minWidth: 30),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+        if (onEditAction != null)
+          IconButton(
+            icon: Icon(Icons.edit, size: sizeIcon ?? 20),
+            tooltip: 'Sửa',
+            color: colorItemEdit ?? Colors.blue,
+            onPressed: () => onEditAction(item),
+            constraints: const BoxConstraints(minWidth: 30),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+        if (onDeleteAction != null)
+          IconButton(
+            icon: Icon(Icons.delete, size: sizeIcon ?? 20),
+            tooltip: 'Xóa',
+            color: colorItemDelete ?? Colors.red,
+            onPressed: () => onDeleteAction(item),
+            constraints: const BoxConstraints(minWidth: 30),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+      ],
+    );
+    
+    _cellBuilderCache[cacheKey] = builder as Widget Function(dynamic);
+    return builder;
+  }
 }
 
 class TableColumnBuilder {

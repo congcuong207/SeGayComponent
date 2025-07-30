@@ -1,6 +1,3 @@
-// ignore_for_file: unused_field, deprecated_member_use
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
