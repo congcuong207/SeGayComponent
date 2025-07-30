@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_table.dart';
 import 'sg_table_component.dart';
 
@@ -71,6 +72,7 @@ class SgTableStateProvider<T> extends ChangeNotifier {
     _columnWidths.clear();
     for (int i = 0; i < columns.length; i++) {
       _columnWidths[i] = columns[i].width ?? 120.0;
+      SGLog.info("InitColumnWidths", "columnWidths: $_columnWidths");
     }
     _originalColumnWidths = Map.from(_columnWidths);
   }

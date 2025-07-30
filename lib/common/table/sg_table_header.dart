@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
+import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_table.dart';
 
 /// StatefulWidget riêng cho Header của bảng
@@ -32,7 +33,7 @@ class SgTableHeader<T> extends StatefulWidget {
   final Color? checkColor;
   final BorderSide? side;
   final BeveledRectangleBorder? shape;
-  
+
   const SgTableHeader({
     super.key,
     required this.columns,
@@ -81,19 +82,19 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
   @override
   void didUpdateWidget(SgTableHeader<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Chỉ rebuild khi cần thiết
     _needsRebuild = widget.columns != oldWidget.columns ||
-                    widget.columnWidths != oldWidget.columnWidths ||
-                    widget.sortColumnIndex != oldWidget.sortColumnIndex ||
-                    widget.sortDirection != oldWidget.sortDirection ||
-                    widget.allSelected != oldWidget.allSelected ||
-                    widget.showVerticalLines != oldWidget.showVerticalLines ||
-                    widget.showLastLineLeftRight != oldWidget.showLastLineLeftRight ||
-                    widget.textHeaderColor != oldWidget.textHeaderColor ||
-                    widget.gridLineColor != oldWidget.gridLineColor ||
-                    widget.gridLineWidth != oldWidget.gridLineWidth;
-    
+        widget.columnWidths != oldWidget.columnWidths ||
+        widget.sortColumnIndex != oldWidget.sortColumnIndex ||
+        widget.sortDirection != oldWidget.sortDirection ||
+        widget.allSelected != oldWidget.allSelected ||
+        widget.showVerticalLines != oldWidget.showVerticalLines ||
+        widget.showLastLineLeftRight != oldWidget.showLastLineLeftRight ||
+        widget.textHeaderColor != oldWidget.textHeaderColor ||
+        widget.gridLineColor != oldWidget.gridLineColor ||
+        widget.gridLineWidth != oldWidget.gridLineWidth;
+
     if (_needsRebuild) {
       _buildHeaderCells();
     }
@@ -151,7 +152,7 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
                   ),
                 ),
                 // Chỉ thêm biểu tượng sắp xếp khi cần thiết
-                if (hasSort && widget.sortColumnIndex == index && widget.sortDirection != SortDirection.none) 
+                if (hasSort && widget.sortColumnIndex == index && widget.sortDirection != SortDirection.none)
                   _buildSortIcon(index),
               ],
             ),
@@ -162,10 +163,10 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
         columnIndex: index,
       );
     });
-    
+
     _needsRebuild = false;
   }
-  
+
   @override
   Widget build(BuildContext context) {
     // Nếu cần rebuild, làm điều đó trước
@@ -210,16 +211,15 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
       color: SGAppColors.neutral700,
     );
   }
-  
+
   Widget _buildCell({
     required Widget child,
     double? width,
     bool isLast = false,
     int? columnIndex,
   }) {
-    final baseWidth = columnIndex != null ? 
-        (widget.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
-
+    final baseWidth = columnIndex != null ? (widget.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
+    SGLog.info("BaseWidth", "baseWidth: $baseWidth");
     final adjustedWidth = baseWidth;
 
     if (isLast) {
@@ -269,4 +269,4 @@ class _SgTableHeaderState<T> extends State<SgTableHeader<T>> {
       ],
     );
   }
-} 
+}
