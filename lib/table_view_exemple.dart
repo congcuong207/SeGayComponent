@@ -604,9 +604,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           headerBackgroundColor: Colors.blue,
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
-          selectedRowColor: Colors.lightBlue.shade100,
-          checkedRowColor:
-              const Color(0xFFE8F4FE), // Light blue background for checked rows
+          // selectedRowColor: Colors.lightBlue.shade100,
+ // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
@@ -619,6 +618,9 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               _selectedItems = selectedItems;
             });
           },
+          // Row hover options
+          // rowHoverColor: Colors.blue.withOpacity(0.1),
+          rowHoverDuration: const Duration(milliseconds: 100),
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
             if (widget.leaveTypeFilter != null &&
