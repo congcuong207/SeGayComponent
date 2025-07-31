@@ -12,146 +12,146 @@ enum SortDirection { none, ascending, descending }
 // Widget chính SgTable - Bảng dữ liệu có thể tùy chỉnh với nhiều tính năng
 class SgTable<T> extends StatefulWidget {
   //---------------------------
-  // TODO NHÓM DỮ LIỆU CHÍNH
+  // NHÓM DỮ LIỆU CHÍNH
   //---------------------------
   /// Danh sách các cột của bảng
   final List<SgTableColumn<T>> columns;
-  
+
   /// Dữ liệu hiển thị trong bảng
   final List<T> data;
-  
+
   //---------------------------
-  // TODO NHÓM KÍCH THƯỚC & GIAO DIỆN
+  // NHÓM KÍCH THƯỚC & GIAO DIỆN
   //---------------------------
   /// Chiều cao của mỗi hàng
   final double rowHeight;
-  
+
   /// Bo tròn viền của bảng
   final BorderRadius? borderRadius;
-  
+
   /// Controller để điều khiển cuộn dọc
   final ScrollController? verticalController;
 
   //---------------------------
-  // TODO NHÓM MÀU SẮC
+  // NHÓM MÀU SẮC
   //---------------------------
   /// Màu chữ trong header
   final Color? textHeaderColor;
-  
+
   /// Màu nền của header
   final Color headerBackgroundColor;
-  
+
   /// Màu nền cho hàng lẻ
   final Color oddRowBackgroundColor;
-  
+
   /// Màu nền cho hàng chẵn
   final Color evenRowBackgroundColor;
-  
+
   /// Màu khi hàng được chọn (hover hoặc click)
   final Color selectedRowColor;
-  
+
   /// Màu khi hàng được đánh dấu với checkbox
   final Color checkedRowColor;
 
   //---------------------------
-  // TODO NHÓM ĐƯỜNG KẺ LƯỚI
+  // NHÓM ĐƯỜNG KẺ LƯỚI
   //---------------------------
   /// Màu của đường kẻ lưới
   final Color gridLineColor;
-  
+
   /// Độ dày của đường kẻ lưới
   final double gridLineWidth;
-  
+
   /// Hiển thị đường kẻ dọc
   final bool showVerticalLines;
-  
+
   /// Hiển thị đường kẻ ngang
   final bool showHorizontalLines;
-  
+
   /// Hiển thị đường kẻ cuối cùng bên trái/phải
   final bool showLastLineLeftRight;
-  
+
   /// Hiển thị đường kẻ cuối cùng trên/dưới
   final bool showLastLineTopBottom;
 
   //---------------------------
-  // TODO NHÓM TƯƠNG TÁC & LỰA CHỌN
+  // NHÓM TƯƠNG TÁC & LỰA CHỌN
   //---------------------------
   /// Cho phép chọn hàng khi click
   final bool allowRowSelection;
-  
+
   /// Callback khi nhấp vào một hàng
   final Function(T)? onRowTap;
 
   //---------------------------
-  // TODO NHÓM TÌM KIẾM & LỌC
+  // NHÓM TÌM KIẾM & LỌC
   //---------------------------
   /// Từ khóa tìm kiếm
   final String? searchTerm;
-  
+
   /// Tìm kiếm phân biệt chữ hoa/thường
   final bool caseSensitiveSearch;
-  
+
   /// Hàm lọc tùy chỉnh
   final bool Function(T)? customFilter;
 
   //---------------------------
-  // TODO NHÓM CHECKBOX
+  // NHÓM CHECKBOX
   //---------------------------
   /// Hiển thị cột checkbox chọn nhiều
   final bool showCheckboxes;
-  
+
   /// Callback khi thay đổi lựa chọn checkbox
   final Function(List<T>)? onSelectionChanged;
-  
+
   /// Chiều rộng của cột checkbox
   final double checkboxColumnWidth;
-  
+
   /// Tỷ lệ kích thước checkbox
   final double? scaleCheckbox;
-  
+
   /// Màu khi checkbox được chọn
   final Color? activeColor;
-  
+
   /// Màu dấu check
   final Color? checkColor;
-  
+
   /// Viền của checkbox
   final BorderSide? side;
-  
+
   /// Hình dạng của checkbox
   final BeveledRectangleBorder? shape;
 
   //---------------------------
-  // TODO NHÓM CỘT HÀNH ĐỘNG
+  // NHÓM CỘT HÀNH ĐỘNG
   //---------------------------
   /// Hiển thị cột hành động
   final bool showActions;
-  
+
   /// Callback khi nhấn nút xem chi tiết
   final Function(T)? onViewAction;
-  
+
   /// Callback khi nhấn nút chỉnh sửa
   final Function(T)? onEditAction;
-  
+
   /// Callback khi nhấn nút xóa
   final Function(T)? onDeleteAction;
-  
+
   /// Màu nút xem chi tiết
   final Color? actionViewColor;
-  
+
   /// Màu nút chỉnh sửa
   final Color? actionEditColor;
-  
+
   /// Màu nút xóa
   final Color? actionDeleteColor;
-  
+
   /// Kích thước icon trong cột hành động
   final double? actionIconSize;
-  
+
   /// Chiều rộng của cột hành động
   final double? actionColumnWidth;
-  
+
   /// Tiêu đề của cột hành động
   final String? actionColumnTitle;
 
@@ -161,12 +161,12 @@ class SgTable<T> extends StatefulWidget {
       // NHÓM DỮ LIỆU CHÍNH
       required this.columns,
       required this.data,
-      
+
       // NHÓM KÍCH THƯỚC & GIAO DIỆN
       this.rowHeight = 48.0,
       this.borderRadius,
       this.verticalController,
-      
+
       // NHÓM MÀU SẮC
       this.textHeaderColor,
       this.headerBackgroundColor = SGAppColors.neutral100,
@@ -174,7 +174,7 @@ class SgTable<T> extends StatefulWidget {
       this.evenRowBackgroundColor = SGAppColors.neutral200,
       this.selectedRowColor = SGAppColors.info100,
       this.checkedRowColor = const Color(0xFFE3F2FD),
-      
+
       // NHÓM ĐƯỜNG KẺ LƯỚI
       this.gridLineColor = SGAppColors.neutral200,
       this.gridLineWidth = 1.0,
@@ -182,16 +182,16 @@ class SgTable<T> extends StatefulWidget {
       this.showHorizontalLines = true,
       this.showLastLineLeftRight = false,
       this.showLastLineTopBottom = false,
-      
+
       // NHÓM TƯƠNG TÁC & LỰA CHỌN
       this.allowRowSelection = true,
       this.onRowTap,
-      
+
       // NHÓM TÌM KIẾM & LỌC
       this.searchTerm,
       this.caseSensitiveSearch = false,
       this.customFilter,
-      
+
       // NHÓM CHECKBOX
       this.showCheckboxes = false,
       this.onSelectionChanged,
@@ -201,7 +201,7 @@ class SgTable<T> extends StatefulWidget {
       this.checkColor = Colors.white,
       this.side,
       this.shape,
-      
+
       // NHÓM CỘT HÀNH ĐỘNG
       this.showActions = false,
       this.onViewAction,
@@ -226,7 +226,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Trạng thái sắp xếp
   int? _sortColumnIndex;
   SortDirection _sortDirection = SortDirection.none;
-  
+
   // Trạng thái dữ liệu
   late List<T> _sortedData;
   late List<T> _filteredData;
@@ -251,24 +251,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
   Timer? _scrollEndTimer;
   Timer? _resizeDebounceTimer; // Debounce timer cho resize
 
-  // Cache để tối ưu hiệu suất render
-  final Map<int, Widget> _rowCache = {};
-  final Map<int, List<Widget>> _cellsCache = {};
-  bool _shouldRebuildCache = true;
-
-  // Memoization cho tổng chiều rộng bảng
-  late double _cachedTotalWidth;
-  bool _shouldRecalculateWidth = true;
-
-  //---------------------------
   // QUẢN LÝ VÒNG ĐỜI WIDGET
   //---------------------------
   @override
   void initState() {
     super.initState();
     _processData();
-    _cachedTotalWidth = _calculateTotalWidth();
-    _shouldRecalculateWidth = false;
 
     // Đăng ký listener sau khi build frame đầu tiên
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -284,7 +272,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _scrollController.dispose();
     _scrollEndTimer?.cancel();
     _resizeDebounceTimer?.cancel(); // Hủy timer resize
-    _clearCaches();
     _backgroundColorCache.clear(); // Xóa cache màu nền
     super.dispose();
   }
@@ -302,10 +289,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
     final bool searchChanged = widget.searchTerm != _lastSearchTerm;
 
     if (dataChanged || columnsChanged || searchChanged) {
-      _shouldRebuildCache = true;
-      _shouldRecalculateWidth = true;
-      _clearCaches();
-
       if (dataChanged) {
         _sortedData = List.from(widget.data);
         _filterAndSortData();
@@ -340,12 +323,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _initColumnWidths();
     _lastSearchTerm = widget.searchTerm;
     _filterData();
-  }
-
-  // Xóa các cache để giải phóng bộ nhớ
-  void _clearCaches() {
-    _rowCache.clear();
-    _cellsCache.clear();
   }
 
   //---------------------------
@@ -472,8 +449,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
         if (mounted) {
           setState(() {
             _columnWidths[_resizingColumnIndex!] = newWidth;
-            _shouldRebuildCache = true;
-            _shouldRecalculateWidth = true; // Đánh dấu cần tính toán lại width
           });
         }
       });
@@ -487,9 +462,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _resizingColumnIndex = null;
       _resizeStartX = null;
       _resizeStartWidth = null;
-      _shouldRebuildCache = true;
-      _shouldRecalculateWidth = true; // Đánh dấu cần tính toán lại width
-      _clearCaches();
     });
   }
 
@@ -532,7 +504,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     setState(() {
       _sortedData = List.from(_filteredData);
-      _shouldRebuildCache = true;
     });
   }
 
@@ -558,7 +529,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
           )).then((result) {
         setState(() {
           _sortedData = result;
-          _shouldRebuildCache = true;
         });
       });
     } else {
@@ -566,7 +536,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
         _sortedData.sort((a, b) {
           return _compareItems(a, b, sortValueGetter, _sortDirection);
         });
-        _shouldRebuildCache = true;
       });
     }
   }
@@ -628,9 +597,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       } else {
         _sortData();
       }
-
-      _shouldRebuildCache = true;
-      _clearCaches();
     });
   }
 
@@ -651,7 +617,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       }
 
       _notifySelectionChanged();
-      _shouldRebuildCache = true;
     });
   }
 
@@ -668,13 +633,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
       _updateAllSelectedState();
       _notifySelectionChanged();
-
-      // Chỉ rebuild row cần thiết
-      final index = _sortedData.indexOf(item);
-      if (index >= 0) {
-        _rowCache.remove(index);
-        _cellsCache.remove(index);
-      }
     });
   }
 
@@ -708,10 +666,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       } else {
         _selectedRowIndex = index;
       }
-
-      // Chỉ rebuild các row cần thiết
-      _rowCache.remove(_selectedRowIndex);
-      _rowCache.remove(index);
     });
 
     // Đảm bảo hàng được chọn nằm trong tầm nhìn
@@ -727,16 +681,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
   //---------------------------
   // Tính tổng chiều rộng của bảng với caching để tối ưu
   double _calculateTotalWidth() {
-    if (!_shouldRecalculateWidth) {
-      return _cachedTotalWidth;
-    }
-
     double totalWidth = 0;
     for (int i = 0; i < _effectiveColumns.length; i++) {
       totalWidth += _columnWidths[i] ?? (_effectiveColumns[i].width ?? 120.0);
     }
-    _cachedTotalWidth = totalWidth;
-    _shouldRecalculateWidth = false;
     return totalWidth;
   }
 
@@ -785,12 +733,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     final exactHeight = widget.rowHeight + (_sortedData.length * widget.rowHeight);
 
-    // Rebuild cache nếu cần
-    if (_shouldRebuildCache) {
-      _clearCaches();
-      _shouldRebuildCache = false;
-    }
-
     return SizedBox(
       width: totalWidth,
       height: exactHeight,
@@ -825,35 +767,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
           Expanded(
             child: ListView.builder(
               controller: widget.verticalController ?? _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: RangeMaintainingScrollPhysics(),
-              ),
-              key: PageStorageKey<String>('table_${widget.hashCode}'),
-              clipBehavior: Clip.hardEdge,
-              cacheExtent: widget.rowHeight * 10, // Cache 10 rows trước/sau
+              physics: const ClampingScrollPhysics(),
+              cacheExtent: widget.rowHeight * 100,
               itemCount: _sortedData.length,
-              itemExtent: widget.rowHeight, // Cố định chiều cao row để tối ưu hơn
-              addAutomaticKeepAlives: false, // Tắt để tối ưu hiệu năng
-              addRepaintBoundaries: true, // Giữ lại tính năng này để tối ưu render
+              itemExtent: widget.rowHeight,
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: true,
               itemBuilder: (context, index) {
-                // Sử dụng cache thông minh
-                Widget? cachedWidget = _rowCache[index];
-                if (cachedWidget != null) {
-                  return cachedWidget;
-                }
-    
-                // Tạo widget mới với key để tối ưu
-                final rowWidget = RepaintBoundary(
-                  key: ValueKey('${widget.hashCode}_row_$index'),
-                  child: _buildTableRow(index, effectiveWidth, totalWidth),
-                );
-    
-                // Giới hạn cache size để tránh memory leak
-                if (_rowCache.length > 50) {
-                  _rowCache.clear();
-                }
-                _rowCache[index] = rowWidget;
-                return rowWidget;
+                return _buildTableRow(index, effectiveWidth, totalWidth);
               },
             ),
           ),
@@ -892,18 +813,16 @@ class _SgTableState<T> extends State<SgTable<T>> {
           child: InkWell(
             onTap: () => _onRowSelected(index),
             onHover: (isHovering) {
-              // Tối ưu hover effect - chỉ cập nhật khi cần thiết
-              if (!_isScrolling && isHovering && _selectedRowIndex != index) {
-                setState(() {
-                  _selectedRowIndex = index;
-                  _rowCache.remove(_selectedRowIndex);
-                });
-              } else if (!_isScrolling && !isHovering && _selectedRowIndex == index) {
-                setState(() {
-                  _selectedRowIndex = null;
-                  _rowCache.remove(index);
-                });
-              }
+              // // Tối ưu hover effect - chỉ cập nhật khi cần thiết
+              // if (!_isScrolling && isHovering && _selectedRowIndex != index) {
+              //   setState(() {
+              //     _selectedRowIndex = index;
+              //   });
+              // } else if (!_isScrolling && !isHovering && _selectedRowIndex == index) {
+              //   setState(() {
+              //     _selectedRowIndex = null;
+              //   });
+              // }
             },
             child: Row(
               children: _buildRowCells(item, false, effectiveWidth, totalWidth, index),
@@ -1000,12 +919,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
   // Xây dựng các ô dữ liệu cho hàng
   List<Widget> _buildRowCells(T item, bool shouldExpand, double screenWidth, double totalWidth, int rowIndex) {
-    // Sử dụng cache thông minh với giới hạn
-    List<Widget>? cachedCells = _cellsCache[rowIndex];
-    if (cachedCells != null) {
-      return cachedCells;
-    }
-
     final cells = List.generate(_effectiveColumns.length, (index) {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
@@ -1045,11 +958,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       );
     });
 
-    // Giới hạn cache size để tránh memory leak
-    if (_cellsCache.length > 50) {
-      _cellsCache.clear();
-    }
-    _cellsCache[rowIndex] = cells;
     return cells;
   }
 
