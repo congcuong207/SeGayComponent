@@ -619,7 +619,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             });
           },
           // Row hover options
-          // rowHoverColor: Colors.blue.withOpacity(0.1),
+          rowHoverColor: Colors.blue.withOpacity(0.1),
           rowHoverDuration: const Duration(milliseconds: 100),
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
