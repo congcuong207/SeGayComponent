@@ -27,6 +27,9 @@ class SgTableColumn<T> {
     this.width,
     this.isNumeric = false,
     this.searchable = true,
+    this.isFullWidth = false,
+    this.titleStyle,
+    this.maxLinesTitle,
   });
 }
 

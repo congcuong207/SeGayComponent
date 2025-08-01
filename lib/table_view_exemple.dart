@@ -64,20 +64,14 @@ class _TableViewExempleState extends State<TableViewExemple> {
   void initState() {
     super.initState();
     // Only initialize the controller if pagination is actually used
-    _controllerDropdownPage =
-        TextEditingController(text: rowsPerPage.toString());
+    _controllerDropdownPage = TextEditingController(text: rowsPerPage.toString());
     _selectedLeaveType = 'Tất cả';
     _selectedStatus = 'Tất cả';
     _leaveTypeController.text = _selectedLeaveType!;
     _statusController.text = _selectedStatus!;
 
     // Create duplicated data
-    duplicatedLeaveRequests = [
-      ...dataTable,
-      ...dataTable,
-      ...dataTable,
-      ...dataTable
-    ];
+    duplicatedLeaveRequests = [...dataTable, ...dataTable, ...dataTable, ...dataTable];
 
     // Initialize pagination on startup
     _updatePagination();
@@ -151,13 +145,8 @@ class _TableViewExempleState extends State<TableViewExemple> {
     );
   }
 
-  Widget _buildFilterDropdown(
-      String title,
-      List<String> items,
-      String? value,
-      Function(String?) onChanged,
-      TextEditingController controller,
-      Size size) {
+  Widget _buildFilterDropdown(String title, List<String> items, String? value, Function(String?) onChanged,
+      TextEditingController controller, Size size) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,8 +178,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
               isShowSuffixIcon: true,
               hintText: 'Chọn ${title.toLowerCase()}',
               textAlign: TextAlign.left,
-              contentPadding:
-                  const EdgeInsets.only(left: 10, top: 8, bottom: 8)),
+              contentPadding: const EdgeInsets.only(left: 10, top: 8, bottom: 8)),
         ),
       ],
     );
@@ -427,11 +415,8 @@ class _TableViewExempleState extends State<TableViewExemple> {
                   child: DemoBaseTable(
                     searchTerm: _searchTerm,
                     dataTable: pageProducts,
-                    leaveTypeFilter: _selectedLeaveType == 'Tất cả'
-                        ? null
-                        : _selectedLeaveType,
-                    statusFilter:
-                        _selectedStatus == 'Tất cả' ? null : _selectedStatus,
+                    leaveTypeFilter: _selectedLeaveType == 'Tất cả' ? null : _selectedLeaveType,
+                    statusFilter: _selectedStatus == 'Tất cả' ? null : _selectedStatus,
                   ),
                 ),
               ),
@@ -509,11 +494,7 @@ class DemoBaseTable extends StatefulWidget {
   final List<DataTable> dataTable;
 
   const DemoBaseTable(
-      {super.key,
-      this.searchTerm = "",
-      this.leaveTypeFilter,
-      this.statusFilter,
-      required this.dataTable});
+      {super.key, this.searchTerm = "", this.leaveTypeFilter, this.statusFilter, required this.dataTable});
 
   @override
   State<DemoBaseTable> createState() => _DemoBaseTableState();
@@ -548,8 +529,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                       onPressed: () {
                         // Handle batch delete
@@ -557,8 +537,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Xác nhận xóa'),
-                            content: Text(
-                                'Bạn có chắc chắn muốn xóa ${_selectedItems.length} mục đã chọn?'),
+                            content: Text('Bạn có chắc chắn muốn xóa ${_selectedItems.length} mục đã chọn?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
@@ -600,12 +579,13 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
         const SizedBox(height: 8),
 
         SgTable<DataTable>(
+          widthScreen: MediaQuery.of(context).size.width,
           // textHeaderColor: SGAppColors.error50,
           headerBackgroundColor: Colors.blue,
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
           // selectedRowColor: Colors.lightBlue.shade100,
- // Light blue background for checked rows
+          // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
@@ -619,18 +599,16 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             });
           },
           // Row hover options
-          rowHoverColor: Colors.blue.withOpacity(0.1),
+          rowHoverColor: Colors.blue.withValues(alpha: 0.1),
           rowHoverDuration: const Duration(milliseconds: 100),
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
-            if (widget.leaveTypeFilter != null &&
-                item.leaveType != widget.leaveTypeFilter) {
+            if (widget.leaveTypeFilter != null && item.leaveType != widget.leaveTypeFilter) {
               return false;
             }
 
             // Lọc theo trạng thái nếu đã chọn
-            if (widget.statusFilter != null &&
-                item.status != widget.statusFilter) {
+            if (widget.statusFilter != null && item.status != widget.statusFilter) {
               return false;
             }
 
