@@ -197,15 +197,16 @@ class _SGInputTextState extends State<SGInputText> {
   }
 
   Widget _buildTextField(double? width) {
-    final double effectiveHeight = widget.height ?? 48.0; // Default height if not specified
-    final bool shouldExpand = !widget.expandable && widget.height != null;
+    final double effectiveHeight =
+        widget.height ?? 48.0; // Default height if not specified
+    final bool shouldExpand = widget.expandable || (widget.height != null);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
       child: Container(
         width: width,
-        height: widget.expandable ? null : effectiveHeight,
+        height: widget.expandable ? 32 : effectiveHeight,
         decoration: BoxDecoration(
           // color: Colors.red,
           borderRadius: BorderRadius.circular(widget.radiusSize),

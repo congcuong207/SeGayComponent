@@ -37,6 +37,7 @@ class SgTable<T> extends StatefulWidget {
   //---------------------------
   /// Màu chữ trong header
   final Color? textHeaderColor;
+  final TextStyle? titleStyleHeader;
 
   /// Màu nền của header
   final Color headerBackgroundColor;
@@ -95,6 +96,8 @@ class SgTable<T> extends StatefulWidget {
   /// Hàm lọc tùy chỉnh
   final bool Function(T)? customFilter;
 
+  // Checkbox selection
+
   //---------------------------
   // NHÓM CHECKBOX
   //---------------------------
@@ -106,6 +109,8 @@ class SgTable<T> extends StatefulWidget {
 
   /// Chiều rộng của cột checkbox
   final double checkboxColumnWidth;
+
+  // Action column options
 
   /// Tỷ lệ kích thước checkbox
   final double? scaleCheckbox;
@@ -154,7 +159,51 @@ class SgTable<T> extends StatefulWidget {
 
   /// Tiêu đề của cột hành động
   final String? actionColumnTitle;
+  // Row hover options
+  final Color? rowHoverColor;
+  final Duration rowHoverDuration;
+  final double widthScreen;
 
+  const SgTable({
+    super.key,
+    required this.columns,
+    required this.data,
+    this.rowHeight = 48.0,
+    this.textHeaderColor,
+    this.headerBackgroundColor = SGAppColors.neutral100,
+    this.oddRowBackgroundColor = Colors.white,
+    this.evenRowBackgroundColor = SGAppColors.neutral200,
+    this.selectedRowColor = SGAppColors.info100,
+    this.gridLineColor = SGAppColors.neutral200,
+    this.gridLineWidth = 1.0,
+    this.showVerticalLines = true,
+    this.showHorizontalLines = true,
+    this.allowRowSelection = true,
+    this.borderRadius,
+    this.onRowTap,
+    this.searchTerm,
+    this.caseSensitiveSearch = false,
+    this.customFilter,
+    this.showCheckboxes = false,
+    this.onSelectionChanged,
+    this.checkboxColumnWidth = 50.0,
+    this.showActions = false,
+    this.onViewAction,
+    this.onEditAction,
+    this.onDeleteAction,
+    this.actionViewColor,
+    this.actionEditColor,
+    this.actionDeleteColor,
+    this.actionIconSize,
+    this.actionColumnWidth = 120.0,
+    this.actionColumnTitle = "Hành động",
+    this.titleStyleHeader,
+    
+    // Row hover options
+    this.rowHoverColor,
+    this.rowHoverDuration = const Duration(milliseconds: 200),
+    this.widthScreen = 1080,
+  });
   // Constructor với nhiều tham số có giá trị mặc định
   const SgTable(
       {super.key,
@@ -234,6 +283,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   late List<SgTableColumn<T>> _effectiveColumns;
   String? _lastSearchTerm;
 
+  // Checkbox selection state
+
   // Trạng thái checkbox selection
   final Set<T> _selectedItems = {};
   bool _allSelected = false;
@@ -244,6 +295,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _resizingColumnIndex;
   double? _resizeStartX;
   double? _resizeStartWidth;
+  
+  // Row hover state
+  int? _hoveredRowIndex;
 
   // Trạng thái cuộn và tối ưu hiệu suất
   bool _isScrolling = false;
@@ -279,6 +333,24 @@ class _SgTableState<T> extends State<SgTable<T>> {
   @override
   void didUpdateWidget(SgTable<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.data != oldWidget.data) {
+      _sortedData = List.from(widget.data);
+      _filterAndSortData();
+
+      // Update selected items when data changes
+      if (widget.showCheckboxes) {
+        _selectedItems.removeWhere((item) => !widget.data.contains(item));
+        _updateAllSelectedState();
+      }
+    }
+
+    if (widget.columns != oldWidget.columns ||
+        widget.showActions != oldWidget.showActions ||
+        widget.showCheckboxes != oldWidget.showCheckboxes ||
+        widget.actionColumnTitle != oldWidget.actionColumnTitle) {
+      _buildEffectiveColumns();
+      _initColumnWidths();
+    }
 
     // Kiểm tra các thay đổi quan trọng để cập nhật bảng
     final bool dataChanged = widget.data != oldWidget.data;
@@ -305,6 +377,57 @@ class _SgTableState<T> extends State<SgTable<T>> {
         _initColumnWidths();
       }
 
+    if (widget.searchTerm != _lastSearchTerm) {
+      _lastSearchTerm = widget.searchTerm;
+      _filterAndSortData();
+    }
+  }
+
+  // Add methods for checkbox handling
+  void _toggleSelectAll(bool? selected) {
+    if (selected == null) return;
+
+    setState(() {
+      _allSelected = selected;
+
+      if (_allSelected) {
+        _selectedItems.addAll(_sortedData);
+      } else {
+        _selectedItems.clear();
+      }
+
+      _notifySelectionChanged();
+    });
+  }
+
+  void _toggleSelectItem(T item, bool? selected) {
+    if (selected == null) return;
+
+    setState(() {
+      if (selected) {
+        _selectedItems.add(item);
+      } else {
+        _selectedItems.remove(item);
+      }
+
+      _updateAllSelectedState();
+      _notifySelectionChanged();
+    });
+  }
+
+  void _updateAllSelectedState() {
+    if (_sortedData.isEmpty) {
+      _allSelected = false;
+      return;
+    }
+
+    _allSelected = _sortedData.every((item) => _selectedItems.contains(item));
+  }
+
+  void _notifySelectionChanged() {
+    if (widget.onSelectionChanged != null) {
+      widget.onSelectionChanged!(_selectedItems.toList());
+    }
       if (searchChanged) {
         _lastSearchTerm = widget.searchTerm;
         _filterAndSortData();
@@ -367,6 +490,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _buildEffectiveColumns() {
     _effectiveColumns = [];
 
+    // Add checkbox column if needed
+
     // Thêm cột checkbox nếu cần
     if (widget.showCheckboxes) {
       _effectiveColumns.add(
@@ -390,8 +515,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
       );
     }
 
+    // Add regular columns
+
     // Thêm các cột thông thường
     _effectiveColumns.addAll(widget.columns);
+
+    // Add action column if enabled
 
     // Thêm cột hành động nếu được bật
     if (widget.showActions) {
@@ -415,7 +544,29 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _initColumnWidths() {
     _columnWidths = {};
     for (int i = 0; i < _effectiveColumns.length; i++) {
-      _columnWidths[i] = _effectiveColumns[i].width ?? 120.0;
+      if (_effectiveColumns[i].width != null) {
+        _columnWidths[i] = _effectiveColumns[i].width!;
+      } else {
+        // Default width if not specified
+        _columnWidths[i] = 120.0;
+        if (_effectiveColumns[i].isFullWidth) {
+          if (widget.showCheckboxes && widget.showActions) {
+            _columnWidths[i] =
+                (widget.widthScreen - widget.checkboxColumnWidth - widget.actionColumnWidth!) /
+                    (_effectiveColumns.length - 2);
+          } else if (widget.showCheckboxes) {
+            _columnWidths[i] =
+                (widget.widthScreen - widget.checkboxColumnWidth) /
+                    (_effectiveColumns.length - 1);
+          } else if (widget.showActions) {
+            _columnWidths[i] =
+                (widget.widthScreen - widget.actionColumnWidth!) /
+                    (_effectiveColumns.length - 1);
+          } else {
+            _columnWidths[i] = widget.widthScreen / _effectiveColumns.length;
+          }
+        }
+      }
     }
     _originalColumnWidths = Map.from(_columnWidths);
   }
@@ -733,6 +884,63 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     final exactHeight = widget.rowHeight + (_sortedData.length * widget.rowHeight);
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: effectiveWidth,
+            height: exactHeight,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: widget.headerBackgroundColor,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: widget.gridLineColor,
+                        width: widget.gridLineWidth,
+                      ),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: effectiveWidth,
+                    height: widget.rowHeight,
+                    child: Row(
+                      children:
+                          _buildHeaderCells(false, effectiveWidth, totalWidth),
+                    ),
+                  ),
+                ),
+                // Table body rows
+                SizedBox(
+                  height: _sortedData.length * widget.rowHeight,
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _sortedData.length,
+                    itemBuilder: (context, index) {
+                                              final isEven = index % 2 == 0;
+                        final isLast = index == _sortedData.length - 1;
+                        final isSelected = _selectedRowIndex == index;
+                        final isChecked =
+                            _selectedItems.contains(_sortedData[index]);
+                        final isHovered = _hoveredRowIndex == index;
+
+                        Color backgroundColor;
+                        if (isSelected) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isChecked) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isHovered && widget.rowHoverColor != null) {
+                          backgroundColor = widget.rowHoverColor!;
+                        } else {
+                          backgroundColor = isEven
+                              ? widget.evenRowBackgroundColor
+                              : widget.oddRowBackgroundColor;
+                        }
     return SizedBox(
       width: totalWidth,
       height: exactHeight,
@@ -793,6 +1001,49 @@ class _SgTableState<T> extends State<SgTable<T>> {
     // Sử dụng màu nền đã cache
     final backgroundColor = _getBackgroundColor(index, isSelected, isChecked);
 
+                        return AnimatedContainer(
+                          duration: widget.rowHoverDuration,
+                          decoration: BoxDecoration(
+                            color: backgroundColor,
+                            border: widget.showHorizontalLines && !isLast
+                                ? Border(
+                                    bottom: BorderSide(
+                                      color: widget.gridLineColor,
+                                      width: widget.gridLineWidth,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          child: SizedBox(
+                            width: effectiveWidth,
+                            height: widget.rowHeight,
+                            child: MouseRegion(
+                              onEnter: (_) => _onRowHover(index),
+                              onExit: (_) => _onRowHoverExit(),
+                              child: InkWell(
+                                onTap: () => _onRowSelected(index),
+                                child: Row(
+                                  children: _buildRowCells(_sortedData[index],
+                                      false, effectiveWidth, totalWidth),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Update the header checkbox to match the style
+  List<Widget> _buildHeaderCells(
+      bool shouldExpand, double screenWidth, double totalWidth) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
@@ -840,6 +1091,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
       final hasSort = column.sortValueGetter != null;
       final isLast = index == _effectiveColumns.length - 1;
 
+      // Special case for checkbox column
+
       // Trường hợp đặc biệt cho cột checkbox
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -865,6 +1118,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
         );
       }
 
+
       return _buildCell(
         child: InkWell(
           onTap: hasSort ? () => _onSortColumn(index) : null,
@@ -880,14 +1134,23 @@ class _SgTableState<T> extends State<SgTable<T>> {
                 Expanded(
                   child: SGText(
                     text: column.title,
-                    fontWeight: FontWeight.bold,
                     textAlign: column.titleAlignment,
                     color: widget.textHeaderColor ?? Colors.white,
+                    style: widget.titleStyleHeader ??
+                        const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                     style: column.titleStyle,
                     maxLines: column.maxLinesTitle,
                     overflow: column.maxLinesTitle == 1 ? TextOverflow.ellipsis : null,
                   ),
                 ),
+                // Only add the icon when it should actually be visible
+                if (hasSort &&
+                    _sortColumnIndex == index &&
+                    _sortDirection != SortDirection.none)
+                  _buildSortIcon(index),
                 // Chỉ thêm biểu tượng sắp xếp khi cần thiết
                 if (hasSort && _sortColumnIndex == index && _sortDirection != SortDirection.none) _buildSortIcon(index),
               ],
@@ -923,6 +1186,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
       final column = _effectiveColumns[index];
       final isLast = index == _effectiveColumns.length - 1;
 
+      // Special handling for checkbox column
+
       // Xử lý đặc biệt cho cột checkbox
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -942,6 +1207,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
       return _buildCell(
         child: Container(
           padding: const EdgeInsets.only(left: 8, right: 8),
+          alignment: column.cellAlignment == TextAlign.center
+              ? Alignment.center
+              : column.cellAlignment == TextAlign.right
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+          child: column.cellBuilder(item),
           alignment: column.cellAlignment == TextAlign.center
               ? Alignment.center
               : column.cellAlignment == TextAlign.right
@@ -987,6 +1258,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
         Container(
           width: adjustedWidth,
           height: widget.rowHeight,
+          decoration: BoxDecoration(
+            border: widget.showVerticalLines && !isLast
+                ? Border(
           decoration: widget.showVerticalLines && (!isLast || widget.showLastLineLeftRight)
               ? BoxDecoration(
                   border: Border(
@@ -994,9 +1268,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
                       color: widget.gridLineColor,
                       width: widget.gridLineWidth,
                     ),
-                  ),
-                )
-              : null,
+                  )
+                : null,
+          ),
           child: child,
         ),
         // Thêm handler để có thể resize cột
@@ -1020,6 +1294,52 @@ class _SgTableState<T> extends State<SgTable<T>> {
           ),
       ],
     );
+  }
+
+  void _startResize(int columnIndex, double startX) {
+    setState(() {
+      _resizingColumnIndex = columnIndex;
+      _resizeStartX = startX;
+      _resizeStartWidth = _columnWidths[columnIndex];
+    });
+  }
+
+  void _updateResize(double currentX) {
+    if (_resizingColumnIndex == null ||
+        _resizeStartX == null ||
+        _resizeStartWidth == null) {
+      return;
+    }
+
+    final delta = currentX - _resizeStartX!;
+    final originalWidth = _originalColumnWidths[_resizingColumnIndex] ?? 120.0;
+    final newWidth = _resizeStartWidth! + delta;
+
+    if (newWidth >= originalWidth) {
+      setState(() {
+        _columnWidths[_resizingColumnIndex!] = newWidth;
+      });
+    }
+  }
+
+  void _endResize() {
+    setState(() {
+      _resizingColumnIndex = null;
+      _resizeStartX = null;
+      _resizeStartWidth = null;
+    });
+  }
+  
+  void _onRowHover(int rowIndex) {
+    setState(() {
+      _hoveredRowIndex = rowIndex;
+    });
+  }
+  
+  void _onRowHoverExit() {
+    setState(() {
+      _hoveredRowIndex = null;
+    });
   }
 }
 

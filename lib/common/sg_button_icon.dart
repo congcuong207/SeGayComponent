@@ -14,6 +14,7 @@ class SGButtonIcon extends StatefulWidget {
   final bool enabled;
   final bool isOutlined;
   final bool isBorder;
+  final bool isHover;
   final double borderRadius;
   final Color? colorHover;
   final Color? colorTextHover;
@@ -24,6 +25,7 @@ class SGButtonIcon extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final FontWeight? fontWeight;
   final VoidCallback? onPressed;
+  final Decoration? decoration;
 
   const SGButtonIcon({
     super.key,
@@ -39,6 +41,7 @@ class SGButtonIcon extends StatefulWidget {
     this.enabled = true,
     this.isOutlined = false,
     this.isBorder = false,
+    this.isHover = true,
     this.borderRadius = 5,
     this.colorHover,
     this.colorTextHover,
@@ -49,6 +52,7 @@ class SGButtonIcon extends StatefulWidget {
     this.padding,
     this.fontWeight,
     this.onPressed,
+    this.decoration,
   });
 
   static const Color defaultOrange = Color(0xFFFFA726);
@@ -64,8 +68,8 @@ class _SGButtonState extends State<SGButtonIcon> {
   Widget build(BuildContext context) {
     final child = Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // widget.iconButton != null ? const Spacer() : Container(),
         if (widget.iconButton != null)
           Padding(
             padding: EdgeInsets.only(left: widget.paddingIconLeft, right: 5),
@@ -78,22 +82,24 @@ class _SGButtonState extends State<SGButtonIcon> {
             ),
           ),
         Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-                bottom: 2,
-                right: widget.iconButton != null ? widget.paddingIconLeft : 0),
-            child: SGText(
-              textAlign: TextAlign.center,
-              fontWeight: widget.fontWeight ?? FontWeight.bold,
-              text: widget.text,
-              size: widget.sizeText ?? 16,
-              color: !widget.isOutlined
-                  ? widget.colorText ?? Colors.white
-                  : _hovering
-                      ? widget.colorTextHover ?? widget.colorHover
-                      : widget.isBorder
-                          ? widget.colorText
-                          : Colors.white,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(
+                  bottom: 2,
+                  right: widget.iconButton != null ? widget.paddingIconLeft : 0),
+              child: SGText(
+                textAlign: TextAlign.center,
+                fontWeight: widget.fontWeight ?? FontWeight.bold,
+                text: widget.text,
+                size: widget.sizeText ?? 16,
+                color: !widget.isOutlined
+                    ? widget.colorText ?? Colors.white
+                    : _hovering
+                        ? widget.colorTextHover ?? widget.colorHover
+                        : widget.isBorder
+                            ? widget.colorText
+                            : Colors.white,
+              ),
             ),
           ),
         ),
@@ -111,25 +117,47 @@ class _SGButtonState extends State<SGButtonIcon> {
           width: widget.width,
           height: widget.height,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-              border: !widget.isOutlined
-                  ? Border.all(
-                      color: widget.colorBorder ?? Colors.black,
-                      width: widget.borderWidth ?? 2)
-                  : _hovering
-                      ? Border.all(
-                          color: widget.colorHover ?? Colors.black,
-                          width: widget.borderWidth ?? 2)
-                      : widget.isBorder
-                          ? Border.all(
-                              color: widget.colorBorder ?? Colors.black,
-                              width: widget.borderWidth ?? 2)
-                          : null,
-              color: widget.defaultBGColor,
-              borderRadius: BorderRadius.circular(widget.borderRadius)),
+          decoration: widget.decoration ?? _buildDecoration(),
           child: child,
         ),
       ),
     );
+  }
+
+  BoxDecoration _buildDecoration() {
+    return BoxDecoration(
+      border: _getBorder(),
+      color: widget.defaultBGColor,
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+    );
+  }
+
+  Border? _getBorder() {
+    // Không phải outline - sử dụng border mặc định
+    // if (!widget.isOutlined) {
+    //   return Border.all(
+    //     color: widget.colorBorder ?? Colors.black,
+    //     width: widget.borderWidth ?? 2,
+    //   );
+    // }
+    
+    // Đang hover - sử dụng border hover
+    if (_hovering && widget.isHover) {
+      return Border.all(
+        color: widget.colorHover ?? Colors.black,
+        width: widget.borderWidth ?? 2,
+      );
+    }
+    
+    // Có border nhưng không hover
+    if (widget.isBorder) {
+      return Border.all(
+        color: widget.colorBorder ?? Colors.black,
+        width: widget.borderWidth ?? 2,
+      );
+    }
+    
+    // Trường hợp không có border
+    return null;
   }
 }

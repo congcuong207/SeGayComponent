@@ -5,6 +5,7 @@ class SgIndicator extends StatelessWidget {
   final int currentStep;
   final ValueChanged<int>? onStepTap;
   final EdgeInsets? paddingItem;
+  final double? fontSize;
 
   const SgIndicator({
     super.key,
@@ -12,6 +13,7 @@ class SgIndicator extends StatelessWidget {
     required this.currentStep,
     this.paddingItem,
     this.onStepTap,
+    this.fontSize,
   });
 
   @override
@@ -44,7 +46,7 @@ class SgIndicator extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isActive ? Colors.black : Colors.grey,
-                        fontSize: 14,
+                        fontSize: fontSize ?? 14,
                       ),
                     ),
                   ),

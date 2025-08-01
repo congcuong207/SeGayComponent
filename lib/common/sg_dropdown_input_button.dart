@@ -130,6 +130,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _setInitialValue() {
+    log('setInitialValue: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
     if (widget.value != null) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
@@ -154,7 +155,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (oldWidget.value != widget.value) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
-      SGLog.info('SGDropdownInputButton', 'didUpdateWidget: ${widget.value} - $_lastSelectedValue');
+      _onTextChanged();
     }
 
     if (oldWidget.items != widget.items) {
@@ -165,6 +166,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   void _setControllerTextByValue(T? value) {
     final text = _getTextFromValue(value);
+    
     _isProgrammaticChange = true;
     widget.controller.text = text;
     _isProgrammaticChange = false;
@@ -273,6 +275,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _onItemSelected(DropdownMenuItem<T> item) {
+    log('onItemSelected: ${item.value}');
     _preventOverlayClose = true;
 
     _isProgrammaticChange = true;
@@ -340,7 +343,8 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     const itemHeight = 44.0;
     final double estimatedPopupHeight = _filteredItems.isEmpty ? 60 : math.min(300, _filteredItems.length * itemHeight);
 
-    final showAbove = spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
+    final showAbove =
+        spaceBelow < estimatedPopupHeight && spaceAbove > spaceBelow;
 
     final popupWidth = math.min(widget.width ?? size.width, 400.0);
     final bool useLeftAlignment = popupWidth >= 400;
@@ -385,7 +389,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   Widget _buildDropdownItem(DropdownMenuItem<T> item) {
     final isSelected = item.value == (widget.value ?? widget.defaultValue);
-    SGLog.info('SGDropdownInputButton', 'isSelected: $isSelected ${item.value} - ${widget.value} - ${widget.defaultValue}');
 
     Widget child = item.child;
     if (child is Text) {
@@ -475,7 +478,10 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   List<TextInputFormatter>? _buildInputFormatters() {
-    return widget.inputType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : null;
+    if (widget.inputType == TextInputType.number) {
+      return [FilteringTextInputFormatter.digitsOnly];
+    }
+    return null;
   }
 
   TextStyle _buildTextStyle() {
