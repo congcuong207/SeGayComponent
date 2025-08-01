@@ -8,6 +8,7 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
+import 'package:se_gay_components/common/table/model/sg_table_props.dart';
 import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 
@@ -579,118 +580,120 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
         const SizedBox(height: 8),
 
         SgTable<DataTable>(
-          widthScreen: MediaQuery.of(context).size.width,
-          // textHeaderColor: SGAppColors.error50,
-          headerBackgroundColor: Colors.blue,
-          evenRowBackgroundColor: Colors.grey.shade200,
-          oddRowBackgroundColor: Colors.white,
-          // selectedRowColor: Colors.lightBlue.shade100,
-          // Light blue background for checked rows
-          gridLineColor: Colors.grey.shade300,
-          gridLineWidth: 1.0,
-          showVerticalLines: true,
-          showHorizontalLines: true,
-          allowRowSelection: true,
-          searchTerm: widget.searchTerm,
-          showCheckboxes: _showCheckboxes, // on, off checkbox
-          onSelectionChanged: (selectedItems) {
-            setState(() {
-              _selectedItems = selectedItems;
-            });
-          },
-          // Row hover options
-          rowHoverColor: Colors.blue.withValues(alpha: 0.1),
-          rowHoverDuration: const Duration(milliseconds: 100),
-          customFilter: (item) {
-            // Lọc theo loại ngày nghỉ nếu đã chọn
-            if (widget.leaveTypeFilter != null && item.leaveType != widget.leaveTypeFilter) {
-              return false;
-            }
+          props: SgTableProps<DataTable>(
+            widthScreen: MediaQuery.of(context).size.width,
+            // textHeaderColor: SGAppColors.error50,
+            headerBackgroundColor: Colors.blue,
+            evenRowBackgroundColor: Colors.grey.shade200,
+            oddRowBackgroundColor: Colors.white,
+            // selectedRowColor: Colors.lightBlue.shade100,
+            // Light blue background for checked rows
+            gridLineColor: Colors.grey.shade300,
+            gridLineWidth: 1.0,
+            showVerticalLines: true,
+            showHorizontalLines: true,
+            allowRowSelection: true,
+            searchTerm: widget.searchTerm,
+            showCheckboxes: _showCheckboxes, // on, off checkbox
+            onSelectionChanged: (selectedItems) {
+              setState(() {
+                _selectedItems = selectedItems;
+              });
+            },
+            // Row hover options
+            // rowHoverColor: Colors.blue.withValues(alpha: 0.1),
+            rowHoverDuration: const Duration(milliseconds: 100),
+            customFilter: (item) {
+              // Lọc theo loại ngày nghỉ nếu đã chọn
+              if (widget.leaveTypeFilter != null && item.leaveType != widget.leaveTypeFilter) {
+                return false;
+              }
 
-            // Lọc theo trạng thái nếu đã chọn
-            if (widget.statusFilter != null && item.status != widget.statusFilter) {
-              return false;
-            }
+              // Lọc theo trạng thái nếu đã chọn
+              if (widget.statusFilter != null && item.status != widget.statusFilter) {
+                return false;
+              }
 
-            return true;
-          },
-          // Bật tính năng hiển thị cột hành động
-          showActions: true,
-          actionColumnTitle: 'Thao tác',
-          actionColumnWidth: 150,
-          actionViewColor: Colors.green,
-          actionEditColor: Colors.blue,
-          actionDeleteColor: Colors.red,
-          onViewAction: (item) {
-            log('message ${item.employeeName}');
-          },
-          onEditAction: (item) {},
-          onDeleteAction: (item) {},
-          columns: [
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Mã',
-              align: TextAlign.center,
-              getValue: (item) => item.id,
-              width: 100,
-            ),
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Nhân viên',
-              getValue: (item) => '${item.employeeId} ${item.employeeName}',
-              sortValue: (item) => item.employeeName,
-              searchValue: (item) => '${item.employeeId} ${item.employeeName}',
-              width: 200,
-            ),
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Phòng/Ban',
-              getValue: (item) => item.department,
-              width: 150,
-            ),
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Loại ngày nghỉ',
-              getValue: (item) => item.leaveType,
-            ),
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Mô tả',
-              getValue: (item) => item.description,
-              width: 100,
-              searchable: false, // Mô tả trống nên không tìm kiếm
-            ),
-            TableColumnBuilder.createDateColumn<DataTable>(
-              title: 'Ngày bắt đầu',
-              getValue: (item) => item.startDate,
-              format: dateFormat,
-              width: 150,
-            ),
-            TableColumnBuilder.createDateColumn<DataTable>(
-              title: 'Ngày kết thúc',
-              getValue: (item) => item.endDate,
-              format: dateFormat,
-              width: 150,
-            ),
-            TableColumnBuilder.createTextColumn<DataTable>(
-              title: 'Số ngày',
-              getValue: (item) => item.days.toString(),
-              sortValue: (item) => item.days,
-              // align: TextAlign.right,
-              width: 120,
-              isNumeric: true,
-            ),
-            SgTableColumn<DataTable>(
-              title: 'Trạng thái',
-              cellBuilder: (item) => _buildStatusTag(item.status),
-              sortValueGetter: (item) => item.status,
-              searchValueGetter: (item) => item.status,
-              cellAlignment: TextAlign.center,
-              titleAlignment: TextAlign.center,
-              width: 170,
-              searchable: true,
-            ),
-            // Đã xóa cột hành động tại đây vì đã dùng showActions
-          ],
-          data: widget.dataTable,
-          onRowTap: (item) {
-            debugPrint('Đã chọn: ${item.id} - ${item.employeeName}');
-          },
+              return true;
+            },
+            // Bật tính năng hiển thị cột hành động
+            showActions: true,
+            actionColumnTitle: 'Thao tác',
+            actionColumnWidth: 150,
+            actionViewColor: Colors.green,
+            actionEditColor: Colors.blue,
+            actionDeleteColor: Colors.red,
+            onViewAction: (item) {
+              log('message ${item.employeeName}');
+            },
+            onEditAction: (item) {},
+            onDeleteAction: (item) {},
+            columns: [
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Mã',
+                align: TextAlign.center,
+                getValue: (item) => item.id,
+                width: 100,
+              ),
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Nhân viên',
+                getValue: (item) => '${item.employeeId} ${item.employeeName}',
+                sortValue: (item) => item.employeeName,
+                searchValue: (item) => '${item.employeeId} ${item.employeeName}',
+                width: 200,
+              ),
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Phòng/Ban',
+                getValue: (item) => item.department,
+                width: 150,
+              ),
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Loại ngày nghỉ',
+                getValue: (item) => item.leaveType,
+              ),
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Mô tả',
+                getValue: (item) => item.description,
+                width: 100,
+                searchable: false, // Mô tả trống nên không tìm kiếm
+              ),
+              TableColumnBuilder.createDateColumn<DataTable>(
+                title: 'Ngày bắt đầu',
+                getValue: (item) => item.startDate,
+                format: dateFormat,
+                width: 150,
+              ),
+              TableColumnBuilder.createDateColumn<DataTable>(
+                title: 'Ngày kết thúc',
+                getValue: (item) => item.endDate,
+                format: dateFormat,
+                width: 150,
+              ),
+              TableColumnBuilder.createTextColumn<DataTable>(
+                title: 'Số ngày',
+                getValue: (item) => item.days.toString(),
+                sortValue: (item) => item.days,
+                // align: TextAlign.right,
+                width: 120,
+                isNumeric: true,
+              ),
+              SgTableColumn<DataTable>(
+                title: 'Trạng thái',
+                cellBuilder: (item) => _buildStatusTag(item.status),
+                sortValueGetter: (item) => item.status,
+                searchValueGetter: (item) => item.status,
+                cellAlignment: TextAlign.center,
+                titleAlignment: TextAlign.center,
+                width: 170,
+                searchable: true,
+              ),
+              // Đã xóa cột hành động tại đây vì đã dùng showActions
+            ],
+            data: widget.dataTable,
+            onRowTap: (item) {
+              debugPrint('Đã chọn: ${item.id} - ${item.employeeName}');
+            },
+          ),
         ),
         // _buildPaginationControls(duplicatedLeaveRequests),
       ],
