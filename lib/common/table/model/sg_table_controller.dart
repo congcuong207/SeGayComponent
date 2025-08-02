@@ -36,10 +36,6 @@ class SgTableController<T> extends ChangeNotifier {
   final Map<int, List<Widget>> _cachedHeaderCells = {};
   bool _layoutDirty = true;
   
-  // Trạng thái phân trang - giữ lại cho API bên ngoài
-  int _currentPage = 0;
-  int _pageSize = 50;
-  
   // Tối ưu cho cuộn
   int _visibleItemStart = 0;
   int _visibleItemEnd = 0;
@@ -56,8 +52,6 @@ class SgTableController<T> extends ChangeNotifier {
   SortDirection get sortDirection => _sortDirection;
   Map<int, double> get columnWidths => _columnWidths;
   int? get resizingColumnIndex => _resizingColumnIndex;
-  int get currentPage => _currentPage;
-  int get pageSize => _pageSize;
   int get visibleItemStart => _visibleItemStart;
   int get visibleItemEnd => _visibleItemEnd;
   
@@ -103,7 +97,7 @@ class SgTableController<T> extends ChangeNotifier {
     _filterData(columns, searchTerm);
     
     // Thiết lập phạm vi hiển thị ban đầu
-    _updateVisibleItemRange(0, 20);
+    _updateVisibleItemRange(0, 100);
   }
   
   // Cập nhật phạm vi hiển thị để tối ưu
@@ -172,32 +166,6 @@ class SgTableController<T> extends ChangeNotifier {
     if (needsNotify) {
       notifyListeners();
     }
-  }
-
-  // Thiết lập tham số phân trang (API cho phân trang bên ngoài)
-  void setPagination(int page, {int? pageSize}) {
-    bool changed = false;
-    
-    if (page != _currentPage && page >= 0) {
-      _currentPage = page;
-      changed = true;
-    }
-    
-    if (pageSize != null && pageSize != _pageSize) {
-      _pageSize = pageSize;
-      changed = true;
-    }
-    
-    if (changed) {
-      _cachedRows.clear(); // Xóa cache hàng khi phân trang thay đổi
-      notifyListeners();
-    }
-  }
-  
-  // Trả về tổng số trang dựa trên kích thước trang
-  int getTotalPages(int itemsPerPage) {
-    if (itemsPerPage <= 0) return 1;
-    return (_sortedData.length / itemsPerPage).ceil();
   }
 
   // Xây dựng các cột hiệu quả (bao gồm checkbox và hành động)

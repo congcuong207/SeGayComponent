@@ -28,8 +28,6 @@ class SgTableProvider<T> extends ChangeNotifier {
           actionColumnWidth: props.actionColumnWidth,
           checkboxColumnWidth: props.checkboxColumnWidth,
           widthScreen: props.widthScreen,
-          pageSize: props.pageSize,
-          usePagination: props.usePagination,
         ) {
     // Khởi tạo các ValueNotifier
     sortedDataNotifier.value = List.from(controller.sortedData);
