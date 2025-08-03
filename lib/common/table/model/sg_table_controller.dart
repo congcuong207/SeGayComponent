@@ -128,6 +128,7 @@ class SgTableController<T> extends ChangeNotifier {
   // Cập nhật dữ liệu từ props
   void updateFromProps(SgTableProps<T> props) {
     bool needsNotify = false;
+    bool columnsChanged = false;
 
     if (!listEquals(_data, props.data)) {
       _data = List.from(props.data);
@@ -149,12 +150,32 @@ class SgTableController<T> extends ChangeNotifier {
       _filterAndSortData(props);
     }
 
-    // Xây dựng lại các cột nếu cần
-    if (props.columns != _effectiveColumns) {
+    // Xác định xem cấu trúc cột có thay đổi không 
+    if (props.columns.length != _effectiveColumns.length || 
+        !_haveSameColumns(props.columns)) {
+      columnsChanged = true;
+    }
+
+    // Xây dựng lại các cột nếu cần nhưng giữ nguyên kích thước cột đã thay đổi
+    if (columnsChanged) {
+      // Lưu kích thước cột hiện tại trước khi cập nhật
+      final currentWidths = Map<int, double>.from(_columnWidths);
+      
       _buildEffectiveColumns(props.columns, props.showCheckboxes, props.showActions, props.actionColumnTitle,
           props.actionColumnWidth, props.checkboxColumnWidth, props.widthScreen);
+      
+      // Chỉ khởi tạo lại chiều rộng cột nếu cấu trúc cột thực sự thay đổi
       _initColumnWidths(props.widthScreen, props.showCheckboxes, props.showActions, props.actionColumnWidth,
           props.checkboxColumnWidth);
+          
+      // Khôi phục chiều rộng cột đã được người dùng thay đổi
+      for (final entry in currentWidths.entries) {
+        // Chỉ khôi phục cho các cột còn tồn tại
+        if (entry.key < _effectiveColumns.length) {
+          _columnWidths[entry.key] = entry.value;
+        }
+      }
+      
       _layoutDirty = true;
       needsNotify = true;
       // Xóa cache khi các cột thay đổi
@@ -166,6 +187,20 @@ class SgTableController<T> extends ChangeNotifier {
     if (needsNotify) {
       notifyListeners();
     }
+  }
+  
+  // Helper method để kiểm tra xem cấu trúc cột có thay đổi không
+  bool _haveSameColumns(List<SgTableColumn<T>> newColumns) {
+    if (newColumns.length != _effectiveColumns.length) return false;
+    
+    for (int i = 0; i < newColumns.length; i++) {
+      // Kiểm tra nếu tiêu đề cột giống nhau (đơn giản hóa, có thể mở rộng với nhiều tiêu chí hơn)
+      if (i >= _effectiveColumns.length || newColumns[i].title != _effectiveColumns[i].title) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   // Xây dựng các cột hiệu quả (bao gồm checkbox và hành động)
@@ -554,6 +589,45 @@ class SgTableController<T> extends ChangeNotifier {
   // Lấy ô tiêu đề từ cache
   List<Widget>? getCachedHeaderCells(int key) {
     return _cachedHeaderCells[key];
+  }
+
+  // Phương thức mới để cập nhật dữ liệu mà không cần xây dựng lại toàn bộ bảng
+  void updateData(List<T> newData) {
+    // Lưu trữ kích thước cột và trạng thái sắp xếp hiện tại
+    final currentColumnWidths = Map<int, double>.from(_columnWidths);
+    final currentSortColumnIndex = _sortColumnIndex;
+    final currentSortDirection = _sortDirection;
+    
+    // Cập nhật dữ liệu
+    _data = List.from(newData);
+    _filteredData = List.from(newData);
+    _sortedData = List.from(newData);
+    
+    // Duy trì các mục đã chọn hiện tại nếu chúng vẫn tồn tại trong dữ liệu mới
+    _selectedItems.removeWhere((item) => !newData.contains(item));
+    _updateAllSelectedState();
+    
+    // Khôi phục kích thước cột hiện tại
+    _columnWidths = currentColumnWidths;
+    
+    // Áp dụng bộ lọc và sắp xếp hiện tại
+    if (_searchTerm != null && _searchTerm!.isNotEmpty) {
+      _filterData(_effectiveColumns, _searchTerm);
+    }
+    
+    // Khôi phục trạng thái sắp xếp
+    _sortColumnIndex = currentSortColumnIndex;
+    _sortDirection = currentSortDirection;
+    
+    if (_sortColumnIndex != null && _sortDirection != SortDirection.none) {
+      _sortData(_effectiveColumns);
+    }
+    
+    // Xóa cache để đảm bảo hiển thị chính xác
+    _cachedRows.clear();
+    
+    // Thông báo về thay đổi
+    notifyListeners();
   }
 }
 

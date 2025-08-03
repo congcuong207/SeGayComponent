@@ -1,19 +1,28 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/table/enum/sort_direction.dart';
 import 'package:se_gay_components/common/table/model/sg_table_controller.dart';
 import 'package:se_gay_components/common/table/model/sg_table_props.dart';
+import 'package:se_gay_components/common/table/model/sg_table_registry.dart';
 import 'package:se_gay_components/common/table/provider/sg_table_provider.dart';
 
 import 'package:se_gay_components/core/utils/sg_log.dart';
 
 class SgTable<T> extends StatefulWidget {
   final SgTableProps<T> props;
+  
+  /// Khóa duy nhất cho bảng, được sử dụng để đăng ký controller
+  final String? registryKey;
 
-  const SgTable({super.key, required this.props});
+  const SgTable({
+    super.key, 
+    required this.props, 
+    this.registryKey,
+  });
 
   @override
   State<SgTable<T>> createState() => _SgTableState<T>();
@@ -63,6 +72,11 @@ class _SgTableState<T> extends State<SgTable<T>> {
       checkboxColumnWidth: widget.props.checkboxColumnWidth,
       widthScreen: widget.props.widthScreen,
     );
+    
+    // Đăng ký controller với registry nếu có registryKey
+    if (widget.registryKey != null && _controller != null) {
+      SgTableRegistry().register<T>(widget.registryKey!, _controller!);
+    }
 
     // Đăng ký listener sau khi tạo frame đầu tiên
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -85,6 +99,11 @@ class _SgTableState<T> extends State<SgTable<T>> {
     if (_verticalController != widget.props.verticalController) {
       _verticalController.dispose();
     }
+    
+    // Hủy đăng ký controller khỏi registry nếu có registryKey
+    if (widget.registryKey != null) {
+      SgTableRegistry().unregister(widget.registryKey!);
+    }
 
     _controller?.dispose();
     _backgroundColorCache.clear(); // Xóa cache màu nền
@@ -97,7 +116,19 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     // Cập nhật tham chiếu controller cục bộ khi props thay đổi
     if (widget.props != oldWidget.props) {
-      _controller?.updateFromProps(widget.props);
+      // Chỉ cập nhật props nếu cần thiết
+      bool dataChanged = !listEquals(widget.props.data, oldWidget.props.data);
+      bool searchTermChanged = widget.props.searchTerm != oldWidget.props.searchTerm;
+      bool columnsChanged = widget.props.columns.length != oldWidget.props.columns.length;
+
+      // Nếu chỉ có dữ liệu thay đổi, sử dụng updateData để giữ nguyên kích thước cột
+      if (dataChanged && !columnsChanged && !searchTermChanged) {
+        _controller?.updateData(widget.props.data);
+      } else {
+        // Nếu có thay đổi khác, sử dụng updateFromProps (đã được cải thiện)
+        _controller?.updateFromProps(widget.props);
+      }
+
       setState(() {
         // Gây ra việc build lại với props mới
       });
