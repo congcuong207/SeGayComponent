@@ -10,8 +10,11 @@ class SgCheckbox extends StatefulWidget {
   final Color? checkedColor;
   final Color? uncheckedColor;
   final Color? checkmarkColor;
+  final Color? borderCheckedColor;
+  final Color? borderUncheckedColor;
   final TextStyle? textStyle;
   final double size;
+  final double borderRadius;
   final Duration animationDuration;
 
   const SgCheckbox({
@@ -22,8 +25,11 @@ class SgCheckbox extends StatefulWidget {
     this.checkedColor,
     this.uncheckedColor,
     this.checkmarkColor,
+    this.borderCheckedColor,
+    this.borderUncheckedColor,
     this.textStyle,
     this.size = 20.0,
+    this.borderRadius = 4.0,
     this.animationDuration = const Duration(milliseconds: 200),
   });
 
@@ -91,7 +97,7 @@ class _SgCheckboxState extends State<SgCheckbox>
                 width: widget.size,
                 height: widget.size,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(widget.borderRadius),
                   color: _getBackgroundColor(),
                   border: Border.all(
                     color: _getBorderColor(),
@@ -138,9 +144,9 @@ class _SgCheckboxState extends State<SgCheckbox>
 
   Color _getBorderColor() {
     if (widget.value) {
-      return widget.checkedColor ?? const Color(0xFF2196F3);
+      return widget.borderCheckedColor ?? const Color(0xFF2196F3);
     } else {
-      return Colors.grey[400] ?? Colors.grey;
+      return widget.borderUncheckedColor ?? Colors.grey;
     }
   }
 } 
