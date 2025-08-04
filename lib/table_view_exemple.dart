@@ -10,6 +10,7 @@ import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
+import 'package:se_gay_components/common/switch/sg_toggle_switch.dart';
 
 class TableViewExemple extends StatefulWidget {
   const TableViewExemple({super.key});
@@ -579,22 +580,32 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                   ],
                 ),
               ),
-            Row(
-              children: [
-                const Text('Hiển thị hộp chọn:'),
-                Switch(
-                  value: _showCheckboxes,
-                  onChanged: (value) {
-                    setState(() {
-                      _showCheckboxes = value;
-                      if (!value) {
-                        _selectedItems = [];
-                      }
-                    });
-                  },
-                ),
-              ],
+            SgToggleSwitch(
+              value: _showCheckboxes,
+              onChanged: (value) => setState(() {
+                _showCheckboxes = value;
+              }),
+              text: 'Custom Switch',
+              switchColor: Colors.purple,
+              onIcon: 'ON',
+              offIcon: 'OFF',
             ),
+            // Row(
+            //   children: [
+            //     const Text('Hiển thị hộp chọn:'),
+            //     Switch(
+            //       value: _showCheckboxes,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           _showCheckboxes = value;
+            //           if (!value) {
+            //             _selectedItems = [];
+            //           }
+            //         });
+            //       },
+            //     ),
+            //   ],
+            // ),
           ],
         ),
         const SizedBox(height: 8),
@@ -604,9 +615,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           headerBackgroundColor: Colors.blue,
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
-          selectedRowColor: Colors.lightBlue.shade100,
-          checkedRowColor:
-              const Color(0xFFE8F4FE), // Light blue background for checked rows
+          // selectedRowColor: Colors.lightBlue.shade100,
+          // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
@@ -619,6 +629,9 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               _selectedItems = selectedItems;
             });
           },
+          // Row hover options
+          rowHoverColor: Colors.blue.withOpacity(0.1),
+          rowHoverDuration: const Duration(milliseconds: 100),
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
             if (widget.leaveTypeFilter != null &&

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
+import 'package:se_gay_components/common/switch/sg_checkbox.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 
 enum SortDirection { none, ascending, descending }
@@ -15,7 +16,6 @@ class SgTable<T> extends StatefulWidget {
   final Color oddRowBackgroundColor;
   final Color evenRowBackgroundColor;
   final Color selectedRowColor;
-  final Color checkedRowColor;
   final Color gridLineColor;
   final double gridLineWidth;
   final bool showVerticalLines;
@@ -43,6 +43,9 @@ class SgTable<T> extends StatefulWidget {
   final double? actionIconSize;
   final double? actionColumnWidth;
   final String? actionColumnTitle;
+  // Row hover options
+  final Color? rowHoverColor;
+  final Duration rowHoverDuration;
   final double widthScreen;
 
   const SgTable({
@@ -55,7 +58,6 @@ class SgTable<T> extends StatefulWidget {
     this.oddRowBackgroundColor = Colors.white,
     this.evenRowBackgroundColor = SGAppColors.neutral200,
     this.selectedRowColor = SGAppColors.info100,
-    this.checkedRowColor = const Color(0xFFE3F2FD),
     this.gridLineColor = SGAppColors.neutral200,
     this.gridLineWidth = 1.0,
     this.showVerticalLines = true,
@@ -80,6 +82,10 @@ class SgTable<T> extends StatefulWidget {
     this.actionColumnWidth = 120.0,
     this.actionColumnTitle = "Hành động",
     this.titleStyleHeader,
+    
+    // Row hover options
+    this.rowHoverColor,
+    this.rowHoverDuration = const Duration(milliseconds: 200),
     this.widthScreen = 1080,
   });
 
@@ -105,6 +111,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _resizingColumnIndex;
   double? _resizeStartX;
   double? _resizeStartWidth;
+  
+  // Row hover state
+  int? _hoveredRowIndex;
 
   @override
   void initState() {
@@ -204,11 +213,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
           width: widget.checkboxColumnWidth,
           cellBuilder: (item) => Transform.scale(
             scale: 1.2,
-            child: Checkbox(
+            child: SgCheckbox(
               value: _selectedItems.contains(item),
               onChanged: (selected) => _toggleSelectItem(item, selected),
-              activeColor: Colors.blue,
-              checkColor: Colors.white,
+              checkedColor: Colors.blue,
+              uncheckedColor: Colors.white,
+              size: 16,
+              borderRadius: 2,
             ),
           ),
           cellAlignment: TextAlign.center,
@@ -462,47 +473,55 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _sortedData.length,
                     itemBuilder: (context, index) {
-                      final isEven = index % 2 == 0;
-                      final isLast = index == _sortedData.length - 1;
-                      final isSelected = _selectedRowIndex == index;
-                      final isChecked =
-                          _selectedItems.contains(_sortedData[index]);
+                                              final isEven = index % 2 == 0;
+                        final isLast = index == _sortedData.length - 1;
+                        final isSelected = _selectedRowIndex == index;
+                        final isChecked =
+                            _selectedItems.contains(_sortedData[index]);
+                        final isHovered = _hoveredRowIndex == index;
 
-                      Color backgroundColor;
-                      if (isSelected) {
-                        backgroundColor = widget.selectedRowColor;
-                      } else if (isChecked) {
-                        backgroundColor = widget.checkedRowColor;
-                      } else {
-                        backgroundColor = isEven
-                            ? widget.evenRowBackgroundColor
-                            : widget.oddRowBackgroundColor;
-                      }
+                        Color backgroundColor;
+                        if (isSelected) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isChecked) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isHovered && widget.rowHoverColor != null) {
+                          backgroundColor = widget.rowHoverColor!;
+                        } else {
+                          backgroundColor = isEven
+                              ? widget.evenRowBackgroundColor
+                              : widget.oddRowBackgroundColor;
+                        }
 
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                          border: widget.showHorizontalLines && !isLast
-                              ? Border(
-                                  bottom: BorderSide(
-                                    color: widget.gridLineColor,
-                                    width: widget.gridLineWidth,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        child: SizedBox(
-                          width: effectiveWidth,
-                          height: widget.rowHeight,
-                          child: InkWell(
-                            onTap: () => _onRowSelected(index),
-                            child: Row(
-                              children: _buildRowCells(_sortedData[index],
-                                  false, effectiveWidth, totalWidth),
+                        return AnimatedContainer(
+                          duration: widget.rowHoverDuration,
+                          decoration: BoxDecoration(
+                            color: backgroundColor,
+                            border: widget.showHorizontalLines && !isLast
+                                ? Border(
+                                    bottom: BorderSide(
+                                      color: widget.gridLineColor,
+                                      width: widget.gridLineWidth,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          child: SizedBox(
+                            width: effectiveWidth,
+                            height: widget.rowHeight,
+                            child: MouseRegion(
+                              onEnter: (_) => _onRowHover(index),
+                              onExit: (_) => _onRowHoverExit(),
+                              child: InkWell(
+                                onTap: () => _onRowSelected(index),
+                                child: Row(
+                                  children: _buildRowCells(_sortedData[index],
+                                      false, effectiveWidth, totalWidth),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      );
+                        );
                     },
                   ),
                 ),
@@ -528,11 +547,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
           child: Center(
             child: Transform.scale(
               scale: 1.2,
-              child: Checkbox(
+              child: SgCheckbox(
                 value: _allSelected,
                 onChanged: _toggleSelectAll,
-                activeColor: Colors.blue,
-                checkColor: Colors.white,
+                checkedColor: Colors.blue,
+                uncheckedColor: Colors.transparent,
+                checkmarkColor: Colors.white ,
+                borderCheckedColor: SGAppColors.colorC0C0C0,
+                size: 16,
+                borderRadius: 2,
               ),
             ),
           ),
@@ -657,16 +680,16 @@ class _SgTableState<T> extends State<SgTable<T>> {
         Container(
           width: adjustedWidth,
           height: widget.rowHeight,
-          decoration: widget.showVerticalLines && !isLast
-              ? BoxDecoration(
-                  border: Border(
+          decoration: BoxDecoration(
+            border: widget.showVerticalLines && !isLast
+                ? Border(
                     right: BorderSide(
                       color: widget.gridLineColor,
                       width: widget.gridLineWidth,
                     ),
-                  ),
-                )
-              : null,
+                  )
+                : null,
+          ),
           child: child,
         ),
         if (columnIndex != null && !isLast)
@@ -724,6 +747,18 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _resizingColumnIndex = null;
       _resizeStartX = null;
       _resizeStartWidth = null;
+    });
+  }
+  
+  void _onRowHover(int rowIndex) {
+    setState(() {
+      _hoveredRowIndex = rowIndex;
+    });
+  }
+  
+  void _onRowHoverExit() {
+    setState(() {
+      _hoveredRowIndex = null;
     });
   }
 }
