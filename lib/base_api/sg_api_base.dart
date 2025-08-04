@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:se_gay_components/base_api/api_config.dart';
 
 class ApiBase {
@@ -14,6 +15,11 @@ class ApiBase {
     _dio.options.headers = {
       'Content-Type': 'application/json',
       if (ApiConfig.getBearToken().isNotEmpty) 'Authorization': 'Bearer ${ApiConfig.getBearToken()}',
+    };
+    //by pass https
+    (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (client) {
+      client.badCertificateCallback = (cert, host, port) => true;
+      return client;
     };
     _dio.interceptors.add(LogInterceptor(
       requestHeader: true,
