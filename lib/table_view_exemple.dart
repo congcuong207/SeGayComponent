@@ -10,6 +10,7 @@ import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
+import 'package:se_gay_components/common/switch/sg_toggle_switch.dart';
 
 class TableViewExemple extends StatefulWidget {
   const TableViewExemple({super.key});
@@ -579,22 +580,32 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                   ],
                 ),
               ),
-            Row(
-              children: [
-                const Text('Hiển thị hộp chọn:'),
-                Switch(
-                  value: _showCheckboxes,
-                  onChanged: (value) {
-                    setState(() {
-                      _showCheckboxes = value;
-                      if (!value) {
-                        _selectedItems = [];
-                      }
-                    });
-                  },
-                ),
-              ],
+            SgToggleSwitch(
+              value: _showCheckboxes,
+              onChanged: (value) => setState(() {
+                _showCheckboxes = value;
+              }),
+              text: 'Custom Switch',
+              switchColor: Colors.purple,
+              onIcon: 'ON',
+              offIcon: 'OFF',
             ),
+            // Row(
+            //   children: [
+            //     const Text('Hiển thị hộp chọn:'),
+            //     Switch(
+            //       value: _showCheckboxes,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           _showCheckboxes = value;
+            //           if (!value) {
+            //             _selectedItems = [];
+            //           }
+            //         });
+            //       },
+            //     ),
+            //   ],
+            // ),
           ],
         ),
         const SizedBox(height: 8),
@@ -605,7 +616,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           evenRowBackgroundColor: Colors.grey.shade200,
           oddRowBackgroundColor: Colors.white,
           // selectedRowColor: Colors.lightBlue.shade100,
- // Light blue background for checked rows
+          // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
           showVerticalLines: true,
