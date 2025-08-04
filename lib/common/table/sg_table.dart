@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
+import 'package:se_gay_components/common/switch/sg_checkbox.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 
 enum SortDirection { none, ascending, descending }
@@ -212,11 +213,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
           width: widget.checkboxColumnWidth,
           cellBuilder: (item) => Transform.scale(
             scale: 1.2,
-            child: Checkbox(
+            child: SgCheckbox(
               value: _selectedItems.contains(item),
               onChanged: (selected) => _toggleSelectItem(item, selected),
-              activeColor: Colors.blue,
-              checkColor: Colors.white,
+              checkedColor: Colors.blue,
+              uncheckedColor: Colors.white,
+              size: 16,
+              borderRadius: 2,
             ),
           ),
           cellAlignment: TextAlign.center,
@@ -544,11 +547,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
           child: Center(
             child: Transform.scale(
               scale: 1.2,
-              child: Checkbox(
+              child: SgCheckbox(
                 value: _allSelected,
                 onChanged: _toggleSelectAll,
-                activeColor: Colors.blue,
-                checkColor: Colors.white,
+                checkedColor: Colors.blue,
+                uncheckedColor: Colors.transparent,
+                checkmarkColor: Colors.white ,
+                borderCheckedColor: SGAppColors.colorC0C0C0,
+                size: 16,
+                borderRadius: 2,
               ),
             ),
           ),

@@ -4,6 +4,8 @@ import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'package:se_gay_components/table_view_exemple.dart';
+import 'package:se_gay_components/toggle_switch_demo.dart';
+import 'package:se_gay_components/checkbox_demo.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
 
@@ -81,6 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
               MenuItem(icon: Icons.abc, label: "Home", idMenu: "H"),
               MenuItem(icon: Icons.abc, label: "Home", idMenu: "M")
             ]),
+            MenuItem(icon: Icons.toggle_on, label: "Toggle Switch", idMenu: "ToggleSwitch"),
+            MenuItem(icon: Icons.check_box, label: "Checkbox", idMenu: "Checkbox"),
           ],
           selectedIndex: selectedIndex,
           onItemSelected: (index, [subIndex]) {
@@ -91,7 +95,11 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           body: selectedIndex == 1
               ? const TestScreen()
-              : const TableViewExemple()),
+              : selectedIndex == 2
+                  ? const ToggleSwitchDemo()
+                  : selectedIndex == 3
+                      ? const CheckboxDemo()
+                      : const TableViewExemple()),
     );
   }
 }
