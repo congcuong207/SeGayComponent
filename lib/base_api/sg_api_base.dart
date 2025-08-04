@@ -16,11 +16,6 @@ class ApiBase {
       'Content-Type': 'application/json',
       if (ApiConfig.getBearToken().isNotEmpty) 'Authorization': 'Bearer ${ApiConfig.getBearToken()}',
     };
-    //by pass https
-    (_dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate = (client) {
-      client.badCertificateCallback = (cert, host, port) => true;
-      return client;
-    };
     _dio.interceptors.add(LogInterceptor(
       requestHeader: true,
       requestBody: true,
