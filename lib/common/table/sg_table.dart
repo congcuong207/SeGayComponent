@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -14,13 +13,13 @@ import 'package:se_gay_components/core/utils/sg_log.dart';
 
 class SgTable<T> extends StatefulWidget {
   final SgTableProps<T> props;
-  
+
   /// Khóa duy nhất cho bảng, được sử dụng để đăng ký controller
   final String? registryKey;
 
   const SgTable({
-    super.key, 
-    required this.props, 
+    super.key,
+    required this.props,
     this.registryKey,
   });
 
@@ -40,10 +39,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
   // Cache màu nền để tối ưu hiệu năng
   final Map<String, Color> _backgroundColorCache = {};
-
-  // Theo dõi các mục hiển thị để tối ưu hóa
-  int _visibleItemStart = 0;
-  int _visibleItemEnd = 100;
 
   // Tham chiếu đến controller để tránh tìm kiếm Provider trong sự kiện cuộn
   SgTableController<T>? _controller;
@@ -72,7 +67,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
       checkboxColumnWidth: widget.props.checkboxColumnWidth,
       widthScreen: widget.props.widthScreen,
     );
-    
+
     // Đăng ký controller với registry nếu có registryKey
     if (widget.registryKey != null && _controller != null) {
       SgTableRegistry().register<T>(widget.registryKey!, _controller!);
@@ -99,7 +94,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     if (_verticalController != widget.props.verticalController) {
       _verticalController.dispose();
     }
-    
+
     // Hủy đăng ký controller khỏi registry nếu có registryKey
     if (widget.registryKey != null) {
       SgTableRegistry().unregister(widget.registryKey!);
@@ -142,27 +137,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _scrollListener() {
     // Kiểm tra nếu controller không có client
     if (!_verticalController.hasClients || _controller == null) return;
-
-    // Tính toán phạm vi các mục hiển thị dựa trên vị trí cuộn
-    final double offset = _verticalController.offset;
-    final double viewportHeight = _verticalController.position.viewportDimension;
-
-    final int startIndex = math.max(0, (offset / widget.props.rowHeight).floor());
-    final int endIndex = math.min(
-      startIndex + (viewportHeight / widget.props.rowHeight).ceil() + 5, // Thêm 5 mục để cuộn mượt hơn
-      widget.props.data.length,
-    );
-
-    // Chỉ cập nhật nếu phạm vi hiển thị thay đổi
-    if (startIndex != _visibleItemStart || endIndex != _visibleItemEnd) {
-      setState(() {
-        _visibleItemStart = startIndex;
-        _visibleItemEnd = endIndex;
-      });
-
-      // Sử dụng tham chiếu controller cục bộ thay vì tìm kiếm thông qua Provider
-      _controller!.updateVisibleItemRange(startIndex, endIndex);
-    }
 
     // Đánh dấu đang cuộn khi vị trí cuộn thay đổi
     final bool isNowScrolling = _verticalController.position.isScrollingNotifier.value;
@@ -210,8 +184,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
   //---------------------------
   @override
   Widget build(BuildContext context) {
-    SGLog.info('SgTable', 'SgTable build');
-
     return SgTableProvider.create<T>(
       key: _providerKey,
       props: widget.props,
@@ -280,17 +252,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
                             child: ListView.builder(
                               controller: _verticalController,
                               physics: const ClampingScrollPhysics(),
-                              cacheExtent: widget.props.rowHeight * 100,
+                              cacheExtent: widget.props.rowHeight * 200,
                               itemCount: displayData.length,
                               itemExtent: widget.props.rowHeight,
                               addAutomaticKeepAlives: false,
                               addRepaintBoundaries: true,
                               itemBuilder: (context, index) {
-                                // Bỏ qua việc render các mục ngoài phạm vi hiển thị khi đang cuộn
-                                if (_isScrolling && (index < _visibleItemStart - 5 || index > _visibleItemEnd + 5)) {
-                                  return SizedBox(height: widget.props.rowHeight);
-                                }
-                                return _buildTableRow(context, controller, index, displayData, effectiveWidth, totalWidth);
+                                return _buildTableRow(
+                                    context, controller, index, displayData, effectiveWidth, totalWidth);
                               },
                             ),
                           ),
@@ -308,7 +277,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   // Xây dựng hàng bảng với caching
-  Widget _buildTableRow(BuildContext context, SgTableController<T> controller, int index, List<T> data, double effectiveWidth, double totalWidth) {
+  Widget _buildTableRow(BuildContext context, SgTableController<T> controller, int index, List<T> data,
+      double effectiveWidth, double totalWidth) {
     final item = data[index];
     final isLast = index == data.length - 1;
     final isChecked = controller.selectedItems.contains(item);
@@ -353,7 +323,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   // Xây dựng và cache các ô trong hàng
-  List<Widget> _buildAndCacheRowCells(SgTableController<T> controller, T item, int rowIndex, double effectiveWidth, double totalWidth) {
+  List<Widget> _buildAndCacheRowCells(
+      SgTableController<T> controller, T item, int rowIndex, double effectiveWidth, double totalWidth) {
     final cells = _buildRowCells(
       context,
       controller,
@@ -371,7 +342,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   // Xây dựng các ô tiêu đề với caching
-  List<Widget> _buildHeaderCells(SgTableController<T> controller, bool shouldExpand, double screenWidth, double totalWidth) {
+  List<Widget> _buildHeaderCells(
+      SgTableController<T> controller, bool shouldExpand, double screenWidth, double totalWidth) {
     // Kiểm tra các ô tiêu đề đã cache
     final int cacheKey = controller.effectiveColumns.length;
     final List<Widget>? cachedCells = controller.getCachedHeaderCells(cacheKey);
@@ -439,7 +411,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
                   ),
                 ),
                 // Chỉ thêm biểu tượng sắp xếp khi cần thiết
-                if (hasSort && controller.sortColumnIndex == index && controller.sortDirection != SortDirection.none) _buildSortIcon(controller.sortDirection),
+                if (hasSort && controller.sortColumnIndex == index && controller.sortDirection != SortDirection.none)
+                  _buildSortIcon(controller.sortDirection),
               ],
             ),
           ),
@@ -469,7 +442,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   // Xây dựng các ô dữ liệu cho hàng
-  List<Widget> _buildRowCells(BuildContext context, SgTableController<T> controller, T item, bool shouldExpand, double screenWidth, double totalWidth, int rowIndex) {
+  List<Widget> _buildRowCells(BuildContext context, SgTableController<T> controller, T item, bool shouldExpand,
+      double screenWidth, double totalWidth, int rowIndex) {
     final cells = List.generate(controller.effectiveColumns.length, (index) {
       final column = controller.effectiveColumns[index];
       final isLast = index == controller.effectiveColumns.length - 1;
@@ -525,7 +499,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
     double? screenWidth,
     double? totalWidth,
   }) {
-    final baseWidth = columnIndex != null ? (controller.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
+    final baseWidth =
+        columnIndex != null ? (controller.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
     final adjustedWidth = baseWidth;
 
     if (isLast) {

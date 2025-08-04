@@ -36,10 +36,6 @@ class SgTableController<T> extends ChangeNotifier {
   final Map<int, List<Widget>> _cachedHeaderCells = {};
   bool _layoutDirty = true;
   
-  // Tối ưu cho cuộn
-  int _visibleItemStart = 0;
-  int _visibleItemEnd = 0;
-  
   // Các getter
   List<T> get data => _data;
   List<T> get sortedData => _sortedData;
@@ -52,9 +48,6 @@ class SgTableController<T> extends ChangeNotifier {
   SortDirection get sortDirection => _sortDirection;
   Map<int, double> get columnWidths => _columnWidths;
   int? get resizingColumnIndex => _resizingColumnIndex;
-  int get visibleItemStart => _visibleItemStart;
-  int get visibleItemEnd => _visibleItemEnd;
-  
   // Lấy dữ liệu cho trang hiện tại (API cho phân trang bên ngoài)
   List<T> getPagedData(int page, int itemsPerPage) {
     if (_sortedData.isEmpty) return [];
@@ -96,30 +89,9 @@ class SgTableController<T> extends ChangeNotifier {
     _initColumnWidths(widthScreen, showCheckboxes, showActions, actionColumnWidth, checkboxColumnWidth);
     _filterData(columns, searchTerm);
     
-    // Thiết lập phạm vi hiển thị ban đầu
-    _updateVisibleItemRange(0, 100);
+
   }
-  
-  // Cập nhật phạm vi hiển thị để tối ưu
-  void _updateVisibleItemRange(int start, int end) {
-    if (start != _visibleItemStart || end != _visibleItemEnd) {
-      _visibleItemStart = start;
-      _visibleItemEnd = end;
-      // Xóa cache hàng cho các mục trở nên hiển thị
-      for (int i = start; i <= end; i++) {
-        if (i < _sortedData.length) {
-          final item = _sortedData[i];
-          _cachedRows.remove(_getRowCacheKey(item, 0)); // Tham số width là giả lập ở đây
-        }
-      }
-    }
-  }
-  
-  // Phương thức công khai để cập nhật phạm vi hiển thị
-  void updateVisibleItemRange(int start, int end) {
-    _updateVisibleItemRange(start, end);
-  }
-  
+
   // Tạo khóa cache cho các hàng
   String _getRowCacheKey(T item, double width) {
     return '${item.hashCode}_${width}_${_sortDirection}_${_selectedRowIndex}_${_selectedItems.contains(item)}';
