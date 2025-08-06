@@ -27,6 +27,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final Color? colorHoverItem;
   final bool? isShowSuffixIcon;
   final bool enableSearch;
+  final bool enable;
   final bool isClearController;
   final TextAlign? textAlign;
   final TextAlign? textAlignItem;
@@ -75,6 +76,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.hintText,
     this.inputType,
     this.enableSearch = true,
+    this.enable = false,
     this.isClearController = true,
     this.textStyle,
     this.fontSize,
@@ -164,7 +166,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   void _setControllerTextByValue(T? value) {
     final text = _getTextFromValue(value);
-    
+
     _isProgrammaticChange = true;
     widget.controller.text = text;
     _isProgrammaticChange = false;
@@ -310,6 +312,8 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _showOverlay() {
+    if (widget.enable) return;
+    log('_showOverlay');
     if (_overlayEntry != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _overlayEntry?.markNeedsBuild();
@@ -478,8 +482,9 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           child: TextField(
             controller: widget.controller,
             focusNode: _focusNode,
-            readOnly: widget.enableSearch,
-            enableInteractiveSelection: widget.enableSearch,
+            // enabled: !widget.enable,
+            readOnly: widget.enable? true: widget.enableSearch,
+            enableInteractiveSelection:widget.enableSearch,
             keyboardType: widget.inputType ?? TextInputType.text,
             inputFormatters: _buildInputFormatters(),
             textAlign: widget.textAlign ??
@@ -564,7 +569,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
             width: widget.sizeBorderLine ?? 1,
           ),
         ),
-        suffixIcon: _buildSuffixIcon(),
+        suffixIcon: widget.enable ? null : _buildSuffixIcon(),
         contentPadding: widget.contentPadding ??
             const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       );
