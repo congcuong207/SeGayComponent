@@ -55,6 +55,9 @@ class SGDateTimeInputButton extends StatefulWidget {
   /// Custom datetime format when including time (default dd/MM/yyyy HH:mm:ss or HH:mm if !includeSeconds)
   final String? dateTimeFormat;
 
+  /// If true and `value` is null, initialize with current date-time on first load
+  final bool initWithNow;
+
   const SGDateTimeInputButton({
     super.key,
     required this.controller,
@@ -84,6 +87,7 @@ class SGDateTimeInputButton extends StatefulWidget {
     this.lastDate,
     this.dateFormat,
     this.dateTimeFormat,
+    this.initWithNow = false,
   });
 
   @override
@@ -138,6 +142,20 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
     }
     _includeTimeToggle = widget.initialIncludeTime ||
         (widget.value != null && _hasNonZeroTime(widget.value!));
+
+    // If requested, initialize with current date-time when no value provided
+    if (widget.value == null && widget.initWithNow) {
+      _includeTimeToggle = true;
+      _selectedDateTime = now;
+      _hour = now.hour;
+      _minute = now.minute;
+      _second = now.second;
+      _visibleMonth = DateTime(now.year, now.month, 1);
+      _setControllerTextFromDate(_selectedDateTime);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onChanged(_selectedDateTime);
+      });
+    }
 
     // Init controllers text for time fields
     _hourController.text = _hour.toString().padLeft(2, '0');
@@ -787,7 +805,6 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       final includeTime = widget.showTimeSection &&
           (_includeTimeToggle || !widget.timeOptional);
       widget.controller.text = _formatDate(dateTime, includeTime: includeTime);
-      log('setControllerTextFromDate: ${widget.controller.text}');
     }
     isProgrammaticChange = false;
   }

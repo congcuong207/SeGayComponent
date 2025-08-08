@@ -526,7 +526,22 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
   bool _showCheckboxes = true; // State for toggling checkboxes
   List<DataTable> _selectedItems = []; // Selected items
   final _dtController = TextEditingController();
-  DateTime? _selected;
+  DateTime? _selected = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('ctrl: ${_dtController.text}'); // đã có ngày/giờ
+    });
+  }
+
+  @override
+  void dispose() {
+    // Safely dispose the controller
+    _dtController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -588,13 +603,13 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               value: _selected,
               onChanged: (dt) {
                 setState(() {
-                  log('message dt: $dt');
                   _selected = dt;
                 });
               },
               width: 260,
               height: 40,
               // Hành vi
+              initWithNow: true,  // bật khởi tạo với thời gian hiện tại
               enable: false, // true = disable hoàn toàn
               allowTyping: true, // cho phép gõ tay
               showTimeSection: true, // hiển thị phần giờ-phút-giây
@@ -608,8 +623,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               // sizeBorderCircular: 12,
               colorBorder: SGAppColors.colorBorderGray,
               colorBorderFocus: SGAppColors.info500,
-              showUnderlineBorderOnly:
-                  true, // true nếu muốn chỉ gạch chân như option có sẵn
+              showUnderlineBorderOnly: true, // true nếu muốn chỉ gạch chân như option có sẵn
             ),
             SgToggleSwitch(
               value: _showCheckboxes,
