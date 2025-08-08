@@ -446,8 +446,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
 
   Widget _buildCalendarGrid() {
     // Monday-first grid with week numbers and leading/trailing days
-    const double cellHeight = 36;
-    const double cellWidth = 44;
+    const double cellHeight = 26;
+    const double cellWidth = 26;
 
     // Find the first Monday on/before the first day of month
     final firstOfMonth = DateTime(_visibleMonth.year, _visibleMonth.month, 1);
@@ -464,12 +464,12 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
     rows.add(
       TableRow(
         children: [
-          _buildHeaderCell('Th 2', width: cellWidth),
-          _buildHeaderCell('Th 3', width: cellWidth),
-          _buildHeaderCell('Th 4', width: cellWidth),
-          _buildHeaderCell('Th 5', width: cellWidth),
-          _buildHeaderCell('Th 6', width: cellWidth),
-          _buildHeaderCell('Th 7', width: cellWidth),
+          _buildHeaderCell('T2', width: cellWidth),
+          _buildHeaderCell('T3', width: cellWidth),
+          _buildHeaderCell('T4', width: cellWidth),
+          _buildHeaderCell('T5', width: cellWidth),
+          _buildHeaderCell('T6', width: cellWidth),
+          _buildHeaderCell('T7', width: cellWidth),
           _buildHeaderCell('CN', width: cellWidth),
         ],
       ),
@@ -519,18 +519,18 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
 
   Widget _buildHeaderCell(String text, {required double width}) {
     return Container(
-      height: 25,
       width: width,
       alignment: Alignment.center,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        color: SGAppColors.neutral300.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(3),
+        color: SGAppColors.neutral100,
+        borderRadius: BorderRadius.circular(2),
       ),
-      child: Text(
-        text,
-        style:
-            const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54),
+      child: SGText(
+        text: text,
+        size: 13,
+        fontWeight: FontWeight.w600,
+        color: SGAppColors.dark,
       ),
     );
   }
@@ -548,76 +548,73 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
         ? Colors.grey
         : (isCurrentMonth ? Colors.black87 : Colors.black38);
 
-    final Widget dayText = Text(
-      '${date.day}',
-      style: TextStyle(
-        color: isSelected
-            ? SGAppColors.info700
-            : (isToday ? SGAppColors.primary600 : textColor),
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-      ),
+    final Widget dayText = SGText(
+      text: '${date.day}',
+      size: 14,
+      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      color: isSelected
+          ? SGAppColors.info700
+          : (isToday ? SGAppColors.primary600 : textColor),
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(4),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-        child: Tooltip(
-          message: '${date.day}/${date.month}/${date.year}',
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            hoverColor: SGAppColors.colorBorderGray.withOpacity(0.15),
-            onTap: isDisabled
-                ? null
-                : () {
-                    setState(() {
-                      if (_includeTimeToggle) {
-                        _selectedDateTime = DateTime(date.year, date.month,
-                            date.day, _hour, _minute, _second);
-                      } else {
-                        _selectedDateTime =
-                            DateTime(date.year, date.month, date.day);
-                      }
-                      _visibleMonth = DateTime(date.year, date.month, 1);
-                    });
-                    _notifySelectionChanged();
-                    _removeOverlay();
-                    _focusNode.unfocus();
-                    _rebuildOverlay();
-                  },
-            child: SizedBox(
-              height: height,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  dayText,
-                  if (isSelected)
-                    Positioned(
-                      bottom: 6,
-                      child: Container(
-                        width: 14,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: SGAppColors.error500,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: Tooltip(
+        message: '${date.day}/${date.month}/${date.year}',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(6),
+          hoverColor: SGAppColors.colorBorderGray.withOpacity(0.15),
+          onTap: isDisabled
+              ? null
+              : () {
+                  setState(() {
+                    if (_includeTimeToggle) {
+                      _selectedDateTime = DateTime(date.year, date.month,
+                          date.day, _hour, _minute, _second);
+                    } else {
+                      _selectedDateTime =
+                          DateTime(date.year, date.month, date.day);
+                    }
+                    _visibleMonth = DateTime(date.year, date.month, 1);
+                  });
+                  _notifySelectionChanged();
+                  _removeOverlay();
+                  _focusNode.unfocus();
+                  _rebuildOverlay();
+                },
+          child: SizedBox(
+            height: height,
+            width: 14,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                dayText,
+                if (isSelected)
+                  Positioned(
+                    bottom: 4,
+                    child: Container(
+                      width: 14,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: SGAppColors.error500,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  if (isToday && !isSelected)
-                    Positioned(
-                      bottom: 6,
-                      child: Container(
-                        width: 14,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: SGAppColors.info400,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                  ),
+                if (isToday && !isSelected)
+                  Positioned(
+                    bottom: 4,
+                    child: Container(
+                      width: 14,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: SGAppColors.info400,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -636,7 +633,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Chọn thời gian'),
+                const SGText(text: 'Chọn thời gian', size: 12, fontWeight: FontWeight.w600),
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: SgCheckbox(
@@ -666,6 +663,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             ),
           if (!widget.timeOptional || _includeTimeToggle)
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNumberDropdown('Giờ', 0, 23, _hour, (v) {
                   setState(() => _hour = v);
@@ -715,8 +713,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             onChanged(v ?? value);
           },
           controller: controller,
-          width: 30,
-          height: 30,
+          width: 25,
+          height: 25,
           maxLength: 2,
           isShowSuffixIcon: false,
           sizeBorderCircular: 5,
