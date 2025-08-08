@@ -44,6 +44,12 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final FontWeight? fontWeight;
   final FocusNode? focusNode;
   final bool showUnderlineBorderOnly; // Thêm tùy chọn mới
+  // NEW: cho phép nhập tự do, giữ nguyên giá trị gõ khi không chọn item
+  final bool allowFreeInput;
+  // NEW (optional): callback nhận chuỗi người dùng gõ khi không khớp item
+  final ValueChanged<String>? onFreeInputSubmitted;
+  // NEW: giới hạn độ dài chuỗi nhập
+  final int? maxLength;
 
   const SGDropdownInputButton({
     super.key,
@@ -83,11 +89,13 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.fontWeight,
     this.focusNode,
     this.showUnderlineBorderOnly = false, // Mặc định là false
+    this.allowFreeInput = false,
+    this.onFreeInputSubmitted,
+    this.maxLength,
   });
 
   @override
-  State<SGDropdownInputButton<T>> createState() =>
-      _SGDropdownInputButtonState<T>();
+  State<SGDropdownInputButton<T>> createState() => _SGDropdownInputButtonState<T>();
 }
 
 class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
@@ -133,19 +141,27 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (widget.value != null) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
+      log('setInitialValue1: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
     } else if (widget.defaultValue != null &&
         widget.items.any((item) => item.value == widget.defaultValue)) {
       _setControllerTextByValue(widget.defaultValue);
       _lastSelectedValue = widget.defaultValue;
+      log('setInitialValue2: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onChanged(widget.defaultValue);
       });
     } else if (widget.items.isNotEmpty) {
-      _setControllerTextByValue(widget.items.first.value);
-      _lastSelectedValue = widget.items.first.value;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onChanged(widget.items.first.value);
-      });
+      if (widget.allowFreeInput) {
+        // Không auto chọn khi cho phép nhập tự do
+        _lastSelectedValue = null;
+        log('allowFreeInput: ${widget.allowFreeInput}: -- $_lastSelectedValue');
+      } else {
+        _setControllerTextByValue(widget.items.first.value);
+        _lastSelectedValue = widget.items.first.value;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onChanged(widget.items.first.value);
+        });
+      }
     }
   }
 
@@ -235,21 +251,27 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       },
     );
 
-    if (match.value == null && _lastSelectedValue != null) {
-      if (widget.value != _lastSelectedValue) {
-        _setControllerTextByValue(_lastSelectedValue);
-        _needsOnChanged = true;
-        _pendingValue = _lastSelectedValue;
+    if (match.value == null) {
+      if (widget.allowFreeInput) {
+        // Giữ nguyên text người dùng đã gõ, không revert
+        _lastSelectedValue = null; // tránh revert về lần chọn trước
+        widget.onFreeInputSubmitted?.call(currentText);
+      } else if (_lastSelectedValue != null) {
+        if (widget.value != _lastSelectedValue) {
+          _setControllerTextByValue(_lastSelectedValue);
+          _needsOnChanged = true;
+          _pendingValue = _lastSelectedValue;
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_needsOnChanged && _pendingValue != null && mounted) {
-            widget.onChanged(_pendingValue);
-            _needsOnChanged = false;
-            _pendingValue = null;
-          }
-        });
-      } else {
-        _setControllerTextByValue(_lastSelectedValue);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_needsOnChanged && _pendingValue != null && mounted) {
+              widget.onChanged(_pendingValue);
+              _needsOnChanged = false;
+              _pendingValue = null;
+            }
+          });
+        } else {
+          _setControllerTextByValue(_lastSelectedValue);
+        }
       }
     }
 
@@ -272,10 +294,13 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           return itemText.toLowerCase().contains(searchValue);
         }).toList();
       }
-      if (_isOpen && _overlayEntry != null) {
-        _overlayEntry!.markNeedsBuild();
-      }
     });
+    // Rebuild overlay outside build frame
+    if (_isOpen && _overlayEntry != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
   }
 
   void _onItemSelected(DropdownMenuItem<T> item) {
@@ -483,8 +508,11 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
             controller: widget.controller,
             focusNode: _focusNode,
             // enabled: !widget.enable,
-            readOnly: widget.enable? true: widget.enableSearch,
-            enableInteractiveSelection:widget.enableSearch,
+            readOnly: widget.enable
+                ? true
+                : (widget.allowFreeInput ? false : widget.enableSearch),
+            enableInteractiveSelection:
+                widget.allowFreeInput ? true : widget.enableSearch,
             keyboardType: widget.inputType ?? TextInputType.text,
             inputFormatters: _buildInputFormatters(),
             textAlign: widget.textAlign ??
@@ -503,10 +531,14 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   List<TextInputFormatter>? _buildInputFormatters() {
+    final List<TextInputFormatter> formatters = [];
     if (widget.inputType == TextInputType.number) {
-      return [FilteringTextInputFormatter.digitsOnly];
+      formatters.add(FilteringTextInputFormatter.digitsOnly);
     }
-    return null;
+    if (widget.maxLength != null && widget.maxLength! > 0) {
+      formatters.add(LengthLimitingTextInputFormatter(widget.maxLength));
+    }
+    return formatters.isEmpty ? null : formatters;
   }
 
   TextStyle _buildTextStyle() {
@@ -653,7 +685,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _handleEditingComplete() {
-    if (!widget.enableSearch) {
+    if (!widget.enableSearch || widget.allowFreeInput) {
       final match = widget.items.firstWhere(
         (item) =>
             (item.child is Text
@@ -663,7 +695,13 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         orElse: () => DropdownMenuItem<T>(value: null, child: const SizedBox()),
       );
       if (match.value == null) {
-        _setControllerTextByValue(_lastSelectedValue);
+        if (widget.allowFreeInput) {
+          // Giữ nguyên và báo về callback text nếu có
+          _lastSelectedValue = null; // tránh revert
+          widget.onFreeInputSubmitted?.call(widget.controller.text);
+        } else {
+          _setControllerTextByValue(_lastSelectedValue);
+        }
       }
     }
     _removeOverlay();
