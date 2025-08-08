@@ -8,8 +8,14 @@ import 'package:se_gay_components/toggle_switch_demo.dart';
 import 'package:se_gay_components/checkbox_demo.dart';
 import 'package:se_gay_components/web_base/sg_sidebar/sg_sidebar.dart';
 import 'package:se_gay_components/web_base/sg_web_base.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Intl.defaultLocale = 'vi_VN';
+  await initializeDateFormatting('vi');
+  await initializeDateFormatting('vi_VN');
   runApp(const MyApp());
 }
 

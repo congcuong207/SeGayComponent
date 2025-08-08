@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:se_gay_components/common/pagination/sg_pagination_controls.dart';
 import 'package:se_gay_components/common/sg_button_icon.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_datetime_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
@@ -524,6 +525,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
   final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
   bool _showCheckboxes = true; // State for toggling checkboxes
   List<DataTable> _selectedItems = []; // Selected items
+  final _dtController = TextEditingController();
+  DateTime? _selected;
 
   @override
   Widget build(BuildContext context) {
@@ -580,6 +583,34 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                   ],
                 ),
               ),
+            SGDateTimeInputButton(
+              controller: _dtController,
+              value: _selected,
+              onChanged: (dt) {
+                setState(() {
+                  log('message dt: $dt');
+                  _selected = dt;
+                });
+              },
+              width: 260,
+              height: 40,
+              // Hành vi
+              enable: false, // true = disable hoàn toàn
+              allowTyping: true, // cho phép gõ tay
+              showTimeSection: true, // hiển thị phần giờ-phút-giây
+              timeOptional: true, // cho phép bật/tắt thời gian
+              includeSeconds: true, // có trường giây
+              initialIncludeTime: false,
+              // Định dạng tuỳ biến (không bắt buộc)
+              // dateFormat: 'dd/MM/yyyy',
+              // dateTimeFormat: 'dd/MM/yyyy HH:mm',
+              // Giao diện theo SGDropdownInputButton
+              // sizeBorderCircular: 12,
+              colorBorder: SGAppColors.colorBorderGray,
+              colorBorderFocus: SGAppColors.info500,
+              showUnderlineBorderOnly:
+                  true, // true nếu muốn chỉ gạch chân như option có sẵn
+            ),
             SgToggleSwitch(
               value: _showCheckboxes,
               onChanged: (value) => setState(() {
