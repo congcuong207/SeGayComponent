@@ -1,6 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
-import 'dart:developer';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -633,7 +630,10 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SGText(text: 'Chọn thời gian', size: 12, fontWeight: FontWeight.w600),
+                const SGText(
+                    text: 'Chọn thời gian',
+                    size: 12,
+                    fontWeight: FontWeight.w600),
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: SgCheckbox(
@@ -915,6 +915,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
     if (widget.showUnderlineBorderOnly) {
       return InputDecoration(
         isDense: false,
+        filled: true,
+        fillColor: Colors.transparent,
         border: _buildUnderlineBorder(false),
         enabledBorder: _buildUnderlineBorder(false),
         focusedBorder: _buildUnderlineBorder(true),
