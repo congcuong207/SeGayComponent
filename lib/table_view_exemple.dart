@@ -187,12 +187,13 @@ class _TableViewExempleState extends State<TableViewExemple> {
               colorBorder: SGAppColors.neutral400,
               showUnderlineBorderOnly: true,
               enableSearch: false,
+              enable: true,
               isClearController: false,
               isShowSuffixIcon: true,
               hintText: 'Chọn ${title.toLowerCase()}',
               textAlign: TextAlign.left,
               contentPadding:
-                  const EdgeInsets.only(left: 10, top: 8, bottom: 8)),
+                  const EdgeInsets.only(left: 10, top: 8, bottom: 10)),
         ),
       ],
     );
@@ -609,13 +610,14 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               width: 260,
               height: 40,
               // Hành vi
-              initWithNow: true,  // bật khởi tạo với thời gian hiện tại
-              enable: false, // true = disable hoàn toàn
+              initWithNow: true, // bật khởi tạo với thời gian hiện tại
+              enable: true, // true = disable hoàn toàn
               allowTyping: true, // cho phép gõ tay
               showTimeSection: true, // hiển thị phần giờ-phút-giây
               timeOptional: true, // cho phép bật/tắt thời gian
               includeSeconds: true, // có trường giây
               initialIncludeTime: false,
+
               // Định dạng tuỳ biến (không bắt buộc)
               // dateFormat: 'dd/MM/yyyy',
               // dateTimeFormat: 'dd/MM/yyyy HH:mm',
@@ -623,7 +625,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               // sizeBorderCircular: 12,
               colorBorder: SGAppColors.colorBorderGray,
               colorBorderFocus: SGAppColors.info500,
-              showUnderlineBorderOnly: true, // true nếu muốn chỉ gạch chân như option có sẵn
+              showUnderlineBorderOnly:
+                  true, // true nếu muốn chỉ gạch chân như option có sẵn
             ),
             SgToggleSwitch(
               value: _showCheckboxes,

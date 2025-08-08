@@ -867,7 +867,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
                     : TextAlign.center),
             style: _buildTextStyle(),
             maxLines: 1,
-            textAlignVertical: TextAlignVertical.center,
+            textAlignVertical: widget.enable ? null : TextAlignVertical.center,
             decoration: _buildInputDecoration(),
             onTap: () {
               if (!_isOpen && !widget.enable) {
@@ -915,7 +915,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
     if (widget.showUnderlineBorderOnly) {
       return InputDecoration(
         isDense: false,
-        filled: true,
+        filled: widget.enable ? false : true,
         fillColor: Colors.transparent,
         border: _buildUnderlineBorder(false),
         enabledBorder: _buildUnderlineBorder(false),
@@ -926,6 +926,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       );
     } else {
       return InputDecoration(
+        isDense: false,
+        filled: widget.enable ? false : true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.sizeBorderCircular ?? 12),
           borderSide: BorderSide(

@@ -95,7 +95,8 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   });
 
   @override
-  State<SGDropdownInputButton<T>> createState() => _SGDropdownInputButtonState<T>();
+  State<SGDropdownInputButton<T>> createState() =>
+      _SGDropdownInputButtonState<T>();
 }
 
 class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
@@ -566,16 +567,18 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     if (widget.showUnderlineBorderOnly) {
       // Custom underline border with gap
       return InputDecoration(
+        isDense: false,
+        filled: widget.enable ? false : true,
+        fillColor: Colors.transparent,
         hintText: widget.hintText,
         hintStyle: TextStyle(
           fontSize: widget.fontSize,
           fontWeight: widget.fontWeight,
         ),
-        isDense: false,
         border: _buildUnderlineBorder(false),
         enabledBorder: _buildUnderlineBorder(false),
         focusedBorder: _buildUnderlineBorder(true),
-        suffixIcon: _buildSuffixIcon(),
+        suffixIcon: widget.enable ? null : _buildSuffixIcon(),
         contentPadding: widget.contentPadding ??
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       );
