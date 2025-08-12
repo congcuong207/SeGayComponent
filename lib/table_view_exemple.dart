@@ -182,8 +182,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
               isShowSuffixIcon: true,
               hintText: 'Chọn ${title.toLowerCase()}',
               textAlign: TextAlign.left,
-              contentPadding:
-                  const EdgeInsets.only(left: 10, top: 8, bottom: 10)),
+              contentPadding: const EdgeInsets.only(left: 10, top: 8, bottom: 10)),
         ),
       ],
     );
@@ -606,8 +605,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               // sizeBorderCircular: 12,
               colorBorder: SGAppColors.colorBorderGray,
               colorBorderFocus: SGAppColors.info500,
-              showUnderlineBorderOnly:
-                  true, // true nếu muốn chỉ gạch chân như option có sẵn
+              showUnderlineBorderOnly: true, // true nếu muốn chỉ gạch chân như option có sẵn
             ),
             SgToggleSwitch(
               value: _showCheckboxes,
@@ -640,33 +638,33 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
         const SizedBox(height: 8),
 
         SgTable<DataTable>(
-          // textHeaderColor: SGAppColors.error50,
-          headerBackgroundColor: Colors.blue,
-          evenRowBackgroundColor: Colors.grey.shade200,
-          oddRowBackgroundColor: Colors.white,
-          // selectedRowColor: Colors.lightBlue.shade100,
-          // Light blue background for checked rows
-          gridLineColor: Colors.grey.shade300,
-          gridLineWidth: 1.0,
-          showVerticalLines: true,
-          showHorizontalLines: true,
-          allowRowSelection: true,
-          searchTerm: widget.searchTerm,
-          showCheckboxes: _showCheckboxes, // on, off checkbox
-          onSelectionChanged: (selectedItems) {
-            setState(() {
-              _selectedItems = selectedItems;
-            });
-          },
-          // Row hover options
-          rowHoverColor: Colors.blue.withOpacity(0.1),
-          rowHoverDuration: const Duration(milliseconds: 100),
-          customFilter: (item) {
-            // Lọc theo loại ngày nghỉ nếu đã chọn
-            if (widget.leaveTypeFilter != null &&
-                item.leaveType != widget.leaveTypeFilter) {
-              return false;
-            }
+          props: SgTableProps<DataTable>(
+            // textHeaderColor: SGAppColors.error50,
+            headerBackgroundColor: Colors.blue,
+            evenRowBackgroundColor: Colors.grey.shade200,
+            oddRowBackgroundColor: Colors.white,
+            // selectedRowColor: Colors.lightBlue.shade100,
+            // Light blue background for checked rows
+            gridLineColor: Colors.grey.shade300,
+            gridLineWidth: 1.0,
+            showVerticalLines: true,
+            showHorizontalLines: true,
+            allowRowSelection: true,
+            searchTerm: widget.searchTerm,
+            showCheckboxes: _showCheckboxes, // on, off checkbox
+            onSelectionChanged: (selectedItems) {
+              setState(() {
+                _selectedItems = selectedItems;
+              });
+            },
+            // Row hover options
+            // rowHoverColor: Colors.blue.withOpacity(0.1),
+            rowHoverDuration: const Duration(milliseconds: 100),
+            customFilter: (item) {
+              // Lọc theo loại ngày nghỉ nếu đã chọn
+              if (widget.leaveTypeFilter != null && item.leaveType != widget.leaveTypeFilter) {
+                return false;
+              }
 
               // Lọc theo trạng thái nếu đã chọn
               if (widget.statusFilter != null && item.status != widget.statusFilter) {
