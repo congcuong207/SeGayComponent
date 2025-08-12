@@ -42,6 +42,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Tham chiếu đến controller để tránh tìm kiếm Provider trong sự kiện cuộn
   SgTableController<T>? _controller;
 
+  // Hover & Press states
+  int? _hoveredRowIndex;
+  int? _pressedRowIndex;
+
   // QUẢN LÝ VÒNG ĐỜI WIDGET
   //---------------------------
   @override
@@ -165,6 +169,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Lấy màu nền cho hàng dựa trên trạng thái
   Color _getBackgroundColor(int index, bool isSelected, bool isChecked) {
     final isEven = index % 2 == 0;
+    // Ưu tiên pressed > hover > selected/checked
+    if (_pressedRowIndex == index) {
+      return widget.props.pressedRowColor;
+    }
+    if (_hoveredRowIndex == index) {
+      return widget.props.hoverRowColor;
+    }
     final key = _backgroundColorKeys[isSelected]![isChecked]![isEven]!;
 
     return _backgroundColorCache[key] ??= (() {
@@ -293,24 +304,22 @@ class _SgTableState<T> extends State<SgTable<T>> {
     }
 
     return RepaintBoundary(
-      child: Container(
-        width: effectiveWidth,
-        height: widget.props.rowHeight,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: widget.props.showHorizontalLines && !isLast
-              ? Border(
-                  bottom: BorderSide(
-                    color: widget.props.gridLineColor,
-                    width: widget.props.gridLineWidth,
-                  ),
-                )
-              : null,
-        ),
-        child: InkWell(
-          // onTap: () => controller.onRowSelected(index),
-          child: Row(
-            children: cachedCells ?? _buildAndCacheRowCells(controller, item, index, effectiveWidth, totalWidth),
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() => _hoveredRowIndex = index);
+        },
+        onExit: (_) {
+          if (_hoveredRowIndex == index) {
+            setState(() => _hoveredRowIndex = null);
+          }
+        },
+        child: GestureDetector(
+          onTap: () => controller.onRowSelected(index),
+          child: ColoredBox(
+            color: backgroundColor,
+            child: Row(
+              children: cachedCells ?? _buildAndCacheRowCells(controller, item, index, effectiveWidth, totalWidth),
+            ),
           ),
         ),
       ),

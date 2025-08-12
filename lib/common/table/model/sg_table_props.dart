@@ -37,6 +37,8 @@ class SgTableProps<T> {
   final Color? textHeaderColor;
   final Color selectedRowColor;
   final Color checkedRowColor;
+  final Color hoverRowColor;
+  final Color pressedRowColor;
   final Color gridLineColor;
 
   // Tùy chọn lưới
@@ -90,6 +92,8 @@ class SgTableProps<T> {
     this.textHeaderColor,
     this.selectedRowColor = const Color(0xFFBBDEFB),
     this.checkedRowColor = const Color(0xFFE1F5FE),
+    this.hoverRowColor = const Color(0xFFE3F2FD),
+    this.pressedRowColor = const Color(0xFFB3E5FC),
     this.gridLineColor = const Color(0xFFE0E0E0),
     this.showHorizontalLines = true,
     this.showVerticalLines = true,
