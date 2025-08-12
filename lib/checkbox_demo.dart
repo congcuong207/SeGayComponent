@@ -46,6 +46,7 @@ class _CheckboxDemoState extends State<CheckboxDemo> {
                   value: _checkbox1,
                   onChanged: (value) => setState(() => _checkbox1 = value),
                   text: 'Chọn tất cả',
+                  isDisabled: true,
                 ),
               ),
               
