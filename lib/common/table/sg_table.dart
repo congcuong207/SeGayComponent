@@ -33,7 +33,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
   final _providerKey = GlobalKey();
 
   // Trạng thái cuộn và tối ưu hóa
-  bool _isScrolling = false;
   late ScrollController _horizontalController;
   late ScrollController _verticalController;
 
@@ -135,17 +134,17 @@ class _SgTableState<T> extends State<SgTable<T>> {
   //---------------------------
   // Theo dõi sự kiện cuộn để tối ưu hiệu năng
   void _scrollListener() {
-    // Kiểm tra nếu controller không có client
-    if (!_verticalController.hasClients || _controller == null) return;
+    // // Kiểm tra nếu controller không có client
+    // if (!_verticalController.hasClients || _controller == null) return;
 
-    // Đánh dấu đang cuộn khi vị trí cuộn thay đổi
-    final bool isNowScrolling = _verticalController.position.isScrollingNotifier.value;
-    if (isNowScrolling != _isScrolling) {
-      // Chỉ cập nhật trạng thái nếu trạng thái cuộn thực sự thay đổi
-      setState(() {
-        _isScrolling = isNowScrolling;
-      });
-    }
+    // // Đánh dấu đang cuộn khi vị trí cuộn thay đổi
+    // final bool isNowScrolling = _verticalController.position.isScrollingNotifier.value;
+    // if (isNowScrolling != _isScrolling) {
+    //   // Chỉ cập nhật trạng thái nếu trạng thái cuộn thực sự thay đổi
+    //   setState(() {
+    //     _isScrolling = isNowScrolling;
+    //   });
+    // }
   }
 
   //---------------------------
@@ -252,7 +251,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
                             child: ListView.builder(
                               controller: _verticalController,
                               physics: const ClampingScrollPhysics(),
-                              cacheExtent: widget.props.rowHeight * 200,
                               itemCount: displayData.length,
                               itemExtent: widget.props.rowHeight,
                               addAutomaticKeepAlives: false,
@@ -295,8 +293,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
     }
 
     return RepaintBoundary(
-      child: AnimatedContainer(
-        duration: widget.props.rowHoverDuration ?? const Duration(milliseconds: 100),
+      child: Container(
+        width: effectiveWidth,
+        height: widget.props.rowHeight,
         decoration: BoxDecoration(
           color: backgroundColor,
           border: widget.props.showHorizontalLines && !isLast
@@ -308,14 +307,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
                 )
               : null,
         ),
-        child: SizedBox(
-          width: effectiveWidth,
-          height: widget.props.rowHeight,
-          child: InkWell(
-            onTap: () => controller.onRowSelected(index),
-            child: Row(
-              children: cachedCells ?? _buildAndCacheRowCells(controller, item, index, effectiveWidth, totalWidth),
-            ),
+        child: InkWell(
+          // onTap: () => controller.onRowSelected(index),
+          child: Row(
+            children: cachedCells ?? _buildAndCacheRowCells(controller, item, index, effectiveWidth, totalWidth),
           ),
         ),
       ),
@@ -359,7 +354,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
       // Trường hợp đặc biệt cho cột checkbox
       if (widget.props.showCheckboxes && index == 0) {
-        return _buildCell(
+        return _buildHeaderCell(
           controller: controller,
           child: Center(
             child: Transform.scale(
@@ -377,13 +372,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
           width: column.width,
           isLast: isLast,
           columnIndex: index,
-          shouldExpand: shouldExpand,
-          screenWidth: screenWidth,
-          totalWidth: totalWidth,
         );
       }
 
-      return _buildCell(
+      return _buildHeaderCell(
         controller: controller,
         child: InkWell(
           onTap: hasSort ? () => controller.onSortColumn(index) : null,
@@ -420,9 +412,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
         width: column.width,
         isLast: isLast,
         columnIndex: index,
-        shouldExpand: shouldExpand,
-        screenWidth: screenWidth,
-        totalWidth: totalWidth,
       );
     });
 
@@ -458,9 +447,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
           width: column.width,
           isLast: isLast,
           columnIndex: index,
-          shouldExpand: shouldExpand,
-          screenWidth: screenWidth,
-          totalWidth: totalWidth,
         );
       }
 
@@ -479,9 +465,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
         width: column.width,
         isLast: isLast,
         columnIndex: index,
-        shouldExpand: shouldExpand,
-        screenWidth: screenWidth,
-        totalWidth: totalWidth,
       );
     });
 
@@ -495,23 +478,41 @@ class _SgTableState<T> extends State<SgTable<T>> {
     double? width,
     bool isLast = false,
     int? columnIndex,
-    bool shouldExpand = false,
-    double? screenWidth,
-    double? totalWidth,
   }) {
     final baseWidth =
         columnIndex != null ? (controller.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
     final adjustedWidth = baseWidth;
 
-    if (isLast) {
-      return RepaintBoundary(
-        child: SizedBox(
-          width: adjustedWidth,
-          height: widget.props.rowHeight,
-          child: child,
+    return RepaintBoundary(
+      child: Container(
+        width: adjustedWidth,
+        height: widget.props.rowHeight,
+        decoration: BoxDecoration(
+          border: widget.props.showVerticalLines && !isLast
+              ? Border(
+                  right: BorderSide(
+                    color: widget.props.gridLineColor,
+                    width: widget.props.gridLineWidth,
+                  ),
+                )
+              : null,
         ),
-      );
-    }
+        child: child,
+      ),
+    );
+  }
+
+// Xây dựng một ô (cho tiêu đề hoặc hàng dữ liệu) với RepaintBoundary
+  Widget _buildHeaderCell({
+    required SgTableController<T> controller,
+    required Widget child,
+    double? width,
+    bool isLast = false,
+    int? columnIndex,
+  }) {
+    final baseWidth =
+        columnIndex != null ? (controller.columnWidths[columnIndex] ?? (width ?? 120.0)) : (width ?? 120.0);
+    final adjustedWidth = baseWidth;
 
     return RepaintBoundary(
       child: Stack(
@@ -546,8 +547,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
                   },
                   onHorizontalDragUpdate: (details) {
                     controller.updateResize(details.globalPosition.dx);
-                    // Đảm bảo UI được cập nhật liên tục khi kéo
-                    setState(() {});
                   },
                   onHorizontalDragEnd: (_) {
                     controller.endResize();

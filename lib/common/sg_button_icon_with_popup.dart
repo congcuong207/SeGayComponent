@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_button_v2.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_popup_controller.dart';
 import 'sg_popup_menu.dart';
 
