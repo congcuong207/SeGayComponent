@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:se_gay_components/common/pagination/sg_pagination_controls.dart';
 import 'package:se_gay_components/common/sg_button_icon.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
+import 'package:se_gay_components/common/sg_datetime_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/table/model/sg_table_props.dart';
 import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
+import 'package:se_gay_components/common/switch/sg_toggle_switch.dart';
 
 class TableViewExemple extends StatefulWidget {
   const TableViewExemple({super.key});
@@ -175,11 +177,13 @@ class _TableViewExempleState extends State<TableViewExemple> {
               colorBorder: SGAppColors.neutral400,
               showUnderlineBorderOnly: true,
               enableSearch: false,
+              enable: true,
               isClearController: false,
               isShowSuffixIcon: true,
               hintText: 'Chọn ${title.toLowerCase()}',
               textAlign: TextAlign.left,
-              contentPadding: const EdgeInsets.only(left: 10, top: 8, bottom: 8)),
+              contentPadding:
+                  const EdgeInsets.only(left: 10, top: 8, bottom: 10)),
         ),
       ],
     );
@@ -505,6 +509,23 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
   final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
   bool _showCheckboxes = true; // State for toggling checkboxes
   List<DataTable> _selectedItems = []; // Selected items
+  final _dtController = TextEditingController();
+  DateTime? _selected = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('ctrl: ${_dtController.text}'); // đã có ngày/giờ
+    });
+  }
+
+  @override
+  void dispose() {
+    // Safely dispose the controller
+    _dtController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -559,55 +580,93 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                   ],
                 ),
               ),
-            Row(
-              children: [
-                const Text('Hiển thị hộp chọn:'),
-                Switch(
-                  value: _showCheckboxes,
-                  onChanged: (value) {
-                    setState(() {
-                      _showCheckboxes = value;
-                      if (!value) {
-                        _selectedItems = [];
-                      }
-                    });
-                  },
-                ),
-              ],
+            SGDateTimeInputButton(
+              controller: _dtController,
+              value: _selected,
+              onChanged: (dt) {
+                setState(() {
+                  _selected = dt;
+                });
+              },
+              width: 260,
+              height: 40,
+              // Hành vi
+              initWithNow: true, // bật khởi tạo với thời gian hiện tại
+              enable: true, // true = disable hoàn toàn
+              allowTyping: true, // cho phép gõ tay
+              showTimeSection: true, // hiển thị phần giờ-phút-giây
+              timeOptional: true, // cho phép bật/tắt thời gian
+              includeSeconds: true, // có trường giây
+              initialIncludeTime: false,
+
+              // Định dạng tuỳ biến (không bắt buộc)
+              // dateFormat: 'dd/MM/yyyy',
+              // dateTimeFormat: 'dd/MM/yyyy HH:mm',
+              // Giao diện theo SGDropdownInputButton
+              // sizeBorderCircular: 12,
+              colorBorder: SGAppColors.colorBorderGray,
+              colorBorderFocus: SGAppColors.info500,
+              showUnderlineBorderOnly:
+                  true, // true nếu muốn chỉ gạch chân như option có sẵn
             ),
+            SgToggleSwitch(
+              value: _showCheckboxes,
+              onChanged: (value) => setState(() {
+                _showCheckboxes = value;
+              }),
+              text: 'Custom Switch',
+              switchColor: Colors.purple,
+              onIcon: 'ON',
+              offIcon: 'OFF',
+            ),
+            // Row(
+            //   children: [
+            //     const Text('Hiển thị hộp chọn:'),
+            //     Switch(
+            //       value: _showCheckboxes,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           _showCheckboxes = value;
+            //           if (!value) {
+            //             _selectedItems = [];
+            //           }
+            //         });
+            //       },
+            //     ),
+            //   ],
+            // ),
           ],
         ),
         const SizedBox(height: 8),
 
         SgTable<DataTable>(
-          props: SgTableProps<DataTable>(
-            widthScreen: MediaQuery.of(context).size.width,
-            // textHeaderColor: SGAppColors.error50,
-            headerBackgroundColor: Colors.blue,
-            evenRowBackgroundColor: Colors.grey.shade200,
-            oddRowBackgroundColor: Colors.white,
-            // selectedRowColor: Colors.lightBlue.shade100,
-            // Light blue background for checked rows
-            gridLineColor: Colors.grey.shade300,
-            gridLineWidth: 1.0,
-            showVerticalLines: true,
-            showHorizontalLines: true,
-            allowRowSelection: true,
-            searchTerm: widget.searchTerm,
-            showCheckboxes: _showCheckboxes, // on, off checkbox
-            onSelectionChanged: (selectedItems) {
-              setState(() {
-                _selectedItems = selectedItems;
-              });
-            },
-            // Row hover options
-            // rowHoverColor: Colors.blue.withValues(alpha: 0.1),
-            rowHoverDuration: const Duration(milliseconds: 100),
-            customFilter: (item) {
-              // Lọc theo loại ngày nghỉ nếu đã chọn
-              if (widget.leaveTypeFilter != null && item.leaveType != widget.leaveTypeFilter) {
-                return false;
-              }
+          // textHeaderColor: SGAppColors.error50,
+          headerBackgroundColor: Colors.blue,
+          evenRowBackgroundColor: Colors.grey.shade200,
+          oddRowBackgroundColor: Colors.white,
+          // selectedRowColor: Colors.lightBlue.shade100,
+          // Light blue background for checked rows
+          gridLineColor: Colors.grey.shade300,
+          gridLineWidth: 1.0,
+          showVerticalLines: true,
+          showHorizontalLines: true,
+          allowRowSelection: true,
+          searchTerm: widget.searchTerm,
+          showCheckboxes: _showCheckboxes, // on, off checkbox
+          onSelectionChanged: (selectedItems) {
+            setState(() {
+              _selectedItems = selectedItems;
+            });
+          },
+          // Row hover options
+          rowHoverColor: Colors.blue.withOpacity(0.1),
+          rowHoverDuration: const Duration(milliseconds: 100),
+          customFilter: (item) {
+            // Lọc theo loại ngày nghỉ nếu đã chọn
+            if (widget.leaveTypeFilter != null &&
+                item.leaveType != widget.leaveTypeFilter) {
+              return false;
+            }
 
               // Lọc theo trạng thái nếu đã chọn
               if (widget.statusFilter != null && item.status != widget.statusFilter) {
