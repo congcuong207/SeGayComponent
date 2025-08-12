@@ -16,6 +16,7 @@ class SgCheckbox extends StatefulWidget {
   final double size;
   final double borderRadius;
   final Duration animationDuration;
+  final bool isDisabled;
 
   const SgCheckbox({
     super.key,
@@ -31,6 +32,7 @@ class SgCheckbox extends StatefulWidget {
     this.size = 20.0,
     this.borderRadius = 4.0,
     this.animationDuration = const Duration(milliseconds: 200),
+    this.isDisabled = false,
   });
 
   @override
@@ -88,7 +90,9 @@ class _SgCheckboxState extends State<SgCheckbox>
         // Checkbox
         GestureDetector(
           onTap: () {
-            widget.onChanged?.call(!widget.value);
+            if (!widget.isDisabled) {
+              widget.onChanged?.call(!widget.value);
+            }
           },
           child: AnimatedBuilder(
             animation: _animation,
