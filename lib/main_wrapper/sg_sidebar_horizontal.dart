@@ -346,9 +346,9 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
             contentAlignmentButton: MainAxisAlignment.spaceBetween,
             contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
             textStyleButton: TextStyle(
-              color: item.isActive ? Colors.deepOrangeAccent : Colors.blue,
-              fontWeight: FontWeight.w400,
-              fontSize: 13,
+              color: item.isActive ? Colors.deepOrangeAccent : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
         ),
