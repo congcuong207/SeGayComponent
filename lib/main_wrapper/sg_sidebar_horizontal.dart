@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_button_icon_with_popup.dart';
 import 'package:se_gay_components/common/sg_button_v2.dart';
 import 'package:se_gay_components/common/sg_popup_menu.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 
 // Thêm class mới cho nhóm sub-items
 class SGSubItemGroup {
@@ -347,7 +346,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
             contentAlignmentButton: MainAxisAlignment.spaceBetween,
             contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
             textStyleButton: TextStyle(
-              color: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+              color: item.isActive ? Colors.deepOrangeAccent : Colors.blue,
               fontWeight: FontWeight.w400,
               fontSize: 13,
             ),
@@ -380,9 +379,9 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
               Text(
                 subItem.label,
                 style: TextStyle(
-                  color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+                  color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
                   fontWeight: FontWeight.w400,
-                  fontSize: 13,
+                  fontSize: 14,
                 ),
               ),
             ],
