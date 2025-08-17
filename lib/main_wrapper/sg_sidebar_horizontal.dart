@@ -28,6 +28,8 @@ class SGSidebarHorizontalItem {
   final Color? popupBackgroundColor;
   final Color? buttonEnterColor;
   final Color? sidebarBackgroundColor;
+  final Color? textColorActive;
+  final Color? textColorNotActive;
   final double popupBorderRadius;
   final EdgeInsetsGeometry popupPadding;
   final bool preferBelow;
@@ -60,6 +62,8 @@ class SGSidebarHorizontalItem {
     this.popupWidth = 200,
     this.buttonEnterColor = Colors.transparent,
     this.popupBackgroundColor = Colors.white,
+    this.textColorActive = Colors.amberAccent,
+    this.textColorNotActive = Colors.white,
     this.popupBorderRadius = 8.0,
     this.popupPadding = EdgeInsets.zero,
     this.preferBelow = true,
@@ -89,12 +93,15 @@ class SGSidebarSubItem {
   final IconData? icon;
   final bool isActive;
   final VoidCallback onTap;
-
+  final Color textColorActive;
+  final Color textColorNotActive;
   SGSidebarSubItem({
     required this.label,
     this.icon,
     this.isActive = false,
     required this.onTap,
+    this.textColorActive = Colors.deepOrangeAccent,
+    this.textColorNotActive = Colors.white,
   });
 }
 
@@ -313,7 +320,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
       },
       // Giới hạn kích thước bằng Container với constraints
       child: Container(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           maxWidth: 200, // Giới hạn chiều rộng tối đa cho mỗi item
           minWidth: 80, // Đảm bảo chiều rộng tối thiểu
         ),
@@ -333,7 +340,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
             onPopupClosed: item.onPopupClosed,
             textButton: item.label,
             iconChildButton: iconWidget,
-            colorTextButton: item.isActive ? Colors.deepOrangeAccent : Colors.grey[800],
+            colorTextButton: item.isActive ? item.textColorActive : Colors.grey[800],
             colorBackgroundButton: backgroundColor,
             buttonType: SGButtonType.text,
             heightButton: item.heightButton,
@@ -346,7 +353,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
             contentAlignmentButton: MainAxisAlignment.spaceBetween,
             contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
             textStyleButton: TextStyle(
-              color: item.isActive ? Colors.deepOrangeAccent : Colors.blue,
+              color: item.isActive ? item.textColorActive : item.textColorNotActive,
               fontWeight: FontWeight.w400,
               fontSize: 13,
             ),
@@ -357,7 +364,8 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
   }
 
   // Tạo một phương thức riêng để xây dựng widget cho subItem
-  SGPopupMenuItem _buildSubItemWidget(SGSidebarSubItem subItem, SGSidebarHorizontalItem parentItem, double leftPadding) {
+  SGPopupMenuItem _buildSubItemWidget(
+      SGSidebarSubItem subItem, SGSidebarHorizontalItem parentItem, double leftPadding) {
     return SGPopupMenuItem(
       spacing: parentItem.spacing ?? 0,
       content: InkWell(
@@ -371,7 +379,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
               if (subItem.icon != null) ...[
                 Icon(
                   subItem.icon,
-                  color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
+                  color: subItem.isActive ? subItem.textColorActive : Colors.grey[600],
                   size: 16,
                 ),
                 const SizedBox(width: 8),
@@ -379,7 +387,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
               Text(
                 subItem.label,
                 style: TextStyle(
-                  color: subItem.isActive ? Colors.deepOrangeAccent : Colors.grey[600],
+                  color: subItem.isActive ? subItem.textColorActive : Colors.grey[600],
                   fontWeight: FontWeight.w400,
                   fontSize: 14,
                 ),
@@ -395,7 +403,8 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
   Offset _calculateOffset(SGSidebarHorizontalItem item) {
     final buttonWidth = _itemOffsets[_getKeyForItem(item)] ?? 10.0;
     final popupWidth = item.popupWidth;
-    final double horizontalOffset = (item.isShowPopupLeft ? 1 : -1) * ((popupWidth / 2) - (buttonWidth / 2)) + item.popupOffsetX;
+    final double horizontalOffset =
+        (item.isShowPopupLeft ? 1 : -1) * ((popupWidth / 2) - (buttonWidth / 2)) + item.popupOffsetX;
     return Offset(horizontalOffset, item.popupOffsetY);
   }
 

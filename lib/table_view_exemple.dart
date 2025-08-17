@@ -187,7 +187,6 @@ class _TableViewExempleState extends State<TableViewExemple> {
               colorBorder: SGAppColors.neutral400,
               showUnderlineBorderOnly: true,
               enableSearch: false,
-              enable: true,
               isClearController: false,
               isShowSuffixIcon: true,
               hintText: 'Chọn ${title.toLowerCase()}',
