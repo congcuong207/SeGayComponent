@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_button_v2.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 import 'sg_popup_controller.dart';
 import 'sg_popup_menu.dart';
 
@@ -120,7 +119,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   void _handleButtonClick(BuildContext context) {
     widget.onclick?.call(context);
-    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     // Create the popup widget with the enhanced features
     final popupWidget = SGPopupMenu(
       items: widget.popupItems,
@@ -163,7 +161,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   @override
   void dispose() {
-    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     _popupController.removeOnPopupStateChangedListener();
     _popupController.dispose();
     _scrollController.dispose();
