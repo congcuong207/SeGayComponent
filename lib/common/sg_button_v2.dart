@@ -247,24 +247,28 @@ class SGButtonV2 extends StatelessWidget {
           : (value) {
               onHover?.call(context, value);
             },
-      child: InkWell(
+      child: GestureDetector(
         onTap: (isDisabled || isLoading)
             ? null
             : () {
                 onclick?.call(context);
               },
-        borderRadius: BorderRadius.circular(defaultStyles.borderRadius),
         child: Container(
           width: width ?? defaultStyles.width,
           height: height ?? defaultStyles.height,
           padding: padding ?? defaultStyles.padding,
           margin: margin ?? const EdgeInsets.all(0),
           decoration: BoxDecoration(
-            color: isDisabled ? Colors.grey.shade300 : colorBackground ?? defaultStyles.backgroundColor,
-            borderRadius: BorderRadius.circular(borderRadius ?? defaultStyles.borderRadius),
+            color: isDisabled
+                ? Colors.grey.shade300
+                : colorBackground ?? defaultStyles.backgroundColor,
+            borderRadius: BorderRadius.circular(
+                borderRadius ?? defaultStyles.borderRadius),
             border: buttonType == SGButtonType.outline
                 ? Border.all(
-                    color: isDisabled ? Colors.grey.shade400 : colorBorder ?? Theme.of(context).primaryColor,
+                    color: isDisabled
+                        ? Colors.grey.shade400
+                        : colorBorder ?? Theme.of(context).primaryColor,
                     width: borderWidth ?? 1.0,
                   )
                 : null,
@@ -284,7 +288,9 @@ class SGButtonV2 extends StatelessWidget {
           child: CircularProgressIndicator(
             strokeWidth: 2,
             valueColor: AlwaysStoppedAnimation<Color>(
-              buttonType == SGButtonType.primary ? Colors.white : styles.textColor,
+              buttonType == SGButtonType.primary
+                  ? Colors.white
+                  : styles.textColor,
             ),
           ),
         ),
@@ -312,7 +318,9 @@ class SGButtonV2 extends StatelessWidget {
             text!,
             style: textStyle ??
                 TextStyle(
-                  color: isDisabled ? Colors.grey.shade600 : colorText ?? styles.textColor,
+                  color: isDisabled
+                      ? Colors.grey.shade600
+                      : colorText ?? styles.textColor,
                   fontSize: styles.fontSize,
                   fontWeight: FontWeight.w500,
                 ),
@@ -371,7 +379,9 @@ class SGButtonV2 extends StatelessWidget {
       case SGButtonType.icon:
         backgroundColor = Colors.grey.shade100;
         textColor = theme.primaryColor;
-        height = buttonSize == SGButtonSize.small ? 32 : (buttonSize == SGButtonSize.large ? 48 : 40);
+        height = buttonSize == SGButtonSize.small
+            ? 32
+            : (buttonSize == SGButtonSize.large ? 48 : 40);
         break;
     }
 

@@ -330,49 +330,44 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
       },
       // Giới hạn kích thước bằng Container với constraints
       child: Container(
+        key: _itemKeys[_getKeyForItem(item)],
         constraints: const BoxConstraints(
           maxWidth: 200, // Giới hạn chiều rộng tối đa cho mỗi item
           minWidth: 80, // Đảm bảo chiều rộng tối thiểu
         ),
-        child: GestureDetector(
-          onTap: () {
+        child: SGButtonIconWithPopup(
+          popupItems: popupItems,
+          popupWidth: item.popupWidth,
+          popupOffset: _calculateOffset(item),
+          preferBelow: item.preferBelow,
+          popupBackgroundColor: item.popupBackgroundColor ?? Colors.white,
+          popupBorderRadius: item.popupBorderRadius,
+          popupPadding: item.popupPadding,
+          popupMaxHeight: item.popupMaxHeight,
+          popupEnableScroll: item.popupEnableScroll,
+          onPopupOpened: item.onPopupOpened,
+          onPopupClosed: item.onPopupClosed,
+          textButton: item.label,
+          iconChildButton: iconWidget,
+          colorTextButton:
+              item.isActive ? item.textColorActive : Colors.grey[800],
+          colorBackgroundButton: backgroundColor,
+          buttonType: SGButtonType.text,
+          heightButton: item.heightButton,
+          paddingButton:
+              item.paddingButton ?? const EdgeInsets.symmetric(horizontal: 12),
+          marginButton: item.marginButton,
+          borderRadiusButton: item.borderRadiusButton,
+          contentAlignmentButton: MainAxisAlignment.spaceBetween,
+          contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
+          onclick: (context) {
             _handleItemTap(item);
           },
-          child: Container(
-            key: _itemKeys[_getKeyForItem(item)],
-            child: SGButtonIconWithPopup(
-              popupItems: popupItems,
-              popupWidth: item.popupWidth,
-              popupOffset: _calculateOffset(item),
-              preferBelow: item.preferBelow,
-              popupBackgroundColor: item.popupBackgroundColor ?? Colors.white,
-              popupBorderRadius: item.popupBorderRadius,
-              popupPadding: item.popupPadding,
-              popupMaxHeight: item.popupMaxHeight,
-              popupEnableScroll: item.popupEnableScroll,
-              onPopupOpened: item.onPopupOpened,
-              onPopupClosed: item.onPopupClosed,
-              textButton: item.label,
-              iconChildButton: iconWidget,
-              colorTextButton:
-                  item.isActive ? item.textColorActive : Colors.grey[800],
-              colorBackgroundButton: backgroundColor,
-              buttonType: SGButtonType.text,
-              heightButton: item.heightButton,
-              paddingButton: item.paddingButton ??
-                  const EdgeInsets.symmetric(horizontal: 12),
-              marginButton: item.marginButton,
-              borderRadiusButton: item.borderRadiusButton,
-              contentAlignmentButton: MainAxisAlignment.spaceBetween,
-              contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
-              textStyleButton: TextStyle(
-                color: item.isActive
-                    ? item.textColorActive
-                    : item.textColorNotActive,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-              ),
-            ),
+          textStyleButton: TextStyle(
+            color:
+                item.isActive ? item.textColorActive : item.textColorNotActive,
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
           ),
         ),
       ),
@@ -380,15 +375,15 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
   }
 
   // Tạo một phương thức riêng để xây dựng widget cho subItem
-  SGPopupMenuItem _buildSubItemWidget(SGSidebarSubItem subItem,
+  Widget _buildSubItemWidget(SGSidebarSubItem subItem,
       SGSidebarHorizontalItem parentItem, double leftPadding) {
-    return SGPopupMenuItem(
-      spacing: parentItem.spacing ?? 0,
-      content: InkWell(
-        onTap: () {
-          _handleSubItemTap(subItem, parentItem);
-        },
-        child: Padding(
+    return GestureDetector(
+      onTap: () {
+        _handleSubItemTap(subItem, parentItem);
+      },
+      child: SGPopupMenuItem(
+        spacing: parentItem.spacing ?? 0,
+        content: Padding(
           padding: EdgeInsets.only(left: leftPadding),
           child: Row(
             children: [
