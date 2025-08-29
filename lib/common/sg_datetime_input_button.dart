@@ -55,6 +55,9 @@ class SGDateTimeInputButton extends StatefulWidget {
   /// If true and `value` is null, initialize with current date-time on first load
   final bool initWithNow;
 
+  final Alignment? targetAnchor;
+  final Alignment? followerAnchor;
+
   const SGDateTimeInputButton({
     super.key,
     required this.controller,
@@ -85,6 +88,8 @@ class SGDateTimeInputButton extends StatefulWidget {
     this.dateFormat,
     this.dateTimeFormat,
     this.initWithNow = false,
+    this.targetAnchor,
+    this.followerAnchor,
   });
 
   @override
@@ -285,12 +290,18 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
           CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
-            targetAnchor: useLeftAlignment
-                ? (showAbove ? Alignment.topLeft : Alignment.bottomLeft)
-                : (showAbove ? Alignment.topCenter : Alignment.bottomCenter),
-            followerAnchor: useLeftAlignment
-                ? (showAbove ? Alignment.bottomLeft : Alignment.topLeft)
-                : (showAbove ? Alignment.bottomCenter : Alignment.topCenter),
+            targetAnchor: widget.targetAnchor ??
+                (useLeftAlignment
+                    ? (showAbove ? Alignment.topLeft : Alignment.bottomLeft)
+                    : (showAbove
+                        ? Alignment.topCenter
+                        : Alignment.bottomCenter)),
+            followerAnchor: widget.followerAnchor ??
+                (useLeftAlignment
+                    ? (showAbove ? Alignment.bottomLeft : Alignment.topLeft)
+                    : (showAbove
+                        ? Alignment.bottomCenter
+                        : Alignment.topCenter)),
             offset: Offset(0, showAbove ? -4 : 4),
             child: SizedBox(
               width: popupWidth < 320 ? 320 : popupWidth,
