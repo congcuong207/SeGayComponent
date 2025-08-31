@@ -1,6 +1,4 @@
 // ignore_for_file: unused_field, deprecated_member_use
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
@@ -138,16 +136,13 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _setInitialValue() {
-    log('setInitialValue: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
     if (widget.value != null) {
       _setControllerTextByValue(widget.value);
       _lastSelectedValue = widget.value;
-      log('setInitialValue1: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
     } else if (widget.defaultValue != null &&
         widget.items.any((item) => item.value == widget.defaultValue)) {
       _setControllerTextByValue(widget.defaultValue);
       _lastSelectedValue = widget.defaultValue;
-      log('setInitialValue2: ${widget.value} - ${widget.defaultValue} - ${widget.items}');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onChanged(widget.defaultValue);
       });
@@ -155,7 +150,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       if (widget.allowFreeInput) {
         // Không auto chọn khi cho phép nhập tự do
         _lastSelectedValue = null;
-        log('allowFreeInput: ${widget.allowFreeInput}: -- $_lastSelectedValue');
       } else {
         _setControllerTextByValue(widget.items.first.value);
         _lastSelectedValue = widget.items.first.value;
@@ -305,7 +299,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   void _onItemSelected(DropdownMenuItem<T> item) {
-    log('onItemSelected: ${item.value}');
     _preventOverlayClose = true;
 
     _isProgrammaticChange = true;
@@ -339,7 +332,6 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
 
   void _showOverlay() {
     if (widget.enable) return;
-    log('_showOverlay');
     if (_overlayEntry != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _overlayEntry?.markNeedsBuild();
