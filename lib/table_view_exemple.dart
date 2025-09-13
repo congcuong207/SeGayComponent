@@ -679,6 +679,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           // Row hover options
           rowHoverColor: Colors.blue.withOpacity(0.1),
           rowHoverDuration: const Duration(milliseconds: 100),
+          enableColumnFilters: true,
           customFilter: (item) {
             // Lọc theo loại ngày nghỉ nếu đã chọn
             if (widget.leaveTypeFilter != null &&
@@ -712,6 +713,7 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               align: TextAlign.center,
               getValue: (item) => item.id,
               width: 100,
+              filterable: true,
             ),
             TableColumnBuilder.createTextColumn<DataTable>(
               title: 'Nhân viên',

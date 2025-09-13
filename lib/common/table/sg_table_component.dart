@@ -14,6 +14,7 @@ class SgTableColumn<T> {
   final bool isNumeric;
   final bool searchable;
   final bool isFullWidth;
+  final bool filterable;
 
   SgTableColumn({
     required this.title,
@@ -26,6 +27,7 @@ class SgTableColumn<T> {
     this.isNumeric = false,
     this.searchable = true,
     this.isFullWidth = false,
+    this.filterable = true,
   });
 }
 
@@ -83,6 +85,7 @@ class SgTableActionColumn<T> extends SgTableColumn<T> {
           ),
           titleAlignment: TextAlign.center,
           cellAlignment: TextAlign.center,
+          filterable: false, // Action column không có filter
         );
 }
 
@@ -100,6 +103,7 @@ class TableColumnBuilder {
     Color? textColor,
     bool searchable = true,
     bool isFullWidth = false,
+    bool filterable = false,
   }) {
     return SgTableColumn<T>(
       title: title,
@@ -119,6 +123,7 @@ class TableColumnBuilder {
       isNumeric: isNumeric,
       searchable: searchable,
       isFullWidth: isFullWidth,
+      filterable: filterable,
     );
   }
 
@@ -129,6 +134,7 @@ class TableColumnBuilder {
     TextAlign align = TextAlign.center,
     double? width = 180,
     bool searchable = true,
+    bool filterable = true,
   }) {
     final dateFormat = format ?? DateFormat('dd/MM/yyyy HH:mm:ss');
     return SgTableColumn<T>(
@@ -144,6 +150,7 @@ class TableColumnBuilder {
       titleAlignment: align,
       width: width,
       searchable: searchable,
+      filterable: filterable,
     );
   }
 

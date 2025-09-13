@@ -43,10 +43,18 @@ class SgTable<T> extends StatefulWidget {
   final double? actionIconSize;
   final double? actionColumnWidth;
   final String? actionColumnTitle;
+  
   // Row hover options
   final Color? rowHoverColor;
   final Duration rowHoverDuration;
   final double widthScreen;
+
+  // Column filter options
+  final bool enableColumnFilters;
+  final Map<int, List<String>> columnFilters;
+  final Function(int columnIndex, List<String> selectedValues)? onColumnFilterChanged;
+  final double filterDropdownWidth;
+  final double filterDropdownMaxHeight;
 
   const SgTable({
     super.key,
@@ -87,6 +95,13 @@ class SgTable<T> extends StatefulWidget {
     this.rowHoverColor,
     this.rowHoverDuration = const Duration(milliseconds: 200),
     this.widthScreen = 1080,
+    
+    // Column filter options
+    this.enableColumnFilters = false,
+    this.columnFilters = const {},
+    this.onColumnFilterChanged,
+    this.filterDropdownWidth = 250.0,
+    this.filterDropdownMaxHeight = 300.0,
   });
 
   @override
@@ -114,6 +129,17 @@ class _SgTableState<T> extends State<SgTable<T>> {
   
   // Row hover state
   int? _hoveredRowIndex;
+  
+  // Column filter state
+  Map<int, List<String>> _columnFilters = {};
+  Map<int, bool> filterDropdownStates = {};
+  
+  // Overlay state for filter dropdown
+  OverlayEntry? _filterOverlayEntry;
+  int? currentFilterColumnIndex;
+
+  // Thêm GlobalKey để lấy vị trí header
+  final GlobalKey _headerKey = GlobalKey();
 
   @override
   void initState() {
@@ -123,6 +149,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _buildEffectiveColumns();
     _initColumnWidths();
     _lastSearchTerm = widget.searchTerm;
+    _columnFilters = Map.from(widget.columnFilters);
     _filterData();
   }
 
@@ -150,6 +177,11 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     if (widget.searchTerm != _lastSearchTerm) {
       _lastSearchTerm = widget.searchTerm;
+      _filterAndSortData();
+    }
+
+    if (widget.columnFilters != oldWidget.columnFilters) {
+      _columnFilters = Map.from(widget.columnFilters);
       _filterAndSortData();
     }
   }
@@ -287,14 +319,37 @@ class _SgTableState<T> extends State<SgTable<T>> {
   void _filterData() {
     setState(() {
       if ((widget.searchTerm == null || widget.searchTerm!.isEmpty) &&
-          widget.customFilter == null) {
+          widget.customFilter == null &&
+          _columnFilters.values.every((filters) => filters.isEmpty)) {
         _filteredData = List.from(widget.data);
       } else {
         _filteredData = widget.data.where((item) {
+          // Apply custom filter
           if (widget.customFilter != null && !widget.customFilter!(item)) {
             return false;
           }
 
+          // Apply column filters
+          for (int i = 0; i < _effectiveColumns.length; i++) {
+            final column = _effectiveColumns[i];
+            final columnIndex = widget.showCheckboxes ? i - 1 : i;
+            
+            // Skip checkbox and action columns
+            if (widget.showCheckboxes && i == 0) continue;
+            if (widget.showActions && i == _effectiveColumns.length - 1) continue;
+            
+            if (columnIndex >= 0 && columnIndex < widget.columns.length) {
+              final filters = _columnFilters[columnIndex] ?? [];
+              if (filters.isNotEmpty && column.searchValueGetter != null) {
+                final value = column.searchValueGetter!(item);
+                if (!filters.contains(value)) {
+                  return false;
+                }
+              }
+            }
+          }
+
+          // Apply search term
           if (widget.searchTerm != null && widget.searchTerm!.isNotEmpty) {
             final term = widget.caseSensitiveSearch
                 ? widget.searchTerm!
@@ -427,6 +482,128 @@ class _SgTableState<T> extends State<SgTable<T>> {
     return totalWidth;
   }
 
+  // Column filter methods
+  void _toggleFilterDropdown(int columnIndex) {
+    setState(() {
+      // Đóng dropdown hiện tại nếu có
+      if (_filterOverlayEntry != null) {
+        _filterOverlayEntry!.remove();
+        _filterOverlayEntry = null;
+        currentFilterColumnIndex = null;
+        return;
+      }
+      
+      // Mở dropdown mới
+      currentFilterColumnIndex = columnIndex;
+      _showFilterOverlay(columnIndex);
+    });
+  }
+
+  void _showFilterOverlay(int columnIndex) {
+    final overlay = Overlay.of(context);
+    final RenderBox? renderBox = _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    
+    // Tính toán vị trí của cột
+    final columnPosition = _calculateColumnPosition(columnIndex);
+    final headerPosition = renderBox.localToGlobal(Offset.zero);
+    
+    _filterOverlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: headerPosition.dy + widget.rowHeight + 5, // Ngay dưới header
+        left: headerPosition.dx + columnPosition.dx,
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: _ColumnFilterDropdown<T>(
+            data: widget.data,
+            column: widget.columns[columnIndex],
+            selectedValues: _columnFilters[columnIndex] ?? [],
+            onFilterChanged: (values) {
+              _onColumnFilterChanged(columnIndex, values);
+              _closeFilterOverlay();
+            },
+            width: widget.filterDropdownWidth,
+            maxHeight: widget.filterDropdownMaxHeight,
+          ),
+        ),
+      ),
+    );
+    
+    overlay.insert(_filterOverlayEntry!);
+  }
+
+  void _closeFilterOverlay() {
+    if (_filterOverlayEntry != null) {
+      _filterOverlayEntry!.remove();
+      _filterOverlayEntry = null;
+      currentFilterColumnIndex = null;
+    }
+  }
+
+  Offset _calculateColumnPosition(int columnIndex) {
+    // Tính toán vị trí của cột dựa trên index
+    double leftOffset = 0;
+    
+    // Tính offset cho checkbox column nếu có
+    if (widget.showCheckboxes) {
+      leftOffset += widget.checkboxColumnWidth;
+    }
+    
+    // Tính offset cho các cột trước cột hiện tại
+    for (int i = 0; i < columnIndex; i++) {
+      leftOffset += _columnWidths[i] ?? (widget.columns[i].width ?? 120.0);
+    }
+    
+    return Offset(leftOffset, 0);
+  }
+
+  Widget _buildColumnFilter(int columnIndex) {
+    if (!widget.enableColumnFilters) return const SizedBox.shrink();
+    
+    final column = widget.columns[columnIndex];
+    if (!column.filterable || column.searchValueGetter == null) return const SizedBox.shrink();
+    
+    final selectedValues = _columnFilters[columnIndex] ?? [];
+    
+    return GestureDetector(
+      onTap: () => _toggleFilterDropdown(columnIndex),
+      child: Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          color: selectedValues.isNotEmpty 
+              ? SGAppColors.primary600 
+              : SGAppColors.neutral400,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.filter_list,
+          size: 10,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  void _onColumnFilterChanged(int columnIndex, List<String> selectedValues) {
+    setState(() {
+      _columnFilters[columnIndex] = selectedValues;
+    });
+    
+    _filterAndSortData();
+    
+    if (widget.onColumnFilterChanged != null) {
+      widget.onColumnFilterChanged!(columnIndex, selectedValues);
+    }
+  }
+
+  @override
+  void dispose() {
+    _closeFilterOverlay();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalWidth = _calculateTotalWidth();
@@ -448,6 +625,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
               children: [
                 // Header row
                 DecoratedBox(
+                  key: _headerKey, // Thêm key để lấy vị trí
                   decoration: BoxDecoration(
                     color: widget.headerBackgroundColor,
                     border: Border(
@@ -466,6 +644,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     ),
                   ),
                 ),
+                
                 // Table body rows
                 SizedBox(
                   height: _sortedData.length * widget.rowHeight,
@@ -473,55 +652,55 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _sortedData.length,
                     itemBuilder: (context, index) {
-                                              final isEven = index % 2 == 0;
-                        final isLast = index == _sortedData.length - 1;
-                        final isSelected = _selectedRowIndex == index;
-                        final isChecked =
-                            _selectedItems.contains(_sortedData[index]);
-                        final isHovered = _hoveredRowIndex == index;
+                      final isEven = index % 2 == 0;
+                      final isLast = index == _sortedData.length - 1;
+                      final isSelected = _selectedRowIndex == index;
+                      final isChecked =
+                          _selectedItems.contains(_sortedData[index]);
+                      final isHovered = _hoveredRowIndex == index;
 
-                        Color backgroundColor;
-                        if (isSelected) {
-                          backgroundColor = widget.selectedRowColor;
-                        } else if (isChecked) {
-                          backgroundColor = widget.selectedRowColor;
-                        } else if (isHovered && widget.rowHoverColor != null) {
-                          backgroundColor = widget.rowHoverColor!;
-                        } else {
-                          backgroundColor = isEven
-                              ? widget.evenRowBackgroundColor
-                              : widget.oddRowBackgroundColor;
-                        }
+                      Color backgroundColor;
+                      if (isSelected) {
+                        backgroundColor = widget.selectedRowColor;
+                      } else if (isChecked) {
+                        backgroundColor = widget.selectedRowColor;
+                      } else if (isHovered && widget.rowHoverColor != null) {
+                        backgroundColor = widget.rowHoverColor!;
+                      } else {
+                        backgroundColor = isEven
+                            ? widget.evenRowBackgroundColor
+                            : widget.oddRowBackgroundColor;
+                      }
 
-                        return AnimatedContainer(
-                          duration: widget.rowHoverDuration,
-                          decoration: BoxDecoration(
-                            color: backgroundColor,
-                            border: widget.showHorizontalLines && !isLast
-                                ? Border(
-                                    bottom: BorderSide(
-                                      color: widget.gridLineColor,
-                                      width: widget.gridLineWidth,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          child: SizedBox(
-                            width: effectiveWidth,
-                            height: widget.rowHeight,
-                            child: MouseRegion(
-                              onEnter: (_) => _onRowHover(index),
-                              onExit: (_) => _onRowHoverExit(),
-                              child: InkWell(
-                                onTap: () => _onRowSelected(index),
-                                child: Row(
-                                  children: _buildRowCells(_sortedData[index],
-                                      false, effectiveWidth, totalWidth),
-                                ),
+                      return AnimatedContainer(
+                        duration: widget.rowHoverDuration,
+                        decoration: BoxDecoration(
+                          color: backgroundColor,
+                          border: widget.showHorizontalLines && !isLast
+                              ? Border(
+                                  bottom: BorderSide(
+                                    color: widget.gridLineColor,
+                                    width: widget.gridLineWidth,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        child: SizedBox(
+                          width: effectiveWidth,
+                          height: widget.rowHeight,
+                          child: MouseRegion(
+                            onEnter: (_) => _onRowHover(index),
+                            onExit: (_) => _onRowHoverExit(),
+                            child: InkWell(
+                              onTap: () => _onRowSelected(index),
+                              child: Row(
+                                children: _buildRowCells(_sortedData[index],
+                                    false, effectiveWidth, totalWidth),
                               ),
                             ),
                           ),
-                        );
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -568,9 +747,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
         );
       }
 
+      // Calculate actual column index for regular columns
+      final actualColumnIndex = widget.showCheckboxes ? index - 1 : index;
+
       return _buildCell(
         child: InkWell(
-          onTap: hasSort ? () => _onSortColumn(index) : null,
+          onTap: hasSort ? () => _onSortColumn(actualColumnIndex) : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
@@ -592,11 +774,27 @@ class _SgTableState<T> extends State<SgTable<T>> {
                         ),
                   ),
                 ),
-                // Only add the icon when it should actually be visible
-                if (hasSort &&
-                    _sortColumnIndex == index &&
-                    _sortDirection != SortDirection.none)
-                  _buildSortIcon(index),
+                // Wrap icons in a Row with flexible sizing
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Only add the icon when it should actually be visible
+                    if (hasSort &&
+                        _sortColumnIndex == actualColumnIndex &&
+                        _sortDirection != SortDirection.none)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: _buildSortIcon(actualColumnIndex),
+                      ),
+                    // Add filter button if enabled and not action column
+                    if (widget.enableColumnFilters && 
+                        actualColumnIndex >= 0 && 
+                        actualColumnIndex < widget.columns.length &&
+                        widget.columns[actualColumnIndex].filterable &&
+                        !(widget.showActions && index == _effectiveColumns.length - 1))
+                      _buildColumnFilter(actualColumnIndex),
+                  ],
+                ),
               ],
             ),
           ),
@@ -760,5 +958,236 @@ class _SgTableState<T> extends State<SgTable<T>> {
     setState(() {
       _hoveredRowIndex = null;
     });
+  }
+}
+
+// Column Filter Dropdown Widget
+class _ColumnFilterDropdown<T> extends StatefulWidget {
+  final List<T> data;
+  final SgTableColumn<T> column;
+  final List<String> selectedValues;
+  final Function(List<String>) onFilterChanged;
+  final double width;
+  final double maxHeight;
+
+  const _ColumnFilterDropdown({
+    required this.data,
+    required this.column,
+    required this.selectedValues,
+    required this.onFilterChanged,
+    required this.width,
+    required this.maxHeight,
+  });
+
+  @override
+  State<_ColumnFilterDropdown<T>> createState() => _ColumnFilterDropdownState<T>();
+}
+
+class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _filteredOptions = [];
+  List<String> _tempSelectedValues = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _tempSelectedValues = List.from(widget.selectedValues);
+    _updateFilteredOptions();
+  }
+
+  void _updateFilteredOptions() {
+    final uniqueValues = <String>{};
+    for (final item in widget.data) {
+      if (widget.column.searchValueGetter != null) {
+        final value = widget.column.searchValueGetter!(item);
+        if (value.isNotEmpty) {
+          uniqueValues.add(value);
+        }
+      }
+    }
+
+    final allOptions = uniqueValues.toList()..sort();
+    
+    if (_searchController.text.isEmpty) {
+      _filteredOptions = allOptions;
+    } else {
+      final searchTerm = _searchController.text.toLowerCase();
+      _filteredOptions = allOptions.where((option) {
+        return option.toLowerCase().contains(searchTerm);
+      }).toList();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _updateFilteredOptions();
+    });
+  }
+
+  void _toggleValue(String value) {
+    setState(() {
+      if (_tempSelectedValues.contains(value)) {
+        _tempSelectedValues.remove(value);
+      } else {
+        _tempSelectedValues.add(value);
+      }
+    });
+  }
+
+  void _applyFilter() {
+    widget.onFilterChanged(_tempSelectedValues);
+  }
+
+  void _resetFilter() {
+    setState(() {
+      _tempSelectedValues.clear();
+      _searchController.clear();
+      _updateFilteredOptions();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      constraints: BoxConstraints(maxHeight: widget.maxHeight),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: SGAppColors.neutral300),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Search bar
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: SGAppColors.neutral200),
+              ),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: "Q Search in filters",
+                hintStyle: TextStyle(
+                  color: SGAppColors.neutral500,
+                  fontSize: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide: BorderSide(color: SGAppColors.neutral300),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                isDense: true,
+                prefixIcon: Icon(Icons.search, size: 16),
+              ),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+          
+          // Options list
+          Flexible(
+            child: _filteredOptions.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    child: SGText(
+                      text: "Không có dữ liệu",
+                      color: SGAppColors.neutral500,
+                      size: 12,
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _filteredOptions.length,
+                    itemBuilder: (context, index) {
+                      final value = _filteredOptions[index];
+                      final isSelected = _tempSelectedValues.contains(value);
+                      
+                      return InkWell(
+                        onTap: () => _toggleValue(value),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              SgCheckbox(
+                                value: isSelected,
+                                onChanged: (_) => _toggleValue(value),
+                                checkedColor: SGAppColors.primary600,
+                                uncheckedColor: Colors.white,
+                                size: 14,
+                                borderRadius: 2,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: SGText(
+                                  text: value,
+                                  size: 12,
+                                  color: SGAppColors.neutral700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          
+          // Action buttons
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: SGAppColors.neutral200),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: _resetFilter,
+                  child: SGText(
+                    text: "Reset",
+                    size: 12,
+                    color: SGAppColors.neutral600,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: _applyFilter,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SGAppColors.primary600,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                  ),
+                  child: SGText(
+                    text: "OK",
+                    size: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
