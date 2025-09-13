@@ -18,6 +18,7 @@ class SGSubItemGroup {
 
 class SGSidebarHorizontalItem {
   final String label;
+  final Widget? child;
   final IconData? icon;
   final bool isActive;
   final bool isHover;
@@ -53,6 +54,7 @@ class SGSidebarHorizontalItem {
 
   const SGSidebarHorizontalItem({
     required this.label,
+    this.child,
     this.icon,
     this.isActive = false,
     this.isHover = false,
@@ -91,6 +93,7 @@ class SGSidebarHorizontalItem {
 
 class SGSidebarSubItem {
   final String label;
+  final Widget? child;
   final IconData? icon;
   final bool isActive;
   final VoidCallback onTap;
@@ -98,6 +101,7 @@ class SGSidebarSubItem {
   final Color textColorNotActive;
   SGSidebarSubItem({
     required this.label,
+    this.child,
     this.icon,
     this.isActive = false,
     required this.onTap,
@@ -241,7 +245,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
                   TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: Colors.red,
                   ),
             ),
           ),
@@ -305,7 +309,7 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
     final Color backgroundColor = isHovered
         ? (item.buttonEnterColor ?? Colors.grey.shade300)
         : Colors.transparent;
-
+        double paddingRight = item.child != null ? 10 : 0;
     // Bọc trong MouseRegion để xử lý hover trực tiếp
     return MouseRegion(
       onEnter: (_) {
@@ -333,42 +337,58 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
         key: _itemKeys[_getKeyForItem(item)],
         constraints: const BoxConstraints(
           maxWidth: 200, // Giới hạn chiều rộng tối đa cho mỗi item
-          minWidth: 80, // Đảm bảo chiều rộng tối thiểu
+          minWidth: 90, // Đảm bảo chiều rộng tối thiểu
         ),
-        child: SGButtonIconWithPopup(
-          popupItems: popupItems,
-          popupWidth: item.popupWidth,
-          popupOffset: _calculateOffset(item),
-          preferBelow: item.preferBelow,
-          popupBackgroundColor: item.popupBackgroundColor ?? Colors.white,
-          popupBorderRadius: item.popupBorderRadius,
-          popupPadding: item.popupPadding,
-          popupMaxHeight: item.popupMaxHeight,
-          popupEnableScroll: item.popupEnableScroll,
-          onPopupOpened: item.onPopupOpened,
-          onPopupClosed: item.onPopupClosed,
-          textButton: item.label,
-          iconChildButton: iconWidget,
-          colorTextButton:
-              item.isActive ? item.textColorActive : Colors.grey[800],
-          colorBackgroundButton: backgroundColor,
-          buttonType: SGButtonType.text,
-          heightButton: item.heightButton,
-          paddingButton:
-              item.paddingButton ?? const EdgeInsets.symmetric(horizontal: 12),
-          marginButton: item.marginButton,
-          borderRadiusButton: item.borderRadiusButton,
-          contentAlignmentButton: MainAxisAlignment.spaceBetween,
-          contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
-          onclick: (context) {
-            _handleItemTap(item);
-          },
-          textStyleButton: TextStyle(
-            color:
-                item.isActive ? item.textColorActive : item.textColorNotActive,
-            fontWeight: FontWeight.w400,
-            fontSize: 14,
-          ),
+        padding: EdgeInsets.only(top: 10, bottom: 10, right: paddingRight),
+        child: Stack(
+          clipBehavior: Clip.none, // Cho phép children hiển thị ra ngoài Stack
+          children: [
+            SGButtonIconWithPopup(
+              popupItems: popupItems,
+              popupWidth: item.popupWidth,
+              popupOffset: _calculateOffset(item),
+              preferBelow: item.preferBelow,
+              popupBackgroundColor: item.popupBackgroundColor ?? Colors.white,
+              popupBorderRadius: item.popupBorderRadius,
+              popupPadding: item.popupPadding,
+              popupMaxHeight: item.popupMaxHeight,
+              popupEnableScroll: item.popupEnableScroll,
+              onPopupOpened: item.onPopupOpened,
+              onPopupClosed: item.onPopupClosed,
+              textButton: item.label,
+              iconChildButton: iconWidget,
+              colorTextButton:
+                  item.isActive ? item.textColorActive : Colors.grey[800],
+              colorBackgroundButton: backgroundColor,
+              buttonType: SGButtonType.text,
+              heightButton: item.heightButton,
+              paddingButton:
+                  item.paddingButton ?? const EdgeInsets.symmetric(horizontal: 12),
+              marginButton: item.marginButton,
+              borderRadiusButton: item.borderRadiusButton,
+              contentAlignmentButton: MainAxisAlignment.spaceBetween,
+              contentCrossAxisAlignmentButton: CrossAxisAlignment.end,
+              onclick: (context) {
+                _handleItemTap(item);
+              },
+              textStyleButton: TextStyle(
+                color:
+                    item.isActive ? item.textColorActive : item.textColorNotActive,
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+              ),
+            ),
+            if (item.child != null) ...[
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Transform.translate(
+                  offset: const Offset(8, -7),
+                  child: item.child!,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -407,6 +427,10 @@ class _SGSidebarHorizontalState extends State<SGSidebarHorizontal> {
                   fontSize: 14,
                 ),
               ),
+              if (subItem.child != null) ...[
+                const SizedBox(width: 8),
+                subItem.child!,
+              ],
             ],
           ),
         ),
