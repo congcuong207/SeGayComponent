@@ -3,6 +3,7 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/switch/sg_checkbox.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
+import 'package:se_gay_components/core/utils/sg_log.dart';
 
 enum SortDirection { none, ascending, descending }
 
@@ -559,11 +560,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   Widget _buildColumnFilter(int columnIndex) {
+    SGLog.info('filterable buildColumnFilter enableColumnFilters', 'filterable: ${widget.enableColumnFilters}');
     if (!widget.enableColumnFilters) return const SizedBox.shrink();
     
     final column = widget.columns[columnIndex];
-    if (!column.filterable || column.searchValueGetter == null) return const SizedBox.shrink();
-    
+    SGLog.info('filterable buildColumnFilter "${column.title}"', 'filterable: ');
+    if (!column.filterable) return const SizedBox.shrink();
+    SGLog.info('filterable buildColumnFilter', 'filterable: ${column.filterable}');
     final selectedValues = _columnFilters[columnIndex] ?? [];
     
     return GestureDetector(
@@ -577,10 +580,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
               : SGAppColors.neutral400,
           shape: BoxShape.circle,
         ),
-        child: Icon(
+        child: const Icon(
           Icons.filter_list,
           size: 10,
-          color: Colors.white,
+          color: Colors.red,
         ),
       ),
     );
@@ -1062,7 +1065,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
           // Search bar
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: SGAppColors.neutral200),
               ),
@@ -1072,20 +1075,20 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Q Search in filters",
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   color: SGAppColors.neutral500,
                   fontSize: 12,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: SGAppColors.neutral300),
+                  borderSide: const BorderSide(color: SGAppColors.neutral300),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 4,
                 ),
                 isDense: true,
-                prefixIcon: Icon(Icons.search, size: 16),
+                prefixIcon: const Icon(Icons.search, size: 16),
               ),
               style: const TextStyle(fontSize: 12),
             ),
@@ -1096,7 +1099,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
             child: _filteredOptions.isEmpty
                 ? Container(
                     padding: const EdgeInsets.all(16),
-                    child: SGText(
+                    child: const SGText(
                       text: "Không có dữ liệu",
                       color: SGAppColors.neutral500,
                       size: 12,
@@ -1145,7 +1148,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
           // Action buttons
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(color: SGAppColors.neutral200),
               ),
@@ -1155,7 +1158,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
               children: [
                 TextButton(
                   onPressed: _resetFilter,
-                  child: SGText(
+                  child: const SGText(
                     text: "Reset",
                     size: 12,
                     color: SGAppColors.neutral600,
@@ -1171,7 +1174,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
                     ),
                     minimumSize: Size.zero,
                   ),
-                  child: SGText(
+                  child: const SGText(
                     text: "OK",
                     size: 12,
                     color: Colors.white,

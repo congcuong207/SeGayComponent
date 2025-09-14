@@ -666,11 +666,11 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           // Light blue background for checked rows
           gridLineColor: Colors.grey.shade300,
           gridLineWidth: 1.0,
-          showVerticalLines: true,
-          showHorizontalLines: true,
-          allowRowSelection: true,
-          searchTerm: widget.searchTerm,
-          showCheckboxes: _showCheckboxes, // on, off checkbox
+          // showVerticalLines: true,
+          // showHorizontalLines: true,
+          // allowRowSelection: true,
+          // searchTerm: widget.searchTerm,
+          // showCheckboxes: _showCheckboxes, // on, off checkbox
           onSelectionChanged: (selectedItems) {
             setState(() {
               _selectedItems = selectedItems;
@@ -680,21 +680,6 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           rowHoverColor: Colors.blue.withOpacity(0.1),
           rowHoverDuration: const Duration(milliseconds: 100),
           enableColumnFilters: true,
-          customFilter: (item) {
-            // Lọc theo loại ngày nghỉ nếu đã chọn
-            if (widget.leaveTypeFilter != null &&
-                item.leaveType != widget.leaveTypeFilter) {
-              return false;
-            }
-
-            // Lọc theo trạng thái nếu đã chọn
-            if (widget.statusFilter != null &&
-                item.status != widget.statusFilter) {
-              return false;
-            }
-
-            return true;
-          },
           // Bật tính năng hiển thị cột hành động
           showActions: true,
           actionColumnTitle: 'Thao tác',
@@ -759,13 +744,23 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             ),
             SgTableColumn<DataTable>(
               title: 'Trạng thái',
-              cellBuilder: (item) => _buildStatusTag(item.status),
-              sortValueGetter: (item) => item.status,
-              searchValueGetter: (item) => item.status,
+              cellBuilder: (item) => _buildStatusTag2(item),
+              // sortValueGetter: (item) => item.status,
+              searchValueGetter: (item) {
+                 final status = getNumberStatus(item.status);
+                return status == 1 ? 'Đã ký'
+                     : status == 0 ? 'Chưa ký'
+                     : status == 2 ? 'Đã ký nháy'
+                     : status == 3 ? 'Đã ký & tạo'
+                     : status == 4 ? 'Chưa ký nháy'
+                     : status == 5 ? 'Chưa ký & tạo'
+                     : 'Người tạo phiếu';
+              },
               cellAlignment: TextAlign.center,
               titleAlignment: TextAlign.center,
               width: 170,
-              searchable: true,
+              // searchable: true,
+              filterable: true,
             ),
             // Đã xóa cột hành động tại đây vì đã dùng showActions
           ],
@@ -777,6 +772,34 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
         // _buildPaginationControls(duplicatedLeaveRequests),
       ],
     );
+  }
+
+  Widget _buildStatusTag2(DataTable status) {
+    return Container(
+      child: SGText(
+        text: status.status,
+        color: Colors.white,
+        textAlign: TextAlign.center,
+        size: 14,
+      ),
+    );
+  }
+
+  int getNumberStatus(String status) {
+    switch (status) {
+      case 'Hoàn thành':
+        return 1;
+      case 'Hủy':
+        return 2;
+      case 'Đã từ chối':
+        return 3;
+      case 'Dự thảo':
+        return 4;
+      case 'Chờ CBQL duyệt':
+        return 5;
+      default:
+        return 0;
+    }
   }
 
   Widget _buildStatusTag(String status) {
