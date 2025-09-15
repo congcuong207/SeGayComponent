@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
@@ -43,7 +45,7 @@ class SgTable<T> extends StatefulWidget {
   final double? actionIconSize;
   final double? actionColumnWidth;
   final String? actionColumnTitle;
-  
+
   // Row hover options
   final Color? rowHoverColor;
   final Duration rowHoverDuration;
@@ -52,9 +54,13 @@ class SgTable<T> extends StatefulWidget {
   // Column filter options
   final bool enableColumnFilters;
   final Map<int, List<String>> columnFilters;
-  final Function(int columnIndex, List<String> selectedValues)? onColumnFilterChanged;
+  final Function(int columnIndex, List<String> selectedValues)?
+      onColumnFilterChanged;
   final double filterDropdownWidth;
   final double filterDropdownMaxHeight;
+  
+  // Thêm offset cho filter popup
+  final Offset filterPopupOffset;
 
   const SgTable({
     super.key,
@@ -90,18 +96,19 @@ class SgTable<T> extends StatefulWidget {
     this.actionColumnWidth = 120.0,
     this.actionColumnTitle = "Hành động",
     this.titleStyleHeader,
-    
+
     // Row hover options
     this.rowHoverColor,
     this.rowHoverDuration = const Duration(milliseconds: 200),
     this.widthScreen = 1080,
-    
+
     // Column filter options
     this.enableColumnFilters = false,
     this.columnFilters = const {},
     this.onColumnFilterChanged,
     this.filterDropdownWidth = 250.0,
     this.filterDropdownMaxHeight = 300.0,
+    this.filterPopupOffset = const Offset(0, 4),
   });
 
   @override
@@ -126,14 +133,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
   int? _resizingColumnIndex;
   double? _resizeStartX;
   double? _resizeStartWidth;
-  
+
   // Row hover state
   int? _hoveredRowIndex;
-  
+
   // Column filter state
   Map<int, List<String>> _columnFilters = {};
   Map<int, bool> filterDropdownStates = {};
-  
+
   // Overlay state for filter dropdown
   OverlayEntry? _filterOverlayEntry;
   int? currentFilterColumnIndex;
@@ -291,9 +298,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
         _columnWidths[i] = 120.0;
         if (_effectiveColumns[i].isFullWidth) {
           if (widget.showCheckboxes && widget.showActions) {
-            _columnWidths[i] =
-                (widget.widthScreen - widget.checkboxColumnWidth - widget.actionColumnWidth!) /
-                    (_effectiveColumns.length - 2);
+            _columnWidths[i] = (widget.widthScreen -
+                    widget.checkboxColumnWidth -
+                    widget.actionColumnWidth!) /
+                (_effectiveColumns.length - 2);
           } else if (widget.showCheckboxes) {
             _columnWidths[i] =
                 (widget.widthScreen - widget.checkboxColumnWidth) /
@@ -333,11 +341,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
           for (int i = 0; i < _effectiveColumns.length; i++) {
             final column = _effectiveColumns[i];
             final columnIndex = widget.showCheckboxes ? i - 1 : i;
-            
+
             // Skip checkbox and action columns
             if (widget.showCheckboxes && i == 0) continue;
-            if (widget.showActions && i == _effectiveColumns.length - 1) continue;
-            
+            if (widget.showActions && i == _effectiveColumns.length - 1)
+              continue;
+
             if (columnIndex >= 0 && columnIndex < widget.columns.length) {
               final filters = _columnFilters[columnIndex] ?? [];
               if (filters.isNotEmpty && column.searchValueGetter != null) {
@@ -492,7 +501,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
         currentFilterColumnIndex = null;
         return;
       }
-      
+
       // Mở dropdown mới
       currentFilterColumnIndex = columnIndex;
       _showFilterOverlay(columnIndex);
@@ -501,17 +510,18 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
   void _showFilterOverlay(int columnIndex) {
     final overlay = Overlay.of(context);
-    final RenderBox? renderBox = _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? renderBox =
+        _headerKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
-    
+
     // Tính toán vị trí của cột
     final columnPosition = _calculateColumnPosition(columnIndex);
     final headerPosition = renderBox.localToGlobal(Offset.zero);
-    
+
     _filterOverlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: headerPosition.dy + widget.rowHeight + 5, // Ngay dưới header
-        left: headerPosition.dx + columnPosition.dx,
+        top: headerPosition.dy + widget.rowHeight + widget.filterPopupOffset.dy,
+        left: headerPosition.dx + columnPosition.dx + widget.filterPopupOffset.dx,
         child: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(8),
@@ -529,7 +539,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
         ),
       ),
     );
-    
+
     overlay.insert(_filterOverlayEntry!);
   }
 
@@ -544,44 +554,37 @@ class _SgTableState<T> extends State<SgTable<T>> {
   Offset _calculateColumnPosition(int columnIndex) {
     // Tính toán vị trí của cột dựa trên index
     double leftOffset = 0;
-    
+
     // Tính offset cho checkbox column nếu có
     if (widget.showCheckboxes) {
       leftOffset += widget.checkboxColumnWidth;
     }
-    
+
     // Tính offset cho các cột trước cột hiện tại
     for (int i = 0; i < columnIndex; i++) {
       leftOffset += _columnWidths[i] ?? (widget.columns[i].width ?? 120.0);
     }
-    
+
     return Offset(leftOffset, 0);
   }
 
   Widget _buildColumnFilter(int columnIndex) {
     if (!widget.enableColumnFilters) return const SizedBox.shrink();
-    
+
     final column = widget.columns[columnIndex];
-    if (!column.filterable || column.searchValueGetter == null) return const SizedBox.shrink();
-    
+    if (!column.filterable) return const SizedBox.shrink();
     final selectedValues = _columnFilters[columnIndex] ?? [];
-    
+
     return GestureDetector(
       onTap: () => _toggleFilterDropdown(columnIndex),
-      child: Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: selectedValues.isNotEmpty 
-              ? SGAppColors.primary600 
-              : SGAppColors.neutral400,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          Icons.filter_list,
-          size: 10,
-          color: Colors.white,
-        ),
+      child: Icon(
+        selectedValues.isNotEmpty
+            ? Icons.filter_alt_rounded
+            : Icons.filter_alt_off_rounded,
+        size: 16,
+        color: selectedValues.isNotEmpty
+            ? Colors.red
+            : Colors.grey,
       ),
     );
   }
@@ -590,9 +593,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
     setState(() {
       _columnFilters[columnIndex] = selectedValues;
     });
-    
+
     _filterAndSortData();
-    
+
     if (widget.onColumnFilterChanged != null) {
       widget.onColumnFilterChanged!(columnIndex, selectedValues);
     }
@@ -644,7 +647,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     ),
                   ),
                 ),
-                
+
                 // Table body rows
                 SizedBox(
                   height: _sortedData.length * widget.rowHeight,
@@ -719,7 +722,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
       final column = _effectiveColumns[index];
       final hasSort = column.sortValueGetter != null;
       final isLast = index == _effectiveColumns.length - 1;
-
       // Special case for checkbox column
       if (widget.showCheckboxes && index == 0) {
         return _buildCell(
@@ -731,7 +733,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
                 onChanged: _toggleSelectAll,
                 checkedColor: Colors.blue,
                 uncheckedColor: Colors.transparent,
-                checkmarkColor: Colors.white ,
+                checkmarkColor: Colors.white,
                 borderCheckedColor: SGAppColors.colorC0C0C0,
                 size: 16,
                 borderRadius: 2,
@@ -787,11 +789,12 @@ class _SgTableState<T> extends State<SgTable<T>> {
                         child: _buildSortIcon(actualColumnIndex),
                       ),
                     // Add filter button if enabled and not action column
-                    if (widget.enableColumnFilters && 
-                        actualColumnIndex >= 0 && 
+                    if (widget.enableColumnFilters &&
+                        actualColumnIndex >= 0 &&
                         actualColumnIndex < widget.columns.length &&
                         widget.columns[actualColumnIndex].filterable &&
-                        !(widget.showActions && index == _effectiveColumns.length - 1))
+                        !(widget.showActions &&
+                            index == _effectiveColumns.length - 1))
                       _buildColumnFilter(actualColumnIndex),
                   ],
                 ),
@@ -947,13 +950,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
       _resizeStartWidth = null;
     });
   }
-  
+
   void _onRowHover(int rowIndex) {
     setState(() {
       _hoveredRowIndex = rowIndex;
     });
   }
-  
+
   void _onRowHoverExit() {
     setState(() {
       _hoveredRowIndex = null;
@@ -980,7 +983,8 @@ class _ColumnFilterDropdown<T> extends StatefulWidget {
   });
 
   @override
-  State<_ColumnFilterDropdown<T>> createState() => _ColumnFilterDropdownState<T>();
+  State<_ColumnFilterDropdown<T>> createState() =>
+      _ColumnFilterDropdownState<T>();
 }
 
 class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
@@ -1007,7 +1011,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
     }
 
     final allOptions = uniqueValues.toList()..sort();
-    
+
     if (_searchController.text.isEmpty) {
       _filteredOptions = allOptions;
     } else {
@@ -1062,7 +1066,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
           // Search bar
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: SGAppColors.neutral200),
               ),
@@ -1072,31 +1076,31 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: "Q Search in filters",
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   color: SGAppColors.neutral500,
                   fontSize: 12,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
-                  borderSide: BorderSide(color: SGAppColors.neutral300),
+                  borderSide: const BorderSide(color: SGAppColors.neutral300),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 4,
                 ),
                 isDense: true,
-                prefixIcon: Icon(Icons.search, size: 16),
+                prefixIcon: const Icon(Icons.search, size: 16),
               ),
               style: const TextStyle(fontSize: 12),
             ),
           ),
-          
+
           // Options list
           Flexible(
             child: _filteredOptions.isEmpty
                 ? Container(
                     padding: const EdgeInsets.all(16),
-                    child: SGText(
+                    child: const SGText(
                       text: "Không có dữ liệu",
                       color: SGAppColors.neutral500,
                       size: 12,
@@ -1108,7 +1112,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
                     itemBuilder: (context, index) {
                       final value = _filteredOptions[index];
                       final isSelected = _tempSelectedValues.contains(value);
-                      
+
                       return InkWell(
                         onTap: () => _toggleValue(value),
                         child: Container(
@@ -1141,11 +1145,11 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
                     },
                   ),
           ),
-          
+
           // Action buttons
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(color: SGAppColors.neutral200),
               ),
@@ -1155,7 +1159,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
               children: [
                 TextButton(
                   onPressed: _resetFilter,
-                  child: SGText(
+                  child: const SGText(
                     text: "Reset",
                     size: 12,
                     color: SGAppColors.neutral600,
@@ -1171,7 +1175,7 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
                     ),
                     minimumSize: Size.zero,
                   ),
-                  child: SGText(
+                  child: const SGText(
                     text: "OK",
                     size: 12,
                     color: Colors.white,
