@@ -106,7 +106,6 @@ class TableColumnBuilder {
     bool isFullWidth = false,
     bool filterable = false,
   }) {
-    SGLog.info('filterable createTextColumn22', 'filterable: $filterable');
     return SgTableColumn<T>(
       title: title,
       cellBuilder: (item) => SGText(

@@ -681,9 +681,9 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
           rowHoverDuration: const Duration(milliseconds: 100),
           enableColumnFilters: true,
           // Bật tính năng hiển thị cột hành động
-          showActions: true,
+          // showActions: true,
           actionColumnTitle: 'Thao tác',
-          actionColumnWidth: 150,
+          // actionColumnWidth: 150,
           actionViewColor: Colors.green,
           actionEditColor: Colors.blue,
           actionDeleteColor: Colors.red,
