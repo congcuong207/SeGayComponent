@@ -1019,7 +1019,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
           text: widget.label,
           style: TextStyle(
             color: widget.colorLabel ?? Colors.black,
-            fontSize: fontSize + 2,
+            fontSize: fontSize,
           ),
           children: [
             TextSpan(
@@ -1034,7 +1034,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
         widget.label,
         style: TextStyle(
           color: widget.colorLabel ?? Colors.black,
-          fontSize: fontSize + 2,
+          fontSize: fontSize,
         ),
       );
     }

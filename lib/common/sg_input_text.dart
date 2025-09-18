@@ -405,7 +405,7 @@ class _SGInputTextState extends State<SGInputText> {
           text: widget.label,
           style: TextStyle(
             color: widget.colorLabel ?? Colors.black,
-            fontSize: fontSize + 2,
+            fontSize: fontSize,
             // fontWeight: FontWeight.w900,
           ),
           children: [
@@ -421,7 +421,7 @@ class _SGInputTextState extends State<SGInputText> {
         widget.label!,
         style: TextStyle(
           color: widget.colorLabel ?? Colors.black,
-          fontSize: fontSize + 2,
+          fontSize: fontSize,
           // fontWeight: widget.fontWeight,
         ),
       );

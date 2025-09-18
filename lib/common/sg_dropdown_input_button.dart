@@ -717,7 +717,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
           text: widget.label,
           style: TextStyle(
             color: widget.colorLabel ?? Colors.black,
-            fontSize: fontSize + 2,
+            fontSize: fontSize,
           ),
           children: [
             TextSpan(
@@ -733,7 +733,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
         widget.label!,
         style: TextStyle(
           color: widget.colorLabel ?? Colors.black,
-          fontSize: fontSize + 2,
+          fontSize: fontSize,
         ),
       );
     }
