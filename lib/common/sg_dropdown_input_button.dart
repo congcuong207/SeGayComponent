@@ -8,6 +8,7 @@ import 'dart:math' as math;
 class SGDropdownInputButton<T> extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
+  final bool required;
   final String? textDataNullSearch;
   final int? maxLines;
   final double? width;
@@ -56,6 +57,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.label,
+    this.required = false,
     this.textDataNullSearch,
     this.maxLines,
     this.width,
@@ -560,6 +562,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       // Custom underline border with gap
       return InputDecoration(
         isDense: false,
+        label: _buildLabel(),
         filled: widget.enable ? false : true,
         fillColor: Colors.transparent,
         hintText: widget.hintText,
@@ -577,6 +580,7 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
     } else {
       // Standard outline border
       return InputDecoration(
+        label: _buildLabel(),
         hintText: widget.hintText,
         hintStyle: TextStyle(
           fontSize: widget.fontSize,
@@ -700,5 +704,37 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       }
     }
     _removeOverlay();
+  }
+
+  Widget _buildLabel() {
+    if (widget.label == null) return const SizedBox.shrink();
+    if (widget.required) {
+      return RichText(
+        text: TextSpan(
+          text: widget.label,
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: widget.fontSize,
+            fontWeight: widget.fontWeight,
+          ),
+          children: [
+            TextSpan(
+              text: ' *',
+              style:
+                  TextStyle(color: Colors.red, fontSize: widget.fontSize ?? 16),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Text(
+        widget.label!,
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: widget.fontSize,
+          fontWeight: widget.fontWeight,
+        ),
+      );
+    }
   }
 }

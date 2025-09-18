@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:se_gay_components/common/pagination/sg_pagination_controls.dart';
-import 'package:se_gay_components/common/sg_button_icon.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_datetime_input_button.dart';
 import 'package:se_gay_components/common/sg_input_text.dart';
@@ -172,6 +171,9 @@ class _TableViewExempleState extends State<TableViewExemple> {
         SizedBox(
           width: size.width * 0.15,
           child: SGDropdownInputButton<String>(
+              label: title,
+              required: true,
+              
               height: 35,
               controller: controller,
               textOverflow: TextOverflow.ellipsis,
@@ -185,7 +187,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
               onChanged: onChanged,
               sizeBorderCircular: 10,
               colorBorder: SGAppColors.neutral400,
-              showUnderlineBorderOnly: true,
+              // showUnderlineBorderOnly: true,
               enableSearch: false,
               isClearController: false,
               isShowSuffixIcon: true,
@@ -747,14 +749,20 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               cellBuilder: (item) => _buildStatusTag2(item),
               // sortValueGetter: (item) => item.status,
               searchValueGetter: (item) {
-                 final status = getNumberStatus(item.status);
-                return status == 1 ? 'Đã ký'
-                     : status == 0 ? 'Chưa ký'
-                     : status == 2 ? 'Đã ký nháy'
-                     : status == 3 ? 'Đã ký & tạo'
-                     : status == 4 ? 'Chưa ký nháy'
-                     : status == 5 ? 'Chưa ký & tạo'
-                     : 'Người tạo phiếu';
+                final status = getNumberStatus(item.status);
+                return status == 1
+                    ? 'Đã ký'
+                    : status == 0
+                        ? 'Chưa ký'
+                        : status == 2
+                            ? 'Đã ký nháy'
+                            : status == 3
+                                ? 'Đã ký & tạo'
+                                : status == 4
+                                    ? 'Chưa ký nháy'
+                                    : status == 5
+                                        ? 'Chưa ký & tạo'
+                                        : 'Người tạo phiếu';
               },
               cellAlignment: TextAlign.center,
               titleAlignment: TextAlign.center,
@@ -800,47 +808,5 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
       default:
         return 0;
     }
-  }
-
-  Widget _buildStatusTag(String status) {
-    Color backgroundColor;
-    Color textColor = Colors.white;
-
-    switch (status) {
-      case 'Hoàn thành':
-        backgroundColor = Colors.green;
-        break;
-      case 'Hủy':
-        backgroundColor = Colors.red;
-        break;
-      case 'Đã từ chối':
-        backgroundColor = Colors.orange;
-        break;
-      case 'Dự thảo':
-        backgroundColor = Colors.blue;
-        break;
-      case 'Chờ CBQL duyệt':
-        backgroundColor = Colors.purple;
-        break;
-      default:
-        backgroundColor = SGAppColors.neutral500;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: SGText(
-          text: status,
-          color: textColor,
-          textAlign: TextAlign.center,
-          size: 14,
-        ),
-      ),
-    );
   }
 }
