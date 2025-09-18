@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_text.dart';
-import 'package:se_gay_components/core/utils/sg_log.dart';
 
 class SgTableColumn<T> {
   final String title;

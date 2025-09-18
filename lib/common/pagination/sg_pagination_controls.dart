@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
