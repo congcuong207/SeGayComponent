@@ -910,12 +910,17 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   }
 
   TextStyle _buildTextStyle() {
+    final bool isReadOnly = widget.enable ? true : !widget.allowTyping;
+    final Color readOnlyColor = Colors.grey.shade600;
     final baseStyle = TextStyle(
       fontSize: widget.fontSize ?? 14,
       fontWeight: widget.fontWeight ?? FontWeight.normal,
       overflow: widget.textOverflow,
       height: 1.2,
       leadingDistribution: TextLeadingDistribution.even,
+      color: isReadOnly
+          ? readOnlyColor
+          : (widget.textStyle?.color ?? Colors.black),
     );
 
     return widget.textStyle?.copyWith(
@@ -924,17 +929,21 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
           overflow: widget.textOverflow,
           height: 1.2,
           leadingDistribution: TextLeadingDistribution.even,
+          color: isReadOnly
+              ? readOnlyColor
+              : (widget.textStyle?.color ?? Colors.black),
         ) ??
         baseStyle;
   }
 
   InputDecoration _buildInputDecoration() {
+    const Color normalBgColor = Colors.transparent;
     if (widget.showUnderlineBorderOnly) {
       return InputDecoration(
         label: _buildLabel(),
         isDense: false,
-        filled: widget.enable ? false : true,
-        fillColor: Colors.transparent,
+        filled: true,
+        fillColor: normalBgColor,
         border: _buildUnderlineBorder(false),
         enabledBorder: _buildUnderlineBorder(false),
         focusedBorder: _buildUnderlineBorder(true),
@@ -946,7 +955,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       return InputDecoration(
         label: _buildLabel(),
         isDense: false,
-        filled: widget.enable ? false : true,
+        filled: true,
+        fillColor: normalBgColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.sizeBorderCircular ?? 12),
           borderSide: BorderSide(
