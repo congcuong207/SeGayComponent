@@ -232,7 +232,7 @@ class _TestScreenState extends State<TestScreen> {
             SGInputText(
               controller: _controller,
               hintText: 'Chọn số...',
-              height: 35,
+              height: 40,
               label: 'Tên',
               // obscureText: true,
               // maxLines: 3,
