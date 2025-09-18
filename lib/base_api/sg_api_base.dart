@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:se_gay_components/base_api/api_config.dart';
 
 class ApiBase {
