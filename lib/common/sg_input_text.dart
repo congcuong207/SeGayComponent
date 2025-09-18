@@ -6,7 +6,6 @@ import 'package:se_gay_components/common/sg_colors.dart';
 
 class SGInputText extends StatefulWidget {
   final TextEditingController? controller;
-  final bool required;
   final int? maxLength;
   final int? maxLines;
   final bool? hasError;
@@ -63,7 +62,6 @@ class SGInputText extends StatefulWidget {
   const SGInputText({
     super.key,
     this.controller,
-    this.required = false,
     this.label,
     this.isRequired = false,
     this.readOnly = false,
@@ -398,7 +396,7 @@ class _SGInputTextState extends State<SGInputText> {
   }
   Widget _buildLabel() {
     if (widget.label == null) return const SizedBox.shrink();
-    if (widget.required) {
+    if (widget.isRequired) {
       return RichText(
         text: TextSpan(
           text: widget.label,
