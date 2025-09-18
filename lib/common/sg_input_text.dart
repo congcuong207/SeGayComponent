@@ -24,6 +24,7 @@ class SGInputText extends StatefulWidget {
   final Color enabledBorderColor;
   final Color focusedBorderColor;
   final Color cursorColor;
+  final Color? colorLabel;
   final bool? isHalfWidth;
   final TextStyle? hintStyle;
   final Widget? prefixIcon;
@@ -112,6 +113,7 @@ class SGInputText extends StatefulWidget {
     this.mainAxisAlignment = MainAxisAlignment.center,
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.cursorColor = SGAppColors.color092C4C,
+    this.colorLabel,
     this.cursorWidth = 1,
     this.cursorHeight = 14,
   });
@@ -167,7 +169,6 @@ class _SGInputTextState extends State<SGInputText> {
       child: _buildTextField(widget.width),
     );
   }
-
 
   Widget _buildTextField(double? width) {
     final double effectiveHeight =
@@ -394,22 +395,23 @@ class _SGInputTextState extends State<SGInputText> {
       ),
     );
   }
+
   Widget _buildLabel() {
+    double? fontSize = widget.fontSize ?? 16;
     if (widget.label == null) return const SizedBox.shrink();
     if (widget.isRequired) {
       return RichText(
         text: TextSpan(
           text: widget.label,
           style: TextStyle(
-            color: Colors.black,
-            fontSize: widget.fontSize,
-            fontWeight: widget.fontWeight,
+            color: widget.colorLabel ?? Colors.black,
+            fontSize: fontSize + 2,
+            // fontWeight: FontWeight.w900,
           ),
           children: [
             TextSpan(
               text: ' *',
-              style:
-                  TextStyle(color: Colors.red, fontSize: widget.fontSize ?? 16),
+              style: TextStyle(color: Colors.red, fontSize: fontSize + 2),
             ),
           ],
         ),
@@ -418,9 +420,9 @@ class _SGInputTextState extends State<SGInputText> {
       return Text(
         widget.label!,
         style: TextStyle(
-          color: Colors.black,
-          fontSize: widget.fontSize,
-          fontWeight: widget.fontWeight,
+          color: widget.colorLabel ?? Colors.black,
+          fontSize: fontSize + 2,
+          // fontWeight: widget.fontWeight,
         ),
       );
     }

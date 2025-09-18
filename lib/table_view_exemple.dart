@@ -173,8 +173,7 @@ class _TableViewExempleState extends State<TableViewExemple> {
           child: SGDropdownInputButton<String>(
               label: title,
               required: true,
-              
-              height: 35,
+              height: 45,
               controller: controller,
               textOverflow: TextOverflow.ellipsis,
               value: value,
@@ -185,8 +184,8 @@ class _TableViewExempleState extends State<TableViewExemple> {
                       ))
                   .toList(),
               onChanged: onChanged,
-              sizeBorderCircular: 10,
-              colorBorder: SGAppColors.neutral400,
+              sizeBorderCircular: 7,
+              colorBorder: SGAppColors.neutral900,
               // showUnderlineBorderOnly: true,
               enableSearch: false,
               isClearController: false,
@@ -420,6 +419,40 @@ class _TableViewExempleState extends State<TableViewExemple> {
                   _statusController,
                   size,
                 ),
+
+                SGDateTimeInputButton(
+                  label: 'Chọn ngày giờ',
+                  isRequired: true,
+                  controller: TextEditingController(
+                      text: DateFormat('dd/MM/yyyy HH:mm:ss')
+                          .format(DateTime.now())),
+                  // value: _selected,
+                  onChanged: (dt) {
+                    setState(() {
+                      // _selected = dt;
+                    });
+                  },
+                  width: 260,
+                  height: 40,
+                  // Hành vi
+                  initWithNow: true, // bật khởi tạo với thời gian hiện tại
+                  enable: true, // true = disable hoàn toàn
+                  allowTyping: true, // cho phép gõ tay
+                  showTimeSection: true, // hiển thị phần giờ-phút-giây
+                  timeOptional: true, // cho phép bật/tắt thời gian
+                  includeSeconds: true, // có trường giây
+                  initialIncludeTime: false,
+
+                  // Định dạng tuỳ biến (không bắt buộc)
+                  // dateFormat: 'dd/MM/yyyy',
+                  // dateTimeFormat: 'dd/MM/yyyy HH:mm',
+                  // Giao diện theo SGDropdownInputButton
+                  // sizeBorderCircular: 12,
+                  colorBorder: SGAppColors.colorBorderGray,
+                  colorBorderFocus: SGAppColors.info500,
+                  // showUnderlineBorderOnly:
+                  //     true, // true nếu muốn chỉ gạch chân như option có sẵn
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -601,6 +634,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
                 ),
               ),
             SGDateTimeInputButton(
+              label: 'Chọn ngày giờ',
+              isRequired: true,
               controller: _dtController,
               value: _selected,
               onChanged: (dt) {
@@ -626,8 +661,8 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
               // sizeBorderCircular: 12,
               colorBorder: SGAppColors.colorBorderGray,
               colorBorderFocus: SGAppColors.info500,
-              showUnderlineBorderOnly:
-                  true, // true nếu muốn chỉ gạch chân như option có sẵn
+              // showUnderlineBorderOnly:
+              //     true, // true nếu muốn chỉ gạch chân như option có sẵn
             ),
             SgToggleSwitch(
               value: _showCheckboxes,

@@ -12,6 +12,8 @@ class SGDateTimeInputButton extends StatefulWidget {
   final TextEditingController controller;
   final DateTime? value;
   final ValueChanged<DateTime?> onChanged;
+  final bool isRequired;
+  final String label;
 
   // Appearance/size (align with SGDropdownInputButton API where possible)
   final double? width;
@@ -20,6 +22,7 @@ class SGDateTimeInputButton extends StatefulWidget {
   final double? sizeBorderCircular;
   final Color? colorBorder;
   final Color? colorBorderFocus;
+  final Color? colorLabel;
   final EdgeInsetsGeometry? contentPadding;
   final TextStyle? textStyle;
   final double? fontSize;
@@ -63,12 +66,15 @@ class SGDateTimeInputButton extends StatefulWidget {
     required this.controller,
     required this.onChanged,
     this.value,
+    this.label = '',
+    this.isRequired = false,
     this.width,
     this.height,
     this.sizeBorderLine,
     this.sizeBorderCircular,
     this.colorBorder,
     this.colorBorderFocus,
+    this.colorLabel,
     this.contentPadding,
     this.textStyle,
     this.fontSize,
@@ -925,6 +931,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   InputDecoration _buildInputDecoration() {
     if (widget.showUnderlineBorderOnly) {
       return InputDecoration(
+        label: _buildLabel(),
         isDense: false,
         filled: widget.enable ? false : true,
         fillColor: Colors.transparent,
@@ -937,6 +944,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       );
     } else {
       return InputDecoration(
+        label: _buildLabel(),
         isDense: false,
         filled: widget.enable ? false : true,
         border: OutlineInputBorder(
@@ -990,5 +998,35 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
         },
       ),
     );
+  }
+
+  Widget _buildLabel() {
+    double fontSize = widget.fontSize ?? 16;
+    if (widget.label == '') return const SizedBox.shrink();
+    if (widget.isRequired) {
+      return RichText(
+        text: TextSpan(
+          text: widget.label,
+          style: TextStyle(
+            color: widget.colorLabel ?? Colors.black,
+            fontSize: fontSize + 2,
+          ),
+          children: [
+            TextSpan(
+              text: ' *',
+              style: TextStyle(color: Colors.red, fontSize: fontSize + 2),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Text(
+        widget.label,
+        style: TextStyle(
+          color: widget.colorLabel ?? Colors.black,
+          fontSize: fontSize + 2,
+        ),
+      );
+    }
   }
 }

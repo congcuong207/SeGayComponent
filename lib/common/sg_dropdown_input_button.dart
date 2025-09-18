@@ -24,6 +24,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
   final Color? colorBorderFocus;
   final Color? colorBorderHover;
   final Color? colorHoverItem;
+  final Color? colorLabel;
   final bool? isShowSuffixIcon;
   final bool enableSearch;
   final bool enable;
@@ -73,6 +74,7 @@ class SGDropdownInputButton<T> extends StatefulWidget {
     this.colorBorderFocus,
     this.colorBorderHover,
     this.colorHoverItem,
+    this.colorLabel,
     this.isShowSuffixIcon = true,
     this.textAlign,
     this.textAlignItem,
@@ -707,21 +709,21 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
   }
 
   Widget _buildLabel() {
+    double fontSize = widget.fontSize ?? 16;
     if (widget.label == null) return const SizedBox.shrink();
     if (widget.required) {
       return RichText(
         text: TextSpan(
           text: widget.label,
           style: TextStyle(
-            color: Colors.black,
-            fontSize: widget.fontSize,
-            fontWeight: widget.fontWeight,
+            color: widget.colorLabel ?? Colors.black,
+            fontSize: fontSize + 2,
           ),
           children: [
             TextSpan(
               text: ' *',
               style:
-                  TextStyle(color: Colors.red, fontSize: widget.fontSize ?? 16),
+                  TextStyle(color: Colors.red, fontSize: fontSize + 2),
             ),
           ],
         ),
@@ -730,9 +732,8 @@ class _SGDropdownInputButtonState<T> extends State<SGDropdownInputButton<T>> {
       return Text(
         widget.label!,
         style: TextStyle(
-          color: Colors.black,
-          fontSize: widget.fontSize,
-          fontWeight: widget.fontWeight,
+          color: widget.colorLabel ?? Colors.black,
+          fontSize: fontSize + 2,
         ),
       );
     }
