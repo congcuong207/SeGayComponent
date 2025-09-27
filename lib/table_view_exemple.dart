@@ -697,12 +697,13 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
         SgTable<DataTable>(
           // textHeaderColor: SGAppColors.error50,
           headerBackgroundColor: Colors.blue,
-          evenRowBackgroundColor: Colors.grey.shade200,
-          oddRowBackgroundColor: Colors.white,
+          showVerticalLines: true,
+          // evenRowBackgroundColor: Colors.grey.shade200,
+          // oddRowBackgroundColor: Colors.white,
           // selectedRowColor: Colors.lightBlue.shade100,
           // Light blue background for checked rows
-          gridLineColor: Colors.grey.shade300,
-          gridLineWidth: 1.0,
+          // gridLineColor: Colors.grey.shade300,
+          // gridLineWidth: 1.0,
           // showVerticalLines: true,
           // showHorizontalLines: true,
           // allowRowSelection: true,
@@ -714,16 +715,16 @@ class _DemoBaseTableState extends State<DemoBaseTable> {
             });
           },
           // Row hover options
-          rowHoverColor: Colors.blue.withOpacity(0.1),
+          // rowHoverColor: Colors.blue.withOpacity(0.1),
           rowHoverDuration: const Duration(milliseconds: 100),
           enableColumnFilters: true,
           // Bật tính năng hiển thị cột hành động
           // showActions: true,
           actionColumnTitle: 'Thao tác',
           // actionColumnWidth: 150,
-          actionViewColor: Colors.green,
-          actionEditColor: Colors.blue,
-          actionDeleteColor: Colors.red,
+          // actionViewColor: Colors.green,
+          // actionEditColor: Colors.blue,
+          // actionDeleteColor: Colors.red,
           onViewAction: (item) {
             log('message ${item.employeeName}');
           },

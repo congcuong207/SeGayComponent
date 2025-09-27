@@ -19,7 +19,9 @@ class SgTable<T> extends StatefulWidget {
   final Color evenRowBackgroundColor;
   final Color selectedRowColor;
   final Color gridLineColor;
+  final Color colorLineVertical;
   final double gridLineWidth;
+  final double gridLineVWidth;
   final bool showVerticalLines;
   final bool showHorizontalLines;
   final bool allowRowSelection;
@@ -74,6 +76,8 @@ class SgTable<T> extends StatefulWidget {
     this.selectedRowColor = SGAppColors.info100,
     this.gridLineColor = SGAppColors.neutral200,
     this.gridLineWidth = 1.0,
+    this.gridLineVWidth = 1.0,
+    this.colorLineVertical = SGAppColors.neutral200,
     this.showVerticalLines = true,
     this.showHorizontalLines = true,
     this.allowRowSelection = true,
@@ -656,7 +660,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     itemCount: _sortedData.length,
                     itemBuilder: (context, index) {
                       final isEven = index % 2 == 0;
-                      final isLast = index == _sortedData.length - 1;
+                      // final isLast = index == _sortedData.length - 1;
                       final isSelected = _selectedRowIndex == index;
                       final isChecked =
                           _selectedItems.contains(_sortedData[index]);
@@ -679,14 +683,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
                         duration: widget.rowHoverDuration,
                         decoration: BoxDecoration(
                           color: backgroundColor,
-                          border: widget.showHorizontalLines && !isLast
-                              ? Border(
-                                  bottom: BorderSide(
-                                    color: widget.gridLineColor,
-                                    width: widget.gridLineWidth,
-                                  ),
-                                )
-                              : null,
+                          // Vẽ border bottom nếu cần
+                          // border: widget.showHorizontalLines && !isLast
+                          //     ? Border(
+                          //         bottom: BorderSide(
+                          //           color: widget.gridLineColor,
+                          //           width: widget.gridLineWidth,
+                          //         ),
+                          //       )
+                          //     : null,
                         ),
                         child: SizedBox(
                           width: effectiveWidth,
@@ -878,13 +883,14 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     return Stack(
       children: [
+        // Container vẽ horizontal line (nằm dưới)
         Container(
           width: adjustedWidth,
           height: widget.rowHeight,
           decoration: BoxDecoration(
-            border: widget.showVerticalLines && !isLast
+            border: widget.showHorizontalLines
                 ? Border(
-                    right: BorderSide(
+                    bottom: BorderSide(
                       color: widget.gridLineColor,
                       width: widget.gridLineWidth,
                     ),
@@ -893,6 +899,19 @@ class _SgTableState<T> extends State<SgTable<T>> {
           ),
           child: child,
         ),
+        // Container vẽ vertical line (nằm trên)
+        if (widget.showVerticalLines && !isLast)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: widget.gridLineVWidth,
+              height: widget.rowHeight,
+              color: widget.colorLineVertical,
+            ),
+          ),
+        // Resize handle giữ nguyên
         if (columnIndex != null && !isLast)
           Positioned(
             right: -5,
