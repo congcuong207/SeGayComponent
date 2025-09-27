@@ -20,7 +20,7 @@ class ApiBase {
       requestBody: true,
       responseHeader: false,
       request: false,
-      responseBody: true,
+      responseBody: false,
       // ignore: avoid_print
       logPrint: (o) => print(o.toString()),
     ));
