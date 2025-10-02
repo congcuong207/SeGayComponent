@@ -11,6 +11,7 @@ enum SortDirection { none, ascending, descending }
 class SgTable<T> extends StatefulWidget {
   final List<SgTableColumn<T>> columns;
   final List<T> data;
+  final double showQuantityColumn;
   final double rowHeight;
   final Color? textHeaderColor;
   final TextStyle? titleStyleHeader;
@@ -60,7 +61,7 @@ class SgTable<T> extends StatefulWidget {
       onColumnFilterChanged;
   final double filterDropdownWidth;
   final double filterDropdownMaxHeight;
-  
+
   // Thêm offset cho filter popup
   final Offset filterPopupOffset;
 
@@ -68,6 +69,7 @@ class SgTable<T> extends StatefulWidget {
     super.key,
     required this.columns,
     required this.data,
+    required this.showQuantityColumn,
     this.rowHeight = 48.0,
     this.textHeaderColor,
     this.headerBackgroundColor = SGAppColors.neutral100,
@@ -152,6 +154,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
   // Thêm GlobalKey để lấy vị trí header
   final GlobalKey _headerKey = GlobalKey();
 
+  final ScrollController _headerController = ScrollController();
+  final ScrollController _bodyController = ScrollController();
+  final ScrollController _scrollbarController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -162,6 +168,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _lastSearchTerm = widget.searchTerm;
     _columnFilters = Map.from(widget.columnFilters);
     _filterData();
+    _onInitListener();
   }
 
   @override
@@ -348,8 +355,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
             // Skip checkbox and action columns
             if (widget.showCheckboxes && i == 0) continue;
-            if (widget.showActions && i == _effectiveColumns.length - 1)
+            if (widget.showActions && i == _effectiveColumns.length - 1) {
               continue;
+            }
 
             if (columnIndex >= 0 && columnIndex < widget.columns.length) {
               final filters = _columnFilters[columnIndex] ?? [];
@@ -495,6 +503,15 @@ class _SgTableState<T> extends State<SgTable<T>> {
     return totalWidth;
   }
 
+  Map<int, TableColumnWidth> _buildTableColumnWidths() {
+    final Map<int, TableColumnWidth> widths = {};
+    for (int i = 0; i < _effectiveColumns.length; i++) {
+      widths[i] = FixedColumnWidth(
+          _columnWidths[i] ?? (_effectiveColumns[i].width ?? 120.0));
+    }
+    return widths;
+  }
+
   // Column filter methods
   void _toggleFilterDropdown(int columnIndex) {
     setState(() {
@@ -521,11 +538,13 @@ class _SgTableState<T> extends State<SgTable<T>> {
     // Tính toán vị trí của cột
     final columnPosition = _calculateColumnPosition(columnIndex);
     final headerPosition = renderBox.localToGlobal(Offset.zero);
+    final double headerScrollX =
+        _headerController.hasClients ? _headerController.offset : 0.0;
 
     _filterOverlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: headerPosition.dy + widget.rowHeight + widget.filterPopupOffset.dy,
-        left: headerPosition.dx + columnPosition.dx + widget.filterPopupOffset.dx,
+        left: headerPosition.dx + columnPosition.dx + widget.filterPopupOffset.dx - headerScrollX,
         child: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(8),
@@ -566,7 +585,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
     // Tính offset cho các cột trước cột hiện tại
     for (int i = 0; i < columnIndex; i++) {
-      leftOffset += _columnWidths[i] ?? (widget.columns[i].width ?? 120.0);
+      final effectiveIndex = widget.showCheckboxes ? i + 1 : i;
+      leftOffset += _columnWidths[effectiveIndex] ?? (widget.columns[i].width ?? 120.0);
     }
 
     return Offset(leftOffset, 0);
@@ -586,9 +606,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
             ? Icons.filter_alt_rounded
             : Icons.filter_alt_off_rounded,
         size: 16,
-        color: selectedValues.isNotEmpty
-            ? Colors.red
-            : Colors.grey,
+        color: selectedValues.isNotEmpty ? Colors.red : Colors.grey,
       ),
     );
   }
@@ -607,8 +625,43 @@ class _SgTableState<T> extends State<SgTable<T>> {
 
   @override
   void dispose() {
+    _headerController.dispose();
+    _bodyController.dispose();
+    _scrollbarController.dispose();
     _closeFilterOverlay();
     super.dispose();
+  }
+
+  /// Thiết lập các listener để đồng bộ hóa scroll ngang giữa header và nội dung
+  void _onInitListener() {
+    _syncControllers(
+      _headerController,
+      [_bodyController, _scrollbarController],
+    );
+    _syncControllers(
+      _bodyController,
+      [_headerController, _scrollbarController],
+    );
+    _syncControllers(
+      _scrollbarController,
+      [_headerController, _bodyController],
+    );
+  }
+
+  bool _syncing = false;
+
+  void _syncControllers(
+      ScrollController source, List<ScrollController> targets) {
+    source.addListener(() {
+      if (_syncing) return;
+      _syncing = true;
+      for (final target in targets) {
+        if (target.hasClients) {
+          target.jumpTo(source.offset);
+        }
+      }
+      _syncing = false;
+    });
   }
 
   @override
@@ -616,22 +669,37 @@ class _SgTableState<T> extends State<SgTable<T>> {
     final totalWidth = _calculateTotalWidth();
     final effectiveWidth = totalWidth;
 
-    final exactHeight =
-        widget.rowHeight + (_sortedData.length * widget.rowHeight);
+    final bodyHeight = widget.showQuantityColumn * widget.rowHeight;
+    // Tính chiều cao body: nếu có maxBodyHeight thì dùng để cuộn dọc, nếu không giữ hành vi cũ
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: effectiveWidth,
-            height: exactHeight,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row
-                DecoratedBox(
+        // Tính chiều cao body hiển thị theo viewport còn lại (tránh overflow)
+        final double availableBodyViewport = (constraints.maxHeight.isFinite
+                ? (constraints.maxHeight - widget.rowHeight)
+                : bodyHeight)
+            .clamp(0, double.infinity);
+        final double bodyViewportHeight = bodyHeight < availableBodyViewport
+            ? bodyHeight
+            : availableBodyViewport;
+
+        return ScrollbarTheme(
+          data: ScrollbarThemeData(
+            trackColor: WidgetStateProperty.all(Colors.white),
+            thumbColor: WidgetStateProperty.all(SGAppColors.neutral500),
+            trackVisibility: WidgetStateProperty.all(true),
+            thumbVisibility: WidgetStateProperty.all(true),
+            thickness: WidgetStateProperty.all(8),
+            radius: const Radius.circular(6),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                controller: _headerController,
+                child: DecoratedBox(
                   key: _headerKey, // Thêm key để lấy vị trí
                   decoration: BoxDecoration(
                     color: widget.headerBackgroundColor,
@@ -651,69 +719,86 @@ class _SgTableState<T> extends State<SgTable<T>> {
                     ),
                   ),
                 ),
+              ),
+              // Table body rows (cuộn dọc có giới hạn theo viewport) - dùng Table
+              SizedBox(
+                height: bodyViewportHeight - 10,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    controller: _bodyController,
+                    child: Table(
+                      columnWidths: _buildTableColumnWidths(),
+                      defaultVerticalAlignment:
+                          TableCellVerticalAlignment.middle,
+                      children: List.generate(_sortedData.length, (rowIdx) {
+                        final isEven = rowIdx % 2 == 0;
+                        final isSelected = _selectedRowIndex == rowIdx;
+                        final isChecked =
+                            _selectedItems.contains(_sortedData[rowIdx]);
+                        final isHovered = _hoveredRowIndex == rowIdx;
 
-                // Table body rows
-                SizedBox(
-                  height: _sortedData.length * widget.rowHeight,
-                  child: ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _sortedData.length,
-                    itemBuilder: (context, index) {
-                      final isEven = index % 2 == 0;
-                      // final isLast = index == _sortedData.length - 1;
-                      final isSelected = _selectedRowIndex == index;
-                      final isChecked =
-                          _selectedItems.contains(_sortedData[index]);
-                      final isHovered = _hoveredRowIndex == index;
+                        Color backgroundColor;
+                        if (isSelected) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isChecked) {
+                          backgroundColor = widget.selectedRowColor;
+                        } else if (isHovered && widget.rowHoverColor != null) {
+                          backgroundColor = widget.rowHoverColor!;
+                        } else {
+                          backgroundColor = isEven
+                              ? widget.evenRowBackgroundColor
+                              : widget.oddRowBackgroundColor;
+                        }
 
-                      Color backgroundColor;
-                      if (isSelected) {
-                        backgroundColor = widget.selectedRowColor;
-                      } else if (isChecked) {
-                        backgroundColor = widget.selectedRowColor;
-                      } else if (isHovered && widget.rowHoverColor != null) {
-                        backgroundColor = widget.rowHoverColor!;
-                      } else {
-                        backgroundColor = isEven
-                            ? widget.evenRowBackgroundColor
-                            : widget.oddRowBackgroundColor;
-                      }
-
-                      return AnimatedContainer(
-                        duration: widget.rowHoverDuration,
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                          // Vẽ border bottom nếu cần
-                          // border: widget.showHorizontalLines && !isLast
-                          //     ? Border(
-                          //         bottom: BorderSide(
-                          //           color: widget.gridLineColor,
-                          //           width: widget.gridLineWidth,
-                          //         ),
-                          //       )
-                          //     : null,
-                        ),
-                        child: SizedBox(
-                          width: effectiveWidth,
-                          height: widget.rowHeight,
-                          child: MouseRegion(
-                            onEnter: (_) => _onRowHover(index),
-                            onExit: (_) => _onRowHoverExit(),
-                            child: InkWell(
-                              onTap: () => _onRowSelected(index),
-                              child: Row(
-                                children: _buildRowCells(_sortedData[index],
-                                    false, effectiveWidth, totalWidth),
-                              ),
-                            ),
+                        return TableRow(
+                          decoration: BoxDecoration(
+                            color: backgroundColor,
                           ),
-                        ),
-                      );
-                    },
+                          children: List.generate(
+                            _effectiveColumns.length,
+                            (colIdx) {
+                              // Xây dựng cell tương tự _buildRowCells nhưng thêm tương tác per-cell
+                              final cell = _buildRowCells(
+                                _sortedData[rowIdx],
+                                false,
+                                effectiveWidth,
+                                totalWidth,
+                              )[colIdx];
+
+                              return MouseRegion(
+                                onEnter: (_) => _onRowHover(rowIdx),
+                                onExit: (_) => _onRowHoverExit(),
+                                child: InkWell(
+                                  onTap: () => _onRowSelected(rowIdx),
+                                  child: cell,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              // Tạo fake content để có thể scroll
+              Scrollbar(
+                controller: _scrollbarController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  controller: _scrollbarController,
+                  child: SizedBox(
+                    width: effectiveWidth,
+                    height: 10,
+                  ),
+                ),
+              )
+            ],
           ),
         );
       },
@@ -841,6 +926,16 @@ class _SgTableState<T> extends State<SgTable<T>> {
       // For regular data columns
       return _buildCell(
         child: Container(
+          decoration: BoxDecoration(
+            border: widget.showHorizontalLines
+                ? Border(
+                    bottom: BorderSide(
+                      color: widget.gridLineColor,
+                      width: widget.gridLineWidth,
+                    ),
+                  )
+                : null,
+          ),
           padding: const EdgeInsets.only(left: 8, right: 8),
           alignment: column.cellAlignment == TextAlign.center
               ? Alignment.center
