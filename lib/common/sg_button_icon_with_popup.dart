@@ -119,7 +119,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   void _handleButtonClick(BuildContext context) {
     widget.onclick?.call(context);
-    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     // Create the popup widget with the enhanced features
     final popupWidget = SGPopupMenu(
       items: widget.popupItems,
@@ -162,7 +161,6 @@ class _SGButtonIconWithPopupState extends State<SGButtonIconWithPopup> {
 
   @override
   void dispose() {
-    String popupId = widget.popupId ?? 'popup_${widget.iconChildButton?.hashCode ?? widget.textButton?.hashCode}_${widget.hashCode}';
     _popupController.removeOnPopupStateChangedListener();
     _popupController.dispose();
     _scrollController.dispose();
