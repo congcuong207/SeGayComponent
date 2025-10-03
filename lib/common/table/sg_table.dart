@@ -544,7 +544,10 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _filterOverlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: headerPosition.dy + widget.rowHeight + widget.filterPopupOffset.dy,
-        left: headerPosition.dx + columnPosition.dx + widget.filterPopupOffset.dx - headerScrollX,
+        left: headerPosition.dx +
+            columnPosition.dx +
+            widget.filterPopupOffset.dx -
+            headerScrollX,
         child: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(8),
@@ -586,7 +589,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
     // Tính offset cho các cột trước cột hiện tại
     for (int i = 0; i < columnIndex; i++) {
       final effectiveIndex = widget.showCheckboxes ? i + 1 : i;
-      leftOffset += _columnWidths[effectiveIndex] ?? (widget.columns[i].width ?? 120.0);
+      leftOffset +=
+          _columnWidths[effectiveIndex] ?? (widget.columns[i].width ?? 120.0);
     }
 
     return Offset(leftOffset, 0);
@@ -679,9 +683,18 @@ class _SgTableState<T> extends State<SgTable<T>> {
                 ? (constraints.maxHeight - widget.rowHeight)
                 : bodyHeight)
             .clamp(0, double.infinity);
-        final double bodyViewportHeight = bodyHeight < availableBodyViewport
-            ? bodyHeight
-            : availableBodyViewport;
+
+        // Đảm bảo chiều cao tối thiểu bằng showQuantityColumn * rowHeight
+        final double minBodyHeight =
+            widget.showQuantityColumn * widget.rowHeight;
+        final double actualDataHeight = _sortedData.length * widget.rowHeight;
+        final double finalBodyHeight =
+            actualDataHeight < minBodyHeight ? minBodyHeight : actualDataHeight;
+
+        final double bodyViewportHeight =
+            finalBodyHeight < availableBodyViewport
+                ? finalBodyHeight
+                : availableBodyViewport;
 
         return ScrollbarTheme(
           data: ScrollbarThemeData(
@@ -722,7 +735,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
               ),
               // Table body rows (cuộn dọc có giới hạn theo viewport) - dùng Table
               SizedBox(
-                height: bodyViewportHeight - 10,
+                height: bodyViewportHeight - 11,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: SingleChildScrollView(
