@@ -11,6 +11,7 @@ import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/table/sg_table.dart';
 import 'package:se_gay_components/common/table/sg_table_component.dart';
 import 'package:se_gay_components/common/switch/sg_toggle_switch.dart';
+import 'package:se_gay_components/core/enum/sg_date_time_mode.dart';
 
 class TableViewExemple extends StatefulWidget {
   const TableViewExemple({super.key});
@@ -353,6 +354,8 @@ class _TableViewExempleState extends State<TableViewExemple> {
       status: 'Hoàn thành',
     ),
   ];
+
+  TextEditingController dtController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -422,21 +425,21 @@ class _TableViewExempleState extends State<TableViewExemple> {
 
                 SGDateTimeInputButton(
                   label: 'Chọn ngày giờ',
-                  isRequired: true,
-                  controller: TextEditingController(
-                      text: DateFormat('dd/MM/yyyy HH:mm:ss')
-                          .format(DateTime.now())),
+                  // isRequired: true,
+                  controller:dtController,
                   // value: _selected,
+                  dateTimeMode: SGDateTimeMode.monthYear,
                   onChanged: (dt) {
                     setState(() {
                       // _selected = dt;
+                      log('message dt: $dt');
                     });
                   },
                   width: 260,
                   height: 40,
                   // Hành vi
                   initWithNow: true, // bật khởi tạo với thời gian hiện tại
-                  enable: true, // true = disable hoàn toàn
+                  // enable: true, // true = disable hoàn toàn
                   allowTyping: true, // cho phép gõ tay
                   showTimeSection: true, // hiển thị phần giờ-phút-giây
                   timeOptional: true, // cho phép bật/tắt thời gian
