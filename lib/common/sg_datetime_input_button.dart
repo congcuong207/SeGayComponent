@@ -8,6 +8,12 @@ import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/switch/sg_checkbox.dart';
 
+enum SGDateTimeMode {
+  dayMonthYear,  // dd/MM/yyyy
+  monthYear,     // MM/yyyy  
+  year,          // yyyy
+}
+
 class SGDateTimeInputButton extends StatefulWidget {
   final TextEditingController controller;
   final DateTime? value;
@@ -61,6 +67,9 @@ class SGDateTimeInputButton extends StatefulWidget {
   final Alignment? targetAnchor;
   final Alignment? followerAnchor;
 
+  /// Thêm thuộc tính mới
+  final SGDateTimeMode dateTimeMode;
+
   const SGDateTimeInputButton({
     super.key,
     required this.controller,
@@ -96,6 +105,7 @@ class SGDateTimeInputButton extends StatefulWidget {
     this.initWithNow = false,
     this.targetAnchor,
     this.followerAnchor,
+    this.dateTimeMode = SGDateTimeMode.dayMonthYear,
   });
 
   @override
@@ -131,6 +141,8 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   @override
   void initState() {
     super.initState();
+
+    // Khởi tạo FocusNode
     if (widget.focusNode != null) {
       _focusNode = widget.focusNode!;
     } else {
@@ -138,20 +150,27 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       _ownsFocusNode = true;
     }
 
+    // Khởi tạo giá trị ngày giờ
     _selectedDateTime = widget.value;
     final now = DateTime.now();
     _visibleMonth = DateTime(
-        (_selectedDateTime ?? now).year, (_selectedDateTime ?? now).month, 1);
+      (_selectedDateTime ?? now).year,
+      (_selectedDateTime ?? now).month,
+      1,
+    );
 
+    // Khởi tạo giá trị thời gian
     if (widget.value != null) {
       _hour = widget.value!.hour;
       _minute = widget.value!.minute;
       _second = widget.value!.second;
     }
+
+    // Khởi tạo _includeTimeToggle
     _includeTimeToggle = widget.initialIncludeTime ||
         (widget.value != null && _hasNonZeroTime(widget.value!));
 
-    // If requested, initialize with current date-time when no value provided
+    // Nếu được yêu cầu, khởi tạo với thời gian hiện tại khi không có giá trị
     if (widget.value == null && widget.initWithNow) {
       _includeTimeToggle = true;
       _selectedDateTime = now;
@@ -165,15 +184,16 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
       });
     }
 
-    // Init controllers text for time fields
+    // Khởi tạo text cho các controller thời gian
     _hourController.text = _hour.toString().padLeft(2, '0');
     _minuteController.text = _minute.toString().padLeft(2, '0');
     _secondController.text = _second.toString().padLeft(2, '0');
 
+    // Lắng nghe sự kiện focus
     _focusNode.addListener(_handleFocus);
 
-    // Initialize controller text from value if provided
-    if (widget.value != null && (widget.controller.text.isEmpty)) {
+    // Khởi tạo text cho controller nếu có giá trị ban đầu
+    if (widget.value != null && widget.controller.text.isEmpty) {
       _setControllerTextFromDate(widget.value);
     }
   }
@@ -370,23 +390,47 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   }
 
   Widget _buildCalendarHeader() {
-    String monthLabel;
-    try {
-      monthLabel = DateFormat("'Tháng' M yyyy").format(_visibleMonth);
-    } catch (_) {
-      monthLabel = 'Tháng ${_visibleMonth.month} ${_visibleMonth.year}';
+    String headerLabel;
+    VoidCallback? prevAction;
+    VoidCallback? nextAction;
+    
+    switch (widget.dateTimeMode) {
+      case SGDateTimeMode.dayMonthYear:
+        try {
+          headerLabel = DateFormat("'Tháng' M yyyy").format(_visibleMonth);
+        } catch (_) {
+          headerLabel = 'Tháng ${_visibleMonth.month} ${_visibleMonth.year}';
+        }
+        prevAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month - 1, 1));
+        nextAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1, 1));
+        break;
+      case SGDateTimeMode.monthYear:
+        headerLabel = 'Năm ${_visibleMonth.year}';
+        prevAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year - 1, _visibleMonth.month, 1));
+        nextAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year + 1, _visibleMonth.month, 1));
+        break;
+      case SGDateTimeMode.year:
+        final startYear = (_visibleMonth.year ~/ 12) * 12;
+        headerLabel = '$startYear - ${startYear + 11}';
+        prevAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year - 12, _visibleMonth.month, 1));
+        nextAction = () => setState(() => _visibleMonth = DateTime(_visibleMonth.year + 12, _visibleMonth.month, 1));
+        break;
     }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
         children: [
-          // Prev year
+          // Prev year/period
           Tooltip(
-            message: 'Năm trước',
+            message: widget.dateTimeMode == SGDateTimeMode.year ? 'Trước' : 'Năm trước',
             child: InkWell(
               onTap: () {
-                setState(() => _visibleMonth =
-                    DateTime(_visibleMonth.year - 1, _visibleMonth.month, 1));
+                if (widget.dateTimeMode == SGDateTimeMode.year) {
+                  setState(() => _visibleMonth = DateTime(_visibleMonth.year - 12, _visibleMonth.month, 1));
+                } else {
+                  setState(() => _visibleMonth = DateTime(_visibleMonth.year - 1, _visibleMonth.month, 1));
+                }
                 _rebuildOverlay();
               },
               child: const Icon(
@@ -396,13 +440,12 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
               ),
             ),
           ),
-          // Prev month
+          // Prev
           Tooltip(
-            message: 'Tháng trước',
+            message: widget.dateTimeMode == SGDateTimeMode.dayMonthYear ? 'Tháng trước' : 'Trước',
             child: InkWell(
               onTap: () {
-                setState(() => _visibleMonth =
-                    DateTime(_visibleMonth.year, _visibleMonth.month - 1, 1));
+                if (prevAction != null) prevAction();
                 _rebuildOverlay();
               },
               child: const Icon(
@@ -412,22 +455,20 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
               ),
             ),
           ),
-
           Expanded(
             child: Center(
               child: Text(
-                monthLabel,
+                headerLabel,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
-          // Next month
+          // Next
           Tooltip(
-            message: 'Tháng sau',
+            message: widget.dateTimeMode == SGDateTimeMode.dayMonthYear ? 'Tháng sau' : 'Sau',
             child: InkWell(
               onTap: () {
-                setState(() => _visibleMonth =
-                    DateTime(_visibleMonth.year, _visibleMonth.month + 1, 1));
+                if (nextAction != null) nextAction();
                 _rebuildOverlay();
               },
               child: const Icon(
@@ -437,13 +478,16 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
               ),
             ),
           ),
-          // Next year
+          // Next year/period
           Tooltip(
-            message: 'Năm sau',
+            message: widget.dateTimeMode == SGDateTimeMode.year ? 'Sau' : 'Năm sau',
             child: InkWell(
               onTap: () {
-                setState(() => _visibleMonth =
-                    DateTime(_visibleMonth.year + 1, _visibleMonth.month, 1));
+                if (widget.dateTimeMode == SGDateTimeMode.year) {
+                  setState(() => _visibleMonth = DateTime(_visibleMonth.year + 12, _visibleMonth.month, 1));
+                } else {
+                  setState(() => _visibleMonth = DateTime(_visibleMonth.year + 1, _visibleMonth.month, 1));
+                }
                 _rebuildOverlay();
               },
               child: const Icon(
@@ -459,6 +503,17 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   }
 
   Widget _buildCalendarGrid() {
+    switch (widget.dateTimeMode) {
+      case SGDateTimeMode.dayMonthYear:
+        return _buildDayCalendarGrid();
+      case SGDateTimeMode.monthYear:
+        return _buildMonthCalendarGrid();
+      case SGDateTimeMode.year:
+        return _buildYearCalendarGrid();
+    }
+  }
+
+  Widget _buildDayCalendarGrid() {
     // Monday-first grid with week numbers and leading/trailing days
     const double cellHeight = 26;
     const double cellWidth = 26;
@@ -632,7 +687,180 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             ),
           ),
         ),
+      )
+    );
+  }
+
+  // Thêm _buildMonthCalendarGrid
+  Widget _buildMonthCalendarGrid() {
+    const double cellHeight = 40;
+    const double cellWidth = 80;
+    
+    final DateTime today = DateTime.now();
+    List<TableRow> rows = [];
+
+    for (int row = 0; row < 4; row++) {
+      List<Widget> cells = [];
+      for (int col = 0; col < 3; col++) {
+        final month = row * 3 + col + 1;
+        final date = DateTime(_visibleMonth.year, month, 1);
+        
+        final bool isToday = today.year == date.year && today.month == date.month;
+        final bool isSelected = _selectedDateTime != null &&
+            _selectedDateTime!.year == date.year &&
+            _selectedDateTime!.month == date.month;
+        
+        final bool isDisabled = (widget.firstDate != null &&
+                date.isBefore(DateTime(widget.firstDate!.year, widget.firstDate!.month, 1))) ||
+            (widget.lastDate != null &&
+                date.isAfter(DateTime(widget.lastDate!.year, widget.lastDate!.month, 1)));
+
+        cells.add(_buildMonthCell(
+          date: date,
+          isToday: isToday,
+          isSelected: isSelected,
+          isDisabled: isDisabled,
+          width: cellWidth,
+          height: cellHeight,
+        ));
+      }
+      rows.add(TableRow(children: cells));
+    }
+
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: rows,
+    );
+  }
+
+  // Thêm _buildYearCalendarGrid
+  Widget _buildYearCalendarGrid() {
+    const double cellHeight = 40;
+    const double cellWidth = 60;
+    
+    final DateTime today = DateTime.now();
+    final int startYear = (_visibleMonth.year ~/ 12) * 12;
+    List<TableRow> rows = [];
+
+    for (int row = 0; row < 4; row++) {
+      List<Widget> cells = [];
+      for (int col = 0; col < 3; col++) {
+        final year = startYear + row * 3 + col;
+        
+        final bool isToday = today.year == year;
+        final bool isSelected = _selectedDateTime != null && _selectedDateTime!.year == year;
+        
+        final bool isDisabled = (widget.firstDate != null && year < widget.firstDate!.year) ||
+            (widget.lastDate != null && year > widget.lastDate!.year);
+
+        cells.add(_buildYearCell(
+          year: year,
+          isToday: isToday,
+          isSelected: isSelected,
+          isDisabled: isDisabled,
+          width: cellWidth,
+          height: cellHeight,
+        ));
+      }
+      rows.add(TableRow(children: cells));
+    }
+
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      children: rows,
+    );
+  }
+
+  // Thêm _buildMonthCell
+  Widget _buildMonthCell({
+    required DateTime date,
+    required bool isToday,
+    required bool isSelected,
+    required bool isDisabled,
+    required double width,
+    required double height,
+  }) {
+    final String monthName = DateFormat('MMM').format(date);
+    final Color textColor = isDisabled ? Colors.grey : Colors.black87;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: isDisabled ? null : () {
+          setState(() {
+            _selectedDateTime = DateTime(date.year, date.month, 1);
+            _visibleMonth = DateTime(date.year, date.month, 1);
+          });
+          _notifySelectionChanged();
+          _removeOverlay();
+          _focusNode.unfocus();
+        },
+        child: Container(
+          height: height,
+          width: width,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? SGAppColors.info100 : null,
+            borderRadius: BorderRadius.circular(6),
+            border: isToday ? Border.all(color: SGAppColors.primary600) : null,
+          ),
+          child: Text(
+            monthName,
+            style: TextStyle(
+              color: isSelected ? SGAppColors.info700 : textColor,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  // Thêm _buildYearCell
+  Widget _buildYearCell({
+    required int year,
+    required bool isToday,
+    required bool isSelected,
+    required bool isDisabled,
+    required double width,
+    required double height,
+  }) {
+    final Color textColor = isDisabled ? Colors.grey : Colors.black87;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: isDisabled ? null : () {
+          setState(() {
+            _selectedDateTime = DateTime(year, 1, 1);
+            _visibleMonth = DateTime(year, 1, 1);
+          });
+          _notifySelectionChanged();
+          _removeOverlay();
+          _focusNode.unfocus();
+        },
+        child: Container(
+          height: height,
+          width: width,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? SGAppColors.info100 : null,
+            borderRadius: BorderRadius.circular(6),
+            border: isToday ? Border.all(color: SGAppColors.primary600) : null,
+          ),
+          child: Text(
+            year.toString(),
+            style: TextStyle(
+              color: isSelected ? SGAppColors.info700 : textColor,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+      )
     );
   }
 
@@ -805,9 +1033,22 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
 
   // Formatting helpers
   String _formatDate(DateTime dateTime, {required bool includeTime}) {
-    final defaultDateFmt = widget.dateFormat ?? 'dd/MM/yyyy';
+    String defaultDateFmt;
+    
+    switch (widget.dateTimeMode) {
+      case SGDateTimeMode.dayMonthYear:
+        defaultDateFmt = widget.dateFormat ?? 'dd/MM/yyyy';
+        break;
+      case SGDateTimeMode.monthYear:
+        defaultDateFmt = widget.dateFormat ?? 'MM/yyyy';
+        break;
+      case SGDateTimeMode.year:
+        defaultDateFmt = widget.dateFormat ?? 'yyyy';
+        break;
+    }
+    
     final defaultDateTimeFmt = widget.dateTimeFormat ??
-        (widget.includeSeconds ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm');
+        (widget.includeSeconds ? '$defaultDateFmt HH:mm:ss' : '$defaultDateFmt HH:mm');
     final fmt = DateFormat(includeTime ? defaultDateTimeFmt : defaultDateFmt);
     return fmt.format(dateTime);
   }
@@ -825,20 +1066,49 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
   }
 
   DateTime? _tryParseVietnameseDateTime(String text) {
-    final patterns = <String>[
-      'dd/MM/yyyy HH:mm:ss',
-      'dd/MM/yyyy HH:mm',
-      'd/M/yyyy HH:mm:ss',
-      'd/M/yyyy HH:mm',
-      'dd-MM-yyyy HH:mm:ss',
-      'dd-MM-yyyy HH:mm',
-      'yyyy-MM-dd HH:mm:ss',
-      'yyyy-MM-dd HH:mm',
-      'dd/MM/yyyy',
-      'd/M/yyyy',
-      'dd-MM-yyyy',
-      'yyyy-MM-dd',
-    ];
+    List<String> patterns = [];
+    
+    switch (widget.dateTimeMode) {
+      case SGDateTimeMode.dayMonthYear:
+        patterns = [
+          'dd/MM/yyyy HH:mm:ss',
+          'dd/MM/yyyy HH:mm',
+          'd/M/yyyy HH:mm:ss',
+          'd/M/yyyy HH:mm',
+          'dd-MM-yyyy HH:mm:ss',
+          'dd-MM-yyyy HH:mm',
+          'yyyy-MM-dd HH:mm:ss',
+          'yyyy-MM-dd HH:mm',
+          'dd/MM/yyyy',
+          'd/M/yyyy',
+          'dd-MM-yyyy',
+          'yyyy-MM-dd',
+        ];
+        break;
+      case SGDateTimeMode.monthYear:
+        patterns = [
+          'MM/yyyy HH:mm:ss',
+          'MM/yyyy HH:mm',
+          'M/yyyy HH:mm:ss',
+          'M/yyyy HH:mm',
+          'MM-yyyy HH:mm:ss',
+          'MM-yyyy HH:mm',
+          'yyyy-MM HH:mm:ss',
+          'yyyy-MM HH:mm',
+          'MM/yyyy',
+          'M/yyyy',
+          'MM-yyyy',
+          'yyyy-MM',
+        ];
+        break;
+      case SGDateTimeMode.year:
+        patterns = [
+          'yyyy HH:mm:ss',
+          'yyyy HH:mm',
+          'yyyy',
+        ];
+        break;
+    }
 
     for (final p in patterns) {
       try {
@@ -848,11 +1118,18 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
         // try next
       }
     }
-    // Try relaxed parse by replacing '-' with '/'
+
+    // Try fallback parsing
     try {
       final replaced = text.replaceAll('-', '/');
-      final dt = DateFormat('d/M/yyyy').parse(replaced);
-      return dt;
+      switch (widget.dateTimeMode) {
+        case SGDateTimeMode.dayMonthYear:
+          return DateFormat('d/M/yyyy').parse(replaced);
+        case SGDateTimeMode.monthYear:
+          return DateFormat('M/yyyy').parse(replaced);
+        case SGDateTimeMode.year:
+          return DateFormat('yyyy').parse(replaced);
+      }
     } catch (_) {}
 
     return null;
