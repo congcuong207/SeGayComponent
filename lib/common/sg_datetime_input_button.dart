@@ -55,7 +55,6 @@ class SGDateTimeInputButton extends StatefulWidget {
 
   /// Custom datetime format when including time (default dd/MM/yyyy HH:mm:ss or HH:mm if !includeSeconds)
   final String? dateTimeFormat;
-
   /// If true and `value` is null, initialize with current date-time on first load
   final bool initWithNow;
 
@@ -64,6 +63,8 @@ class SGDateTimeInputButton extends StatefulWidget {
 
   /// Thêm thuộc tính mới
   final SGDateTimeMode dateTimeMode;
+  /// Hiển thị icon calendar ở suffix (mặc định true)
+  final bool showSuffixIcon;
 
   const SGDateTimeInputButton({
     super.key,
@@ -101,6 +102,7 @@ class SGDateTimeInputButton extends StatefulWidget {
     this.targetAnchor,
     this.followerAnchor,
     this.dateTimeMode = SGDateTimeMode.dayMonthYear,
+    this.showSuffixIcon = true,
   });
 
   @override
@@ -1219,7 +1221,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
         border: _buildUnderlineBorder(false),
         enabledBorder: _buildUnderlineBorder(false),
         focusedBorder: _buildUnderlineBorder(true),
-        suffixIcon: widget.enable ? null : _buildSuffixIcon(),
+        suffixIcon: widget.enable || !widget.showSuffixIcon ? null : _buildSuffixIcon(),
         contentPadding:
             widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 10),
       );
@@ -1243,7 +1245,7 @@ class _SGDateTimeInputButtonState extends State<SGDateTimeInputButton> {
             width: widget.sizeBorderLine ?? 1,
           ),
         ),
-        suffixIcon: widget.enable ? null : _buildSuffixIcon(),
+        suffixIcon: widget.enable || !widget.showSuffixIcon ? null : _buildSuffixIcon(),
         contentPadding:
             widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 10),
       );
