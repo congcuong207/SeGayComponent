@@ -7,12 +7,7 @@ import 'package:se_gay_components/common/sg_colors.dart';
 import 'package:se_gay_components/common/sg_dropdown_input_button.dart';
 import 'package:se_gay_components/common/sg_text.dart';
 import 'package:se_gay_components/common/switch/sg_checkbox.dart';
-
-enum SGDateTimeMode {
-  dayMonthYear,  // dd/MM/yyyy
-  monthYear,     // MM/yyyy  
-  year,          // yyyy
-}
+import 'package:se_gay_components/core/enum/sg_date_time_mode.dart';
 
 class SGDateTimeInputButton extends StatefulWidget {
   final TextEditingController controller;
