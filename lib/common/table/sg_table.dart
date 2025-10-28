@@ -138,8 +138,8 @@ class _SgTableState<T> extends State<SgTable<T>> {
   double? _resizeStartX;
   double? _resizeStartWidth;
 
-  // Row hover state
-  int? _hoveredRowIndex;
+  // Row hover state - sử dụng ValueNotifier để tối ưu performance
+  final ValueNotifier<int?> _hoveredRowNotifier = ValueNotifier<int?>(null);
 
   // Column filter state
   Map<int, List<String>> _columnFilters = {};
@@ -501,14 +501,6 @@ class _SgTableState<T> extends State<SgTable<T>> {
     return totalWidth;
   }
 
-  Map<int, TableColumnWidth> _buildTableColumnWidths() {
-    final Map<int, TableColumnWidth> widths = {};
-    for (int i = 0; i < _effectiveColumns.length; i++) {
-      widths[i] = FixedColumnWidth(
-          _columnWidths[i] ?? (_effectiveColumns[i].width ?? 120.0));
-    }
-    return widths;
-  }
 
   // Column filter methods
   void _toggleFilterDropdown(int columnIndex) {
@@ -626,6 +618,7 @@ class _SgTableState<T> extends State<SgTable<T>> {
     _headerController.dispose();
     _bodyController.dispose();
     _scrollbarController.dispose();
+    _hoveredRowNotifier.dispose(); // Dispose ValueNotifier
     _closeFilterOverlay();
     super.dispose();
   }
@@ -653,12 +646,16 @@ class _SgTableState<T> extends State<SgTable<T>> {
     source.addListener(() {
       if (_syncing) return;
       _syncing = true;
-      for (final target in targets) {
-        if (target.hasClients) {
-          target.jumpTo(source.offset);
+      
+      // Sử dụng Future.microtask để tránh blocking UI thread
+      Future.microtask(() {
+        for (final target in targets) {
+          if (target.hasClients && target.offset != source.offset) {
+            target.jumpTo(source.offset);
+          }
         }
-      }
-      _syncing = false;
+        _syncing = false;
+      });
     });
   }
 
@@ -718,65 +715,46 @@ class _SgTableState<T> extends State<SgTable<T>> {
                   ),
                 ),
               ),
-              // Table body rows (cuộn dọc có giới hạn theo viewport) - dùng Table
+              // Table body rows - sử dụng ListView.builder để tối ưu performance
               SizedBox(
                 height: bodyViewportHeight - 10,
                 child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: _bodyController,
-                    child: Table(
-                      columnWidths: _buildTableColumnWidths(),
-                      defaultVerticalAlignment:
-                          TableCellVerticalAlignment.middle,
-                      children: List.generate(_sortedData.length, (rowIdx) {
+                  scrollDirection: Axis.horizontal,
+                  controller: _bodyController,
+                  child: SizedBox(
+                    width: effectiveWidth,
+                    child: ListView.builder(
+                      itemCount: _sortedData.length,
+                      itemBuilder: (context, rowIdx) {
                         final isEven = rowIdx % 2 == 0;
                         final isSelected = _selectedRowIndex == rowIdx;
-                        final isChecked =
-                            _selectedItems.contains(_sortedData[rowIdx]);
-                        final isHovered = _hoveredRowIndex == rowIdx;
+                        final isChecked = _selectedItems.contains(_sortedData[rowIdx]);
 
-                        Color backgroundColor;
-                        if (isSelected) {
-                          backgroundColor = widget.selectedRowColor;
-                        } else if (isChecked) {
-                          backgroundColor = widget.selectedRowColor;
-                        } else if (isHovered && widget.rowHoverColor != null) {
-                          backgroundColor = widget.rowHoverColor!;
-                        } else {
-                          backgroundColor = isEven
-                              ? widget.evenRowBackgroundColor
-                              : widget.oddRowBackgroundColor;
-                        }
-
-                        return TableRow(
-                          decoration: BoxDecoration(
-                            color: backgroundColor,
-                          ),
-                          children: List.generate(
-                            _effectiveColumns.length,
-                            (colIdx) {
-                              // Xây dựng cell tương tự _buildRowCells nhưng thêm tương tác per-cell
-                              final cell = _buildRowCells(
-                                _sortedData[rowIdx],
-                                false,
-                                effectiveWidth,
-                                totalWidth,
-                              )[colIdx];
-
-                              return MouseRegion(
-                                onEnter: (_) => _onRowHover(rowIdx),
-                                onExit: (_) => _onRowHoverExit(),
-                                child: InkWell(
-                                  onTap: () => _onRowSelected(rowIdx),
-                                  child: cell,
-                                ),
-                              );
-                            },
-                          ),
+                        return _TableRow<T>(
+                          key: ValueKey('row_$rowIdx'),
+                          rowIndex: rowIdx,
+                          item: _sortedData[rowIdx],
+                          isEven: isEven,
+                          isSelected: isSelected,
+                          isChecked: isChecked,
+                          hoveredRowNotifier: _hoveredRowNotifier,
+                          onRowHover: _onRowHover,
+                          onRowHoverExit: _onRowHoverExit,
+                          onRowSelected: _onRowSelected,
+                          onBuildRowCells: _buildRowCells,
+                          effectiveWidth: effectiveWidth,
+                          totalWidth: totalWidth,
+                          rowHeight: widget.rowHeight,
+                          selectedRowColor: widget.selectedRowColor,
+                          evenRowBackgroundColor: widget.evenRowBackgroundColor,
+                          oddRowBackgroundColor: widget.oddRowBackgroundColor,
+                          rowHoverColor: widget.rowHoverColor,
+                          gridLineColor: widget.gridLineColor,
+                          gridLineWidth: widget.gridLineWidth,
+                          showHorizontalLines: widget.showHorizontalLines,
+                          sortedDataLength: _sortedData.length,
                         );
-                      }),
+                      },
                     ),
                   ),
                 ),
@@ -921,19 +899,9 @@ class _SgTableState<T> extends State<SgTable<T>> {
         );
       }
 
-      // For regular data columns
+      // For regular data columns - tối ưu bằng cách loại bỏ decoration không cần thiết
       return _buildCell(
         child: Container(
-          decoration: BoxDecoration(
-            border: widget.showHorizontalLines
-                ? Border(
-                    bottom: BorderSide(
-                      color: widget.gridLineColor,
-                      width: widget.gridLineWidth,
-                    ),
-                  )
-                : null,
-          ),
           padding: const EdgeInsets.only(left: 8, right: 8),
           alignment: column.cellAlignment == TextAlign.center
               ? Alignment.center
@@ -974,57 +942,63 @@ class _SgTableState<T> extends State<SgTable<T>> {
       );
     }
 
+    // Tối ưu bằng cách sử dụng Container thay vì Stack khi không cần resize handle
+    if (columnIndex == null) {
+      return Container(
+        width: adjustedWidth,
+        height: widget.rowHeight,
+        decoration: BoxDecoration(
+          border: widget.showVerticalLines
+              ? Border(
+                  right: BorderSide(
+                    color: widget.colorLineVertical,
+                    width: widget.gridLineVWidth,
+                  ),
+                )
+              : null,
+        ),
+        child: child,
+      );
+    }
+
     return Stack(
       children: [
-        // Container vẽ horizontal line (nằm dưới)
+        // Container chính
         Container(
           width: adjustedWidth,
           height: widget.rowHeight,
           decoration: BoxDecoration(
-            border: widget.showHorizontalLines
+            border: widget.showVerticalLines
                 ? Border(
-                    bottom: BorderSide(
-                      color: widget.gridLineColor,
-                      width: widget.gridLineWidth,
+                    right: BorderSide(
+                      color: widget.colorLineVertical,
+                      width: widget.gridLineVWidth,
                     ),
                   )
                 : null,
           ),
           child: child,
         ),
-        // Container vẽ vertical line (nằm trên)
-        if (widget.showVerticalLines && !isLast)
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: widget.gridLineVWidth,
-              height: widget.rowHeight,
-              color: widget.colorLineVertical,
-            ),
-          ),
-        // Resize handle giữ nguyên
-        if (columnIndex != null && !isLast)
-          Positioned(
-            right: -5,
-            top: 0,
-            bottom: 0,
-            width: 10,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.resizeLeftRight,
-              child: GestureDetector(
-                onHorizontalDragStart: (details) =>
-                    _startResize(columnIndex, details.globalPosition.dx),
-                onHorizontalDragUpdate: (details) =>
-                    _updateResize(details.globalPosition.dx),
-                onHorizontalDragEnd: (_) => _endResize(),
-                child: Container(
-                  color: Colors.transparent,
-                ),
+        // Resize handle
+        Positioned(
+          right: -5,
+          top: 0,
+          bottom: 0,
+          width: 10,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.resizeLeftRight,
+            child: GestureDetector(
+              onHorizontalDragStart: (details) =>
+                  _startResize(columnIndex, details.globalPosition.dx),
+              onHorizontalDragUpdate: (details) =>
+                  _updateResize(details.globalPosition.dx),
+              onHorizontalDragEnd: (_) => _endResize(),
+              child: Container(
+                color: Colors.transparent,
               ),
             ),
           ),
+        ),
       ],
     );
   }
@@ -1064,15 +1038,11 @@ class _SgTableState<T> extends State<SgTable<T>> {
   }
 
   void _onRowHover(int rowIndex) {
-    setState(() {
-      _hoveredRowIndex = rowIndex;
-    });
+    _hoveredRowNotifier.value = rowIndex;
   }
 
   void _onRowHoverExit() {
-    setState(() {
-      _hoveredRowIndex = null;
-    });
+    _hoveredRowNotifier.value = null;
   }
 }
 
@@ -1305,5 +1275,108 @@ class _ColumnFilterDropdownState<T> extends State<_ColumnFilterDropdown<T>> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+}
+
+// Tối ưu TableRow widget để giảm rebuild không cần thiết
+class _TableRow<T> extends StatelessWidget {
+  final int rowIndex;
+  final T item;
+  final bool isEven;
+  final bool isSelected;
+  final bool isChecked;
+  final ValueNotifier<int?> hoveredRowNotifier;
+  final Function(int) onRowHover;
+  final VoidCallback onRowHoverExit;
+  final Function(int) onRowSelected;
+  final List<Widget> Function(T, bool, double, double) onBuildRowCells;
+  final double effectiveWidth;
+  final double totalWidth;
+  final double rowHeight;
+  final Color selectedRowColor;
+  final Color evenRowBackgroundColor;
+  final Color oddRowBackgroundColor;
+  final Color? rowHoverColor;
+  final Color gridLineColor;
+  final double gridLineWidth;
+  final bool showHorizontalLines;
+  final int sortedDataLength;
+
+  const _TableRow({
+    super.key,
+    required this.rowIndex,
+    required this.item,
+    required this.isEven,
+    required this.isSelected,
+    required this.isChecked,
+    required this.hoveredRowNotifier,
+    required this.onRowHover,
+    required this.onRowHoverExit,
+    required this.onRowSelected,
+    required this.onBuildRowCells,
+    required this.effectiveWidth,
+    required this.totalWidth,
+    required this.rowHeight,
+    required this.selectedRowColor,
+    required this.evenRowBackgroundColor,
+    required this.oddRowBackgroundColor,
+    this.rowHoverColor,
+    required this.gridLineColor,
+    required this.gridLineWidth,
+    required this.showHorizontalLines,
+    required this.sortedDataLength,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: hoveredRowNotifier,
+        builder: (context, child) {
+          final isHovered = hoveredRowNotifier.value == rowIndex;
+          
+          Color backgroundColor;
+          if (isSelected) {
+            backgroundColor = selectedRowColor;
+          } else if (isChecked) {
+            backgroundColor = selectedRowColor;
+          } else if (isHovered && rowHoverColor != null) {
+            backgroundColor = rowHoverColor!;
+          } else {
+            backgroundColor = isEven ? evenRowBackgroundColor : oddRowBackgroundColor;
+          }
+
+          return Container(
+            height: rowHeight,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: showHorizontalLines && rowIndex < sortedDataLength - 1
+                  ? Border(
+                      bottom: BorderSide(
+                        color: gridLineColor,
+                        width: gridLineWidth,
+                      ),
+                    )
+                  : null,
+            ),
+            child: MouseRegion(
+              onEnter: (_) => onRowHover(rowIndex),
+              onExit: (_) => onRowHoverExit(),
+              child: InkWell(
+                onTap: () => onRowSelected(rowIndex),
+                child: Row(
+                  children: onBuildRowCells(
+                    item,
+                    false,
+                    effectiveWidth,
+                    totalWidth,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
