@@ -55,7 +55,6 @@ class SGDateTimeInputButton extends StatefulWidget {
 
   /// Custom datetime format when including time (default dd/MM/yyyy HH:mm:ss or HH:mm if !includeSeconds)
   final String? dateTimeFormat;
-
   /// If true and `value` is null, initialize with current date-time on first load
   final bool initWithNow;
 
