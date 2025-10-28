@@ -64,7 +64,6 @@ class SGDateTimeInputButton extends StatefulWidget {
 
   /// Thêm thuộc tính mới
   final SGDateTimeMode dateTimeMode;
-
   /// Hiển thị icon calendar ở suffix (mặc định true)
   final bool showSuffixIcon;
 
