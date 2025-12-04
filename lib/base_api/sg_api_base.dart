@@ -15,15 +15,16 @@ class ApiBase {
       'Content-Type': 'application/json',
       if (ApiConfig.getBearToken().isNotEmpty) 'Authorization': 'Bearer ${ApiConfig.getBearToken()}',
     };
-    _dio.interceptors.add(LogInterceptor(
-      requestHeader: true,
-      requestBody: true,
-      responseHeader: false,
-      request: false,
-      responseBody: false,
-      // ignore: avoid_print
-      logPrint: (o) => print(o.toString()),
-    ));
+    // 关闭 Dio 默认的控制台日志输出，避免在 Web 上打印请求/响应日志。
+    // 如需调试时打开日志，可以临时恢复下面的 LogInterceptor 配置。
+    // _dio.interceptors.add(LogInterceptor(
+    //   requestHeader: true,
+    //   requestBody: true,
+    //   responseHeader: false,
+    //   request: false,
+    //   responseBody: false,
+    //   logPrint: (o) => print(o.toString()),
+    // ));
   }
 
   Future<Response<T>> get<T>(
